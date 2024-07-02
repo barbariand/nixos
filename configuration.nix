@@ -3,16 +3,8 @@
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
 { config, pkgs, ... }:
-let
-  vscodeWithExtensions = import ./vscode.nix { 
-    pkgs = pkgs.unstable;
-  };
-  pythonWithPackages = import ./python.nix { 
-    pkgs = pkgs.unstable;
-  };
-  
-in {
-  nix={package = pkgs.nixFlakes;
+
+nix={package = pkgs.nixFlakes;
    extraOptions = ''
      experimental-features = nix-command flakes
    '';
@@ -219,4 +211,4 @@ in {
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "24.05"; # Did you read the comment?
-  }
+
