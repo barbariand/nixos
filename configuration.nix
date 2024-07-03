@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, pkgs, ... }:{
 
 nix={package = pkgs.nixFlakes;
    extraOptions = ''
@@ -12,9 +12,10 @@ nix={package = pkgs.nixFlakes;
   };
   imports =
     [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-       <home-manager/nixos> 
-    ];
+      ./hardware-configuration.nix 
+    	./home.nix
+    ./programs.nix
+    	];
   users.defaultUserShell = pkgs.zsh;
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
@@ -94,6 +95,7 @@ nix={package = pkgs.nixFlakes;
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.cindy = {
     isNormalUser = true;
+    home="/home/cindy";
     description = "Cindy Nilsson";
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
@@ -101,89 +103,6 @@ nix={package = pkgs.nixFlakes;
     #  thunderbird
     ];
   };
-
-  # Install firefox.
-  programs.firefox.enable = true;
-
-  # Allow unfree packages
-  nixpkgs.config.allowUnfree = true;
-  #xdg.enable=true;
-  
-  system.userActivationScripts = {
-   extraUserActivation = {
-       text = ''
-        #ln -sfn /etc/per-user/kitty ~/.config/
-	
-        #ln -sfn /etc/per-user/i3 ~/.config/
-        #ln -sfn /etc/per-user/i3blocks/i3blocks.conf ~/.i3blocks.conf
-        #ln -sfn /etc/per-user/zsh/zshrc ~/.zshrc
-        #ln -sfn /etc/per-user/tmux/tmux.conf ~/.tmux.conf
-      '';
-      deps = [];
-    };
-  };
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
-  environment.systemPackages = with pkgs; [
-    vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-    wget
-    rustup
-    git
-    starship
-    tmux
-    kitty
-    gh
-  ];
-  programs.neovim={
-    enable=true;
-    defaultEditor=true;
-  };
-  
-   home-manager.users.cindy = {
-    home.stateVersion="24.05";
-    programs.kitty = {
-      enable = true;
-      theme="Blazer";
-      extraConfig = ''
-        font_family FiraCode
-        font_size 14.0
-
-        # Other configuration options..
-      '';
-    };
-  };
-
-  environment.etc = { 
-   # "per-user/tmux/tmux.conf".text = import ./tmux.nix { zsh = pkgs.zsh; };
-    
-    #"per-user/zsh/zshrc".text = import ./zshrc.nix { zsh = pkgs.zsh; };
-  };
-  programs.ssh = {
-    startAgent = true;
-  };
-  programs.zsh = {
-    enable = true;
-    autosuggestions.enable = true;
-    zsh-autoenv.enable = true;
-    syntaxHighlighting.enable = true;
-    ohMyZsh = {
-      enable = true;
-      theme = "robbyrussell";
-      plugins = [
-        "git"
-        "npm"
-        "history"
-        "node"
-        "rust"
-        "deno"
-      ];
-    };
-    shellAliases = {
-      ll = "ls -l";
-      update = "sudo nixos-rebuild switch";
-    };
-  };
-
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
@@ -211,4 +130,4 @@ nix={package = pkgs.nixFlakes;
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "24.05"; # Did you read the comment?
-
+}

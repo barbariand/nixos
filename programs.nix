@@ -1,35 +1,19 @@
-{config, pkgs, ...}:
+{config, pkgs, ...}:{
 
-enviroment.systemPackages = with pkgs;[
- vim
- wget
- rustup
- git
- starship
- tmux
- gh
- firefox
-];
-
-home-manager.users.cindy={
- home.stateVersion="24.05";
- #enableing kitty
- programs.kitty={
-  enable=true;
-  theme="Blazers"
-  extraConfig=''
-  font_family FiraCode
-  font_size 14.0
-
-  '';
- };
+programs={
+ #vim.enable=true;
+ #wget.enable=true;
+ #rustup.enable=true;
+ git.enable=true;
+ starship.enable=true;
+ tmux.enable=true;
+ #gh.enable=true;
+ firefox.enable=true;
 };
-
-programs.neovim = {
-  enable=true;
-  defaultEditor=true;
+programs.neovim={
+enable=true;
+defaultEditor=true;
 };
- 
 programs.zsh = {
     enable = true;
     autosuggestions.enable = true;
@@ -52,3 +36,4 @@ programs.zsh = {
       update = "sudo nixos-rebuild switch";
     };
   };
+}
