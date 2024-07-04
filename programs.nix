@@ -7,7 +7,6 @@ programs={
  git.enable=true;
  starship.enable=true;
  tmux.enable=true;
- #gh.enable=true;
  firefox.enable=true;
 };
 programs.neovim={

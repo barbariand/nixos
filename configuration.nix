@@ -22,7 +22,7 @@ nix={package = pkgs.nixFlakes;
   boot.loader.efi.canTouchEfiVariables = true;
    # Enable plymouth
   #boot.plymouth.enable = true;
-
+  
   networking.hostName = "nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
@@ -66,7 +66,10 @@ nix={package = pkgs.nixFlakes;
     layout = "se";
     xkbVariant = "";
   };
-
+environment.systemPackages = with pkgs;[
+	gh
+  gcc
+];
   # Configure console keymap
   console.keyMap = "sv-latin1";
  

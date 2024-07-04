@@ -57,12 +57,9 @@ in
         fastfetch
         inotify-tools
 
-        # Source control
-        gh
-
         # Rust build systems
         cargo-info
-
+        rustup
         # Package managers
         # opam
         # yarn
