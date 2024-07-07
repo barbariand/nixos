@@ -17,13 +17,16 @@ in
     shell = pkgs.zsh;
   };
 
-  # Home
+
+# Home
   home-manager.users.cindy = { pkgs, config, ... }: {
+
     nixpkgs = {
       config = {
         allowInsecurePredicate = pkg: builtins.elem (lib.getName pkg) [
           "electron"
         ];
+        allowUnfree=true;
       };
     };
     #enableing kitty
@@ -61,8 +64,8 @@ in
         cargo-info
         rustup
         # Package managers
-        # opam
-        # yarn
+         opam
+         unstable.pnpm
 
         # Programming languages
         nodejs_22
@@ -98,6 +101,12 @@ in
         toipe
         # obsidian
         neomutt
+
+        #Destroying the brain
+        steam
+
+        #Comunication
+        discord
       ];
 
       # Version of the originally installed home-manager

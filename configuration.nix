@@ -3,16 +3,15 @@
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
 { config, pkgs, ... }:{
-
 nix={package = pkgs.nixFlakes;
    extraOptions = ''
      experimental-features = nix-command flakes
    '';
-  
+
   };
   imports =
     [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix 
+      ./hardware-configuration.nix
     	./home.nix
     ./programs.nix
     	];
@@ -22,7 +21,7 @@ nix={package = pkgs.nixFlakes;
   boot.loader.efi.canTouchEfiVariables = true;
    # Enable plymouth
   #boot.plymouth.enable = true;
-  
+  nixpkgs.config.allowUnfree = true;
   networking.hostName = "nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
@@ -50,7 +49,6 @@ nix={package = pkgs.nixFlakes;
     LC_TELEPHONE = "sv_SE.UTF-8";
     LC_TIME = "sv_SE.UTF-8";
   };
-
   # Enable the X11 windowing system.
   # You can disable this if you're only using the Wayland session.
   services.xserver.enable = true;
@@ -58,7 +56,7 @@ nix={package = pkgs.nixFlakes;
   # Enable the KDE Plasma Desktop Environment.
   services.displayManager.sddm.enable = true;
   services.desktopManager.plasma6.enable = true;
-  
+
   #camera
   services.mediamtx.allowVideoAccess = true;
   # Configure keymap in X11
@@ -66,13 +64,26 @@ nix={package = pkgs.nixFlakes;
     layout = "se";
     xkbVariant = "";
   };
+
 environment.systemPackages = with pkgs;[
 	gh
   gcc
+  krita
+  vscode-fhs
+  pkg-config
+  dbus
+  openssl_3
+  glib
+  gtk3
+  libsoup
+  webkitgtk
+  appimagekit
+  librsvg
+  whatsapp-for-linux
 ];
   # Configure console keymap
   console.keyMap = "sv-latin1";
- 
+
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
@@ -134,3 +145,4 @@ environment.systemPackages = with pkgs;[
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "24.05"; # Did you read the comment?
 }
+
