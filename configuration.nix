@@ -3,23 +3,26 @@
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
 { config, pkgs, ... }:{
-nix={package = pkgs.nixFlakes;
-   extraOptions = ''
-     experimental-features = nix-command flakes
-   '';
+nix={
+  package = pkgs.nixFlakes;
+    extraOptions = ''
+      experimental-features = nix-command flakes
+    '';
 
   };
   imports =
     [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-    	./home.nix
+    ./hardware-configuration.nix
+    ./home.nix
     ./programs.nix
-    	];
+  ];
+  hardware.opengl.enable = true;
+  hardware.opengl.driSupport32Bit = true;
   users.defaultUserShell = pkgs.zsh;
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-   # Enable plymouth
+  # Enable plymouth
   #boot.plymouth.enable = true;
   nixpkgs.config.allowUnfree = true;
   networking.hostName = "nixos"; # Define your hostname.
@@ -37,7 +40,7 @@ nix={package = pkgs.nixFlakes;
 
   # Select internationalisation properties.
   i18n.defaultLocale = "en_US.UTF-8";
-
+  fonts.fontconfig.enable=true;
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "sv_SE.UTF-8";
     LC_IDENTIFICATION = "sv_SE.UTF-8";
@@ -60,27 +63,76 @@ nix={package = pkgs.nixFlakes;
   #camera
   services.mediamtx.allowVideoAccess = true;
   # Configure keymap in X11
-  services.xserver = {
+  services.xserver.xkb = {
     layout = "se";
-    xkbVariant = "";
+    variant = "";
   };
-
-environment.systemPackages = with pkgs;[
-	gh
-  gcc
-  krita
-  vscode-fhs
-  pkg-config
-  dbus
-  openssl_3
-  glib
-  gtk3
-  libsoup
-  webkitgtk
-  appimagekit
-  librsvg
-  whatsapp-for-linux
-];
+  programs.hyprland = {
+    enable = true;
+    xwayland.enable = true;
+  };
+  services.dbus.enable = true;
+  xdg.portal = {
+    enable = true;
+    wlr.enable = true;
+    extraPortals = [
+      pkgs.xdg-desktop-portal-gtk
+    ];
+  };
+  # Hint Electon apps to use wayland
+  environment.sessionVariables = {
+    NIXOS_OZONE_WL = "1";
+  };
+  nixpkgs.overlays = [
+    (self: super: {
+      waybar = super.waybar.overrideAttrs (oldAttrs: {
+        mesonFlags = oldAttrs.mesonFlags ++ [ "-Dexperimental=true" ];
+      });
+    })
+  ];
+  fonts.fonts = with pkgs; [
+    nerdfonts
+    meslo-lgs-nf
+  ];
+  virtualisation.libvirtd.enable = true;
+  programs.virt-manager.enable = true;
+  environment.systemPackages = with pkgs;[
+    gh
+    gcc
+    krita
+    vscode-fhs
+    pkg-config
+    dbus
+    openssl_3
+    glib
+    gtk3
+    libsoup
+    webkitgtk
+    appimagekit
+    librsvg
+    whatsapp-for-linux
+    figma-linux
+    google-chrome
+    ocs-url
+    bacon
+    hyprland
+    swww # for wallpapers
+    xdg-desktop-portal-gtk
+    xdg-desktop-portal-hyprland
+    xwayland
+    meson
+    wayland-protocols
+    wayland-utils
+    wl-clipboard
+    wlroots
+    freecad
+    uv
+    dust
+    curl
+    wget
+    pkg-config
+    zlib
+  ];
   # Configure console keymap
   console.keyMap = "sv-latin1";
 
@@ -88,7 +140,10 @@ environment.systemPackages = with pkgs;[
   services.printing.enable = true;
 
   # Enable sound with pipewire.
+  sound.enable = true;
   hardware.pulseaudio.enable = false;
+  hardware.pulseaudio.package = pkgs.pulseaudioFull;
+  hardware.pulseaudio.support32Bit = true;
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
@@ -111,7 +166,7 @@ environment.systemPackages = with pkgs;[
     isNormalUser = true;
     home="/home/cindy";
     description = "Cindy Nilsson";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = [ "networkmanager" "wheel" "libvirtd"];
     packages = with pkgs; [
       kdePackages.kate
     #  thunderbird

@@ -4,7 +4,6 @@
       enableFishIntegration = true;
       settings = {
         format = "$username$directory$character";
-	right_format = "$nix_shell$time";
 
 	username = {
 	  disabled = false;

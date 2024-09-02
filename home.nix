@@ -17,10 +17,15 @@ in
     shell = pkgs.zsh;
   };
 
-
 # Home
   home-manager.users.cindy = { pkgs, config, ... }: {
-
+    wayland.windowManager.hyprland.enable = true;
+    dconf.settings = {
+      "org/virt-manager/virt-manager/connections" = {
+        autoconnect = ["qemu:///system"];
+        uris = ["qemu:///system"];
+      };
+    };
     nixpkgs = {
       config = {
         allowInsecurePredicate = pkg: builtins.elem (lib.getName pkg) [
@@ -30,14 +35,22 @@ in
       };
     };
     #enableing kitty
-    programs.kitty={
+    programs={
+      kitty={
       enable=true;
       theme="Blazer";
       extraConfig=''
         font_family FiraCode
-  	font_size 14.0
-
+  	    font_size 14.0
+        transparency = yes
       '';
+    };
+    direnv = {
+      enable = true;
+      enableZshIntegration = true; # see note on other shells below
+      nix-direnv.enable = true;
+    };
+
     };
     home = {
       sessionVariables = {
@@ -63,9 +76,12 @@ in
         # Rust build systems
         cargo-info
         rustup
+        wasm-pack
+        wasm-bindgen-cli
+
         # Package managers
-         opam
-         unstable.pnpm
+        opam
+        unstable.pnpm
 
         # Programming languages
         nodejs_22
@@ -102,12 +118,14 @@ in
         # obsidian
         neomutt
 
-        #Destroying the brain
-        steam
-
         #Comunication
         discord
-      ];
+        #VM
+        unstable.spice-vdagent
+        #OBS
+        obs-studio
+
+];
 
       # Version of the originally installed home-manager
       stateVersion = "24.05";
