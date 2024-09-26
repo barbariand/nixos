@@ -6,4 +6,5 @@
   # Make sure to add ssh keys too be safe
   age.secrets.user-password.file = ./user-password.age;
   age.secrets.wifi-env.file = ./wifi-env.age;
+  age.secrets.nix-access-tokens.file=./nix-access-tokens.age;
 }

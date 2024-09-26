@@ -1,9 +1,42 @@
-{
+let
+  networks = {
+    "Cinderblock_5G" = {
+      psk = "@PSK_CINDERBLOCK@";
+      priority = 0;
+    };
+    "eduroam" = {
+      auth = ''
+        key_mgmt=WPA-EAP
+        eap=PEAP
+        identity="@ID_EDUROAM@"
+        password="@PSK_EDUROAM@"
+        phase2="auth=MSCHAPV2"
+      '';
+      priority = 2;
+    };
+    "CindyPhone"={
+      priority=1;
+      psk="@PSK_CINDYPHONE@";
+    };
+    "rbguest"={
+      priority=3;
+    };
+    "SJ"={
+      priority=3;
+    };
+    "FamNilsson"={
+      priority=0;
+      psk="@PSK_FAMNILSSON@";
+    };
+  };
+in {
   config.modules = {
-    wifi.enable = true;
-    hyprland.enable = true;
+    wifi = {
+      enable = true;
+      networks = networks;
+    };
+
     display-manager.enable = true;
-    display-manager.pam_google_auth=false;
-    plasma.enable=true;
+    #plasma.enable=true;
   };
 }
