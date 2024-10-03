@@ -107,11 +107,11 @@
     },
     "hardware": {
       "locked": {
-        "lastModified": 1725885300,
-        "narHash": "sha256-5RLEnou1/GJQl+Wd+Bxaj7QY7FFQ9wjnFq1VNEaxTmc=",
+        "lastModified": 1727665282,
+        "narHash": "sha256-oKtfbQB1MBypqIyzkC8QCQcVGOa1soaXaGgcBIoh14o=",
         "owner": "NixOS",
         "repo": "nixos-hardware",
-        "rev": "166dee4f88a7e3ba1b7a243edb1aca822f00680e",
+        "rev": "11c43c830e533dad1be527ecce379fcf994fbbb5",
         "type": "github"
       },
       "original": {
@@ -235,15 +235,15 @@
     "nvim": {
       "flake": false,
       "locked": {
-        "lastModified": 1725621597,
-        "narHash": "sha256-xxwpznl6m1ghalk/sgSxMv0JcFeEkbWBDQoeLu1JFRY=",
-        "owner": "aabrupt",
+        "lastModified": 1727949575,
+        "narHash": "sha256-WtCVDlMOg3xiIuhBClKkXRTRI66WcsHEpw/Pc+b6RYo=",
+        "owner": "barbariand",
         "repo": "nvim",
-        "rev": "2510602248cbaa2181cb44a430e32e91691f5ab9",
+        "rev": "38a341ce2d19929e1d9e1a53aebde3890c11e108",
         "type": "github"
       },
       "original": {
-        "owner": "aabrupt",
+        "owner": "barbariand",
         "repo": "nvim",
         "type": "github"
       }
@@ -268,11 +268,11 @@
         "wsl": "wsl"
       },
       "locked": {
-        "lastModified": 1726232608,
-        "narHash": "sha256-WHWymntkTM9wsQGhRUpUHm5Qf9QiySxreEUO9Hi1B1Y=",
+        "lastModified": 1727944289,
+        "narHash": "sha256-FSdtrB76ruUAqgG2qZ/ebMQ329E0gzyrMvt/x2ZMDVw=",
         "owner": "aabrupt",
         "repo": "sensible-nix",
-        "rev": "0ed41a44d5d2d4678c771a477a6b701717afccf4",
+        "rev": "67aaef3275a2a94f653cdf12e1622a03fe005109",
         "type": "github"
       },
       "original": {

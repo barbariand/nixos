@@ -4,7 +4,7 @@
     sensible-nix.url = "github:aabrupt/sensible-nix";
     hardware.url = "github:NixOS/nixos-hardware";
     nvim = {
-      url = "github:aabrupt/nvim";
+      url = "github:barbariand/nvim";
       flake = false;
     };
   };

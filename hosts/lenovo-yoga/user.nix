@@ -5,10 +5,10 @@
       enable = true;
       monitors = ["eDP-1,1920x1200@59.99900,0x0,1"];
     };
+    dunst.enable=true;
     eww.enable = true;
     waybar.enable = false;
-    dunst.enable = false;
-
+    zen.enable=true;
     # applets
     fuzzel.enable = true;
     chromium.enable = true;
@@ -22,7 +22,7 @@
     tmux.enable = true;
 
     # system
-    xdg.enable = true;
+    xdg={enable = true; defaultBrowser="zen.desktop";};
     gtk.enable = true;
     packages.enable = true;
   };

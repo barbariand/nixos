@@ -14,21 +14,24 @@ let
       '';
       priority = 2;
     };
-    "CindyPhone"={
-      priority=1;
-      psk="@PSK_CINDYPHONE@";
+    "CindyPhone" = {
+      priority = 1;
+      psk = "@PSK_CINDYPHONE@";
     };
-    "rbguest"={
-      priority=3;
+    "rbguest" = {
+      priority = 3;
     };
-    "SJ"={
-      priority=3;
+    "SJ" = {
+      priority = 3;
     };
-    "FamNilsson"={
-      priority=0;
-      psk="@PSK_FAMNILSSON@";
+    "FamNilsson" = {
+      priority = 0;
+      psk = "@PSK_FAMNILSSON@";
     };
-  };
+    "Barolo5" = {
+      psk = "@PSK_BAROLO@";
+    };
+ };
 in {
   config.modules = {
     wifi = {
