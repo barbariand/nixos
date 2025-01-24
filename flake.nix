@@ -4,7 +4,7 @@
     sensible-nix.url = "github:aabrupt/sensible-nix";
     hardware.url = "github:NixOS/nixos-hardware";
     nvim = {
-      url = "github:barbariand/nvim";
+      url = "github:barbariand/nvim/personal";
       flake = false;
     };
   };
@@ -35,10 +35,15 @@
             virtualisation.vmware.host.enable = true;
             environment.systemPackages = with pkgs; [
               krita
+              modrinth-app
               inkscape
               obs-studio
               whatsapp-for-linux
               google-chrome
+              sage
+              pavucontrol
+              alsa-utils
+              freecad-wayland
             ];
 
             environment.etc."current-system-packages".text = let

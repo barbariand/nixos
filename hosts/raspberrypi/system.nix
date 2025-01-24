@@ -1,29 +1,26 @@
 let
   networks = {
     "Cinderblock_5G" = {
-      pskRaw = "ext:PSK_CINDERBLOCK_5G";
+      psk = "@PSK_CINDERBLOCK@";
       priority = 0;
-    };
-    "Guest HvK/Skandion 5" = {
-      pskRaw = "ext:PSK_GUEST_HVK";
     };
     "eduroam" = {
       auth = ''
         key_mgmt=WPA-EAP
         eap=PEAP
-        identity="ext:ID_EDUROAM"
-        password="ext:PSK_EDUROAM"
+        identity="@ID_EDUROAM@"
+        password="@PSK_EDUROAM@"
         phase2="auth=MSCHAPV2"
       '';
-      priority = 1;
+      priority = 2;
     };
     "CindyPhone" = {
-      priority = 2;
-      pskRaw = "ext:PSK_CINDYPHONE";
+      priority = 1;
+      psk = "@PSK_CINDYPHONE@";
     };
     "Dantes pixel" = {
       priority = 1;
-      pskRaw = "ext:PSK_CINDYPHONE";
+      psk = "@PSK_CINDYPHONE@";
     };
     "rbguest" = {
       priority = 3;
@@ -33,10 +30,10 @@ let
     };
     "FamNilsson" = {
       priority = 0;
-      pskRaw = "ext:PSK_FAMNILSSON";
+      psk = "@PSK_FAMNILSSON@";
     };
     "Barolo5" = {
-      pskRaw = "ext:PSK_BAROLO";
+      psk = "@PSK_BAROLO@";
     };
   };
 in {
@@ -45,10 +42,5 @@ in {
       enable = true;
       networks = networks;
     };
-    steam = {enable = true;};
-    display-manager = {
-      enable = true;
-    };
-    #plasma.enable=true;
-  };
+ };
 }
