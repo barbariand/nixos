@@ -30,7 +30,7 @@
     };
   in {
     nixosConfigurations = {
-      home_computer = mkSystem "home_computer" {
+      homecomputer = mkSystem "homecomputer" {
         system = "x86_64-linux";
         disko = true;
 
@@ -40,8 +40,8 @@
             config,
             ...
           }: {
-            virtualisation.vmware.host.enable = true;
             environment.systemPackages = with pkgs; [
+              docker
               krita
               modrinth-app
               inkscape

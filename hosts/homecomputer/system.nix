@@ -1,6 +1,6 @@
-let
+{pkgs, ...}: let
   networks = {
-    "snalltaget"={};
+    "snalltaget" = {};
     "Cinderblock_5G" = {
       pskRaw = "ext:PSK_CINDERBLOCK_5G";
       priority = 0;
@@ -44,13 +44,19 @@ let
   };
 in {
   config.modules = {
+    declarative-password.enable = true;
     wifi = {
       enable = true;
       networks = networks;
     };
-    steam = {enable = true;};
+    steam = {
+      enable = true;
+      gamemode = true;
+      extraPackages = [pkgs.mangohud pkgs.proton-ge-bin];
+    };
     display-manager = {
       enable = true;
+      monitors = ["DP-2,1920x1080@60.00,0x0,0.5" "HDMI-A-1,1920x1080@60.00,3840x960,1"];
     };
     #plasma.enable=true;
   };

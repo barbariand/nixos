@@ -2,8 +2,14 @@
   config.modules = {
     # gui
     hyprland = {
+      live_wallpaper = {
+        enable = true;
+        default = "~/wallpaper.mp4";
+        monitors = ["DP-2" "HDMI-A-1"];
+      };
       enable = true;
-      monitors = ["eDP-1,1920x1200@59.99900,0x0,1"];
+      monitors = ["DP-2,1920x1080@60.00,0x0,0.5" "HDMI-A-1,1920x1080@60.00,3840x960,1"];
+      # monitors = [",highres,auto,1"];
       browser = pkgs.zen-browser;
     };
     dunst.enable = false;
