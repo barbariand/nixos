@@ -57,7 +57,7 @@
       };
       lenovo-yoga = mkSystem "lenovo-yoga" {
         system = "x86_64-linux";
-        disko = true;
+        disko = false;
 
         extraModules = [
           ({
