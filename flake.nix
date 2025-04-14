@@ -44,13 +44,9 @@
               docker
               krita
               modrinth-app
-              inkscape
               whatsapp-for-linux
-              sage
               protontricks
-              lutris
-              freecad-wayland
-              jujutsu
+              unstable.jujutsu
             ];
           })
         ];
@@ -75,7 +71,7 @@
               protontricks
               lutris
               freecad-wayland
-              jujutsu
+              unstable.jujutsu
             ];
           })
         ];

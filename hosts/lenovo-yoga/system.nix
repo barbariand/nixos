@@ -1,6 +1,7 @@
 let
   networks = {
-    "snalltaget"={};
+    "snalltaget" = {};
+    "Furusund Guest" = {};
     "Cinderblock_5G" = {
       pskRaw = "ext:PSK_CINDERBLOCK_5G";
       priority = 0;
