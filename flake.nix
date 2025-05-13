@@ -63,14 +63,9 @@
           }: {
             virtualisation.vmware.host.enable = true;
             environment.systemPackages = with pkgs; [
-              krita
-              modrinth-app
-              inkscape
               whatsapp-for-linux
               sage
               protontricks
-              lutris
-              freecad-wayland
               unstable.jujutsu
             ];
           })
