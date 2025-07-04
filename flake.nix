@@ -54,9 +54,6 @@
                 };
               })
             ];
-            virtualisation.virtualbox.host.enableExtensionPack = true;
-            users.extraGroups.vboxusers.members = ["cindy"];
-            virtualisation.virtualbox.host.enable = true;
             environment.systemPackages = with pkgs;
               [
                 itch
@@ -81,9 +78,9 @@
             config,
             ...
           }: {
-            virtualisation.virtualbox.host.enableExtensionPack = true;
-            users.extraGroups.vboxusers.members = ["cindy"];
-            virtualisation.virtualbox.host.enable = true;
+            #virtualisation.virtualbox.host.enableExtensionPack = true;
+            #users.extraGroups.vboxusers.members = ["cindy"];
+            #virtualisation.virtualbox.host.enable = true;
             environment.systemPackages = with pkgs;
               [
                 sage
