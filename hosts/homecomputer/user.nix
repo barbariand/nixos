@@ -3,6 +3,7 @@
     # gui
     hyprland = {
       live_wallpaper = {
+        auto_start = true;
         enable = true;
         default = "~/wallpaper.mp4";
         monitors = ["DP-2" "HDMI-A-1"];
@@ -16,6 +17,7 @@
     swaync.enable = true;
     waybar.enable = true;
     zen.enable = true;
+    ghostty.enable = true;
     # applets
     fuzzel.enable = true;
     chromium.enable = true;
@@ -27,7 +29,6 @@
     git.enable = true;
     pass.enable = true;
     tmux.enable = true;
-
     # system
     xdg = {
       enable = true;

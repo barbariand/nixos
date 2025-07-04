@@ -1,6 +1,6 @@
 let
-  github = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWc4yBF7ji/ceoR322U5NHxIcxkFLqQJFAHR25Q0F2i";
-  lenovo = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAOnR00BoyVKj+4mWb2UH1IwfMYHkvlwfu1f2R2STPst";
+  github = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIdaQe2WbF2N7kEzrcz2JNb7C+LdwVdnIH2L8Ok5Zfqh";
+  lenovo = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICsK1mn4aCbtTviKH9EgYBdQkue4NkiLyP2eiMKbqr31";
   home_computer = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKAtTqXhEwlDPmpAQuShQlprHQn6iD4ODnzFEaRTtwUC";
 in {
   users = [lenovo home_computer github];
