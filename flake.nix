@@ -28,7 +28,7 @@
       outPath = self.outPath;
       wallpaper = ./background.jpg;
     };
-    common_packages = {pkgs}: with pkgs; [nixos-anywhere unstable.jujutsu docker];
+    common_packages = {pkgs}: with pkgs; [nh monocraft nixos-anywhere unstable.jujutsu docker];
     common_de_packages = {pkgs}:
       with pkgs; [
         whatsapp-for-linux

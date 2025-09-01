@@ -1,13 +1,16 @@
 let
   networks = {
-    "snalltaget" = {};
-    "Furusund Guest" = {};
+    "CindyPhone" = {
+      priority = 0;
+      pskRaw = "ext:PSK_CINDYPHONE";
+    };
+    "Dantes pixel" = {
+      priority = 0;
+      pskRaw = "ext:PSK_CINDYPHONE";
+    };
     "Cinderblock_5G" = {
       pskRaw = "ext:PSK_CINDERBLOCK_5G";
-      priority = 0;
-    };
-    "Guest HvK/Skandion 5" = {
-      pskRaw = "ext:PSK_GUEST_HVK";
+      priority = 1;
     };
     "eduroam" = {
       auth = ''
@@ -21,13 +24,21 @@ let
       '';
       priority = 1;
     };
-    "CindyPhone" = {
+    "FamNilsson" = {
       priority = 2;
-      pskRaw = "ext:PSK_CINDYPHONE";
+      pskRaw = "ext:PSK_FAMNILSSON";
     };
-    "Dantes pixel" = {
-      priority = 1;
-      pskRaw = "ext:PSK_CINDYPHONE";
+    "Barolo5" = {
+      pskRaw = "ext:PSK_BAROLO";
+      priority = 2;
+    };
+    "3MobilWiFi-4G-842A" = {
+      pskRaw="ext:PSK_MORFAR";
+      priority = 2;
+    };
+    "Guest HvK/Skandion 5" = {
+      pskRaw = "ext:PSK_GUEST_HVK";
+      priority = 3;
     };
     "rbguest" = {
       priority = 3;
@@ -35,16 +46,16 @@ let
     "SJ" = {
       priority = 3;
     };
-    "FamNilsson" = {
-      priority = 0;
-      pskRaw = "ext:PSK_FAMNILSSON";
+    "snalltaget" = {
+      priority = 3;
     };
-    "Barolo5" = {
-      pskRaw = "ext:PSK_BAROLO";
+    "Furusund Guest" = {
+      priority = 3;
     };
   };
 in {
   config.modules = {
+    declarative-password.enable = true;
     wifi = {
       enable = true;
       networks = networks;

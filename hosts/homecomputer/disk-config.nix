@@ -3,7 +3,7 @@
     disk = {
       main = {
         type = "disk";
-        device = "/dev/sda";
+        device = "/dev/disk/by-id/wwn-0x5002538d40cf2003";
         content = {
           type = "gpt";
           partitions = {
@@ -27,9 +27,9 @@
           };
         };
       };
-      games={
+      games = {
         type = "disk";
-        device = "/dev/nvme0n1";
+        device = "/dev/disk/by-id/nvme-eui.00000000000000000026b7381c5c1f05";
         content = {
           type = "gpt";
           partitions = {
