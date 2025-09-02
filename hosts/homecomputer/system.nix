@@ -1,9 +1,10 @@
 {pkgs, ...}: {
   config.modules = {
-    declarative-password.enable = false;
+    declarative-password.enable = true;
     steam = {
       enable = true;
       gamemode = true;
+      gamescope = true;
       extraPackages = [pkgs.mangohud pkgs.proton-ge-bin];
     };
     display-manager = {

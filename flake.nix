@@ -31,6 +31,7 @@
     common_packages = {pkgs}: with pkgs; [nh monocraft nixos-anywhere unstable.jujutsu docker];
     common_de_packages = {pkgs}:
       with pkgs; [
+        gajim
         whatsapp-for-linux
       ];
   in {
@@ -56,7 +57,6 @@
             ];
             environment.systemPackages = with pkgs;
               [
-                itch
                 heroic
                 krita
                 modrinth-app
