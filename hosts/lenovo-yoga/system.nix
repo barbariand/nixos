@@ -1,16 +1,53 @@
-let
+{pkgs, ...}: let
+  PHONE = 1000;
+  TRUSTED = 900;
+  TRAVELING = 200;
+  EDUROAM = 0;
   networks = {
     "CindyPhone" = {
-      priority = 0;
+      priority = PHONE;
       pskRaw = "ext:PSK_CINDYPHONE";
     };
-    "Dantes pixel" = {
-      priority = 0;
-      pskRaw = "ext:PSK_CINDYPHONE";
+    "#ROOT > (BITS & BOSS)" = {
+      pskRaw = "ext:PSK_ROOTRUMMET";
+      priority = TRUSTED;
     };
+
     "Cinderblock_5G" = {
       pskRaw = "ext:PSK_CINDERBLOCK_5G";
-      priority = 1;
+      priority = TRUSTED;
+    };
+    "FamNilsson" = {
+      priority = TRUSTED;
+      pskRaw = "ext:PSK_FAMNILSSON";
+    };
+    "Barolo5" = {
+      pskRaw = "ext:PSK_BAROLO";
+      priority = TRUSTED;
+    };
+    "3MobilWiFi-4G-842A" = {
+      pskRaw = "ext:PSK_MORFAR";
+      priority = TRUSTED;
+    };
+    "Guest HvK/Skandion 5" = {
+      pskRaw = "ext:PSK_GUEST_HVK";
+      priority = TRAVELING;
+    };
+    "rbguest" = {
+      priority = TRAVELING;
+    };
+    "SJ" = {
+      priority = TRAVELING;
+    };
+    "snalltaget" = {
+      priority = TRAVELING;
+    };
+    "Furusund Guest" = {
+      priority = TRAVELING;
+    };
+
+    "Kalmarlanstrafik" = {
+      priority = TRAVELING;
     };
     "eduroam" = {
       auth = ''
@@ -22,35 +59,7 @@ let
         password=ext:PSK_EDUROAM
         phase2="auth=MSCHAPV2"
       '';
-      priority = 1;
-    };
-    "FamNilsson" = {
-      priority = 2;
-      pskRaw = "ext:PSK_FAMNILSSON";
-    };
-    "Barolo5" = {
-      pskRaw = "ext:PSK_BAROLO";
-      priority = 2;
-    };
-    "3MobilWiFi-4G-842A" = {
-      pskRaw="ext:PSK_MORFAR";
-      priority = 2;
-    };
-    "Guest HvK/Skandion 5" = {
-      pskRaw = "ext:PSK_GUEST_HVK";
-      priority = 3;
-    };
-    "rbguest" = {
-      priority = 3;
-    };
-    "SJ" = {
-      priority = 3;
-    };
-    "snalltaget" = {
-      priority = 3;
-    };
-    "Furusund Guest" = {
-      priority = 3;
+      priority = EDUROAM;
     };
   };
 in {
@@ -60,7 +69,12 @@ in {
       enable = true;
       networks = networks;
     };
-    steam = {enable = true;};
+    steam = {
+      enable = true;
+      gamemode = true;
+      gamescope = true;
+      extraPackages = [pkgs.gamescope pkgs.mangohud pkgs.proton-ge-bin];
+    };
     display-manager = {
       enable = true;
     };

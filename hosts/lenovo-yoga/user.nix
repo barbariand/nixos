@@ -4,6 +4,10 @@
     hyprland = {
       enable = true;
       monitors = ["eDP-1,1920x1200@59.99900,0x0,1"];
+      live_wallpaper = {
+        enable = true;
+        monitors = ["eDP-1,1920x1200@59.99900,0x0,1"];
+      };
       browser = pkgs.zen-browser;
     };
     dunst.enable = false;

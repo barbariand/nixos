@@ -15,13 +15,35 @@
   boot.initrd.availableKernelModules = ["nvme" "xhci_pci" "thunderbolt" "usb_storage" "sd_mod"];
   boot.initrd.kernelModules = [];
   boot.kernelModules = ["kvm-amd" "amdgpu"];
-  boot.extraModulePackages = [];
+  services.upower.enable = true;
+  boot.loader.grub.splashImage = ./../../background.jpg;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
+  hardware.xpadneo.enable = true;
+  hardware.xone.enable = true;
+  services.udev.packages = [pkgs.game-devices-udev-rules];
   boot.kernelParams = [
     "usbcore.autosuspend=-1"
   ];
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
+  };
+  zramSwap.enable = true;
+  zramSwap.priority = 100; # Highest priority
+  zramSwap.memoryPercent = 50; # Uses up to 8GB of RAM for compression
+  swapDevices = [
+    {device = "/dev/disk/by-uuid/3a0d3bbd-adce-48e8-ab46-dc0083044b2b";}
+    {
+      device = "/var/lib/swapfile";
+      size = 16384;
+      priority = 5;
+    }
+  ];
+  boot.kernel.sysctl = {
+    # Don't swap aggressively; stay in RAM/zRam as long as possible
+    "vm.swappiness" = 10;
+    # Improve file system cache pressure
+    "vm.vfs_cache_pressure" = 50;
   };
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.systemd-boot.enable = true;
@@ -35,4 +57,9 @@
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+  services.udev.extraRules = ''
+    # wierd xpad fix
+    SUBSYSTEM=="usb", ATTR{idVendor}=="2dc8", ATTR{idProduct}=="6013", MODE="0660", GROUP="users"
+        KERNEL=="ttyACM0", MODE="0777"
+  '';
 }
