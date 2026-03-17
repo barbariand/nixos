@@ -9,7 +9,7 @@
         monitors = ["DP-2" "HDMI-A-1"];
       };
       enable = true;
-      monitors = ["DP-2,1920x1080@60.00,0x0,0.5" "HDMI-A-1,1920x1080@60.00,3840x960,1"];
+      monitors = ["HDMI-A-1,3840x2160@30.00,0x0,1" "DP-2,1920x1080@60.00,3840x1088,1"];
       # monitors = [",highres,auto,1"];
       browser = pkgs.zen-browser;
     };
@@ -22,7 +22,6 @@
     fuzzel.enable = true;
     chromium.enable = true;
     social.enable = true;
-
     # cli
     nvim.enable = true;
     fish.enable = true;

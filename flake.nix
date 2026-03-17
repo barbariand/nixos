@@ -24,7 +24,26 @@
       outPath = self.outPath;
       wallpaper = ./background.jpg;
     };
-    common_packages = {pkgs}: with pkgs; [gimp bitwarden-cli protonvpn-gui unzip bruno hyprmon moonlight-qt libreoffice inkscape evtest unstable.signal-desktop nh monocraft nixos-anywhere unstable.jujutsu docker docker-compose];
+    common_packages = {pkgs}:
+      with pkgs; [
+        hyprmon
+        moonlight-qt
+        libreoffice
+        inkscape
+        evtest
+        unstable.signal-desktop
+        nh
+        monocraft
+        nixos-anywhere
+        unstable.jujutsu
+        docker
+        gimp
+        bitwarden-cli
+        protonvpn-gui
+        unzip
+        bruno
+        docker-compose
+      ];
     common_de_packages = {pkgs}:
       with pkgs; [
         gajim
@@ -68,7 +87,6 @@
                 krita
                 modrinth-app
                 opentabletdriver
-                wacomtablet
               ]
               ++ common_packages {inherit pkgs;} ++ common_de_packages {inherit pkgs;};
             security.polkit.enable = true;
