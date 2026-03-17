@@ -24,7 +24,7 @@
       outPath = self.outPath;
       wallpaper = ./background.jpg;
     };
-    common_packages = {pkgs}: with pkgs; [hyprmon moonlight-qt libreoffice inkscape evtest unstable.signal-desktop nh monocraft nixos-anywhere unstable.jujutsu docker];
+    common_packages = {pkgs}: with pkgs; [gimp bitwarden-cli protonvpn-gui unzip bruno hyprmon moonlight-qt libreoffice inkscape evtest unstable.signal-desktop nh monocraft nixos-anywhere unstable.jujutsu docker docker-compose];
     common_de_packages = {pkgs}:
       with pkgs; [
         gajim
@@ -87,6 +87,12 @@
           }: {
             #virtualisation.virtualbox.host.enableExtensionPack = true;
             #users.extraGroups.vboxusers.members = ["cindy"];
+            virtualisation.docker.enable = true;
+            users.extraGroups.docker.members = ["cindy"];
+            virtualisation.docker.rootless = {
+              enable = true;
+              setSocketVariable = true;
+            };
             #virtualisation.virtualbox.host.enable = true;
             environment.systemPackages = with pkgs;
               [

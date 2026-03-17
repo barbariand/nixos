@@ -64,6 +64,7 @@
   };
 in {
   config.modules = {
+    podman.enable = false;
     declarative-password.enable = true;
     wifi = {
       enable = true;
