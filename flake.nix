@@ -24,6 +24,15 @@
       outPath = self.outPath;
       wallpaper = ./background.jpg;
     };
+    wgConfig = {pkgs}:
+      (import ./lib/wireguard-network.nix {
+        lib = sensible-nix.nixpkgs.lib;
+        inherit pkgs;
+      }) {
+        serverName = "raspberrypi";
+        clientNames = ["homecomputer" "lenovo-yoga"];
+        externalDomain = "simd.me";
+      };
     common_packages = {pkgs}:
       with pkgs; [
         hyprmon
@@ -83,6 +92,7 @@
             ];
             environment.systemPackages = with pkgs;
               [
+                wgConfig.homecomputer
                 heroic
                 krita
                 modrinth-app
@@ -103,23 +113,38 @@
             config,
             ...
           }: {
-            #virtualisation.virtualbox.host.enableExtensionPack = true;
-            #users.extraGroups.vboxusers.members = ["cindy"];
             virtualisation.docker.enable = true;
             users.extraGroups.docker.members = ["cindy"];
             virtualisation.docker.rootless = {
               enable = true;
               setSocketVariable = true;
             };
-            #virtualisation.virtualbox.host.enable = true;
             environment.systemPackages = with pkgs;
               [
+                wgConfig
+                {inherit pkgs;}.lenovo-yoga
                 sage
               ]
               ++ common_packages {inherit pkgs;} ++ common_de_packages {inherit pkgs;};
           })
         ];
       };
+    };
+    raspberrypi = mkSystem "raspberrypi" {
+      system = "aarch64-linux";
+      disko = false;
+      extraModules = [
+        (
+          {pkgs, ...}: {
+            environment.systemPackages = [
+              wgConfig
+              {inherit pkgs;}.raspberrypi
+              ./hosts/raspberrypi/system.nix
+              ./hosts/raspberrypi/user.nix
+            ];
+          }
+        )
+      ];
     };
   };
 }

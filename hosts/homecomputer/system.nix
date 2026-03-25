@@ -6,7 +6,6 @@
     steam = {
       enable = true;
       gamemode = true;
-      gamescope = true;
       extraPackages = [pkgs.mangohud pkgs.proton-ge-bin];
     };
     display-manager = {
