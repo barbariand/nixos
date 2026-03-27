@@ -12,10 +12,49 @@
   };
   outputs = {
     self,
+    nixpkgs,
     sensible-nix,
     nvim,
     ...
-  }: let
+  } @ inputs: let
+    lib = nixpkgs.lib;
+
+    clusterData = {
+      raspberrypi = {
+        ip = "10.0.0.1";
+        id = "@PI_ST_ID@";
+      };
+      homecomputer = {
+        ip = "10.0.0.2";
+        id = "@HOME_ST_ID@";
+      };
+      "lenovo-yoga" = {
+        ip = "10.0.0.3";
+        id = "@YOGA_ST_ID@";
+      };
+    };
+    keys = import ./ssh {};
+
+    #tunnels = import ./lib/wireguard.nix {
+    # inherit lib;
+    #   port = 51820;
+    #   interface = "wlan0";
+    #  endpoint = "simd.me";
+    # privateKeyFile = "/etc/wireguard/private.key";
+    # publicKey = keys.raspberrypi;
+    # peers = {
+    #   homecomputer = keys.home_computer;
+    #   "lenovo-yoga" = keys.lenovo;
+    # };
+    # serverName = "raspberrypi";
+    #};
+
+    syncthingNodes = import ./lib/syncthing.nix {
+      inherit lib;
+      clusterMap = clusterData;
+      user = "cindy";
+      syncPath = "/etc/nixos";
+    };
     mkSystem = sensible-nix.nixosModules.mkSystem {
       user = "cindy";
       email = "cindy@simd.me";
@@ -24,15 +63,6 @@
       outPath = self.outPath;
       wallpaper = ./background.jpg;
     };
-    wgConfig = {pkgs}:
-      (import ./lib/wireguard-network.nix {
-        lib = sensible-nix.nixpkgs.lib;
-        inherit pkgs;
-      }) {
-        serverName = "raspberrypi";
-        clientNames = ["homecomputer" "lenovo-yoga"];
-        externalDomain = "simd.me";
-      };
     common_packages = {pkgs}:
       with pkgs; [
         hyprmon
@@ -65,6 +95,9 @@
         disko = true;
 
         extraModules = [
+          #tunnels.homecomputer
+
+          #syncthingNodes."homecomputer"
           ({
             pkgs,
             config,
@@ -79,7 +112,6 @@
             ];
             fonts.packages = with pkgs; [
               corefonts
-
               comfortaa #
               (google-fonts.override {
                 fonts = [
@@ -92,7 +124,6 @@
             ];
             environment.systemPackages = with pkgs;
               [
-                wgConfig.homecomputer
                 heroic
                 krita
                 modrinth-app
@@ -108,6 +139,9 @@
         disko = true;
 
         extraModules = [
+          # tunnels."lenovo-yoga"
+
+          # syncthingNodes."lenovo-yoga"
           ({
             pkgs,
             config,
@@ -121,30 +155,43 @@
             };
             environment.systemPackages = with pkgs;
               [
-                wgConfig
-                {inherit pkgs;}.lenovo-yoga
                 sage
               ]
               ++ common_packages {inherit pkgs;} ++ common_de_packages {inherit pkgs;};
           })
         ];
       };
-    };
-    raspberrypi = mkSystem "raspberrypi" {
-      system = "aarch64-linux";
-      disko = false;
-      extraModules = [
-        (
-          {pkgs, ...}: {
-            environment.systemPackages = [
-              wgConfig
-              {inherit pkgs;}.raspberrypi
-              ./hosts/raspberrypi/system.nix
-              ./hosts/raspberrypi/user.nix
+
+      raspberrypi = mkSystem "raspberrypi" {
+        system = "aarch64-linux";
+        disko = false;
+        extraModules = [
+          ({
+            pkgs,
+            config,
+            ...
+          }: {
+            nixpkgs.overlays = [
+              (final: prev: {
+                python312Packages = prev.python312Packages.override {
+                  overrides = pyFinal: pyPrev: {
+                    whatthepatch = pyPrev.whatthepatch.overridePythonAttrs (old: {
+                      doCheck = false;
+                    });
+                    python-lsp-server = pyPrev.python-lsp-server.overridePythonAttrs (old: {
+                      doCheck = false;
+                    });
+                  };
+                };
+              })
             ];
-          }
-        )
-      ];
+          })
+          #syncthingNodes."raspberrypi"
+          #tunnels.raspberrypi
+          inputs.hardware.nixosModules.raspberry-pi-4
+          "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
+        ];
+      };
     };
   };
 }
