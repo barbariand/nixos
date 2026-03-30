@@ -3,58 +3,39 @@
 */
 {
   lib,
-  clusterMap, # { hostname = { ip, id }; }
-  user ? "cindy",
-  syncPath ? "/etc/nixos",
+  clusterMap, # { hostname = id; }
+  user,
+  sync_folders,
   tunnel ? "wg0",
 }:
 assert lib.asserts.assertMsg (builtins.isAttrs clusterMap) "clusterMap must be an attribute set.";
-assert lib.asserts.assertMsg (builtins.isString user) "user must be a string.";
-assert lib.asserts.assertMsg (builtins.isString syncPath) "syncPath must be a path string."; let
-  genNode = host: params: {
-    services.syncthing = {
-      enable = true;
-      inherit user;
-      dataDir = "/home/${user}/syncthing";
-      guiAddress = "${params.ip}:8384";
+assert lib.asserts.assertMsg (builtins.isString user) "user must be a string."; {
+  # Brandvägg isolerad till wireguard-interfacet
+  networking.firewall.interfaces.${tunnel}.allowedTCPPorts = [22000 8384];
+  home-manager.users.${user}.services.syncthing = {
+    enable = true;
+    inherit user;
 
-      settings = {
-        options = {
-          listenAddresses = ["tcp://${params.ip}:22000"];
-          localAnnounceEnabled = false;
-          globalAnnounceEnabled = false;
-          relaysEnabled = false;
-        };
+    settings = rec {
+      devices =
+        clusterMap;
 
-        # Definiera alla enheter i klustret
-        devices =
-          lib.mapAttrs (name: cfg: {
-            id = cfg.id;
-            addresses = ["tcp://${cfg.ip}:22000"];
-          })
-          clusterMap;
+      folders =
+        lib.mapAttrs (name: cfg: {
+          label = cfg.label;
+          id = cfg.id;
+          path = cfg.path;
 
-        # Konfigurera mappen som ska delas
-        folders."nixos-config" = {
-          path = syncPath;
-          id = "nixos-cluster-config";
-          # Dela med alla utom sig själv
-          devices = builtins.attrNames (builtins.removeAttrs clusterMap [host]);
-          versioning = {
-            type = "simple";
-            params.keep = "5";
-          };
-        };
-      };
+          fsWatcherEnabled = true;
+          ignorePerms = true;
+          type = "sendreceive";
+          devices = builtins.attrNames devices;
+        })
+        folders;
     };
-
-    # Rättigheter för att tillåta synk av systemfiler
-    systemd.tmpfiles.rules = [
-      "d ${syncPath} 0775 root ${user} -"
-    ];
-
-    # Brandvägg isolerad till wireguard-interfacet
-    networking.firewall.interfaces.${tunnel}.allowedTCPPorts = [22000 8384];
   };
-in
-  lib.mapAttrs (name: params: genNode name params) clusterMap
+
+  # Rättigheter för att tillåta synk av systemfiler
+
+  systemd.tmpfiles.rules = ["d /var/lib/syncthing 774 root syncthing"];
+}

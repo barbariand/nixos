@@ -5,5 +5,6 @@
     fish.enable = true;
     git.enable = true;
     tmux.enable = true;
+    packages.enable = true;
   };
 }

@@ -18,74 +18,71 @@
     ...
   } @ inputs: let
     lib = nixpkgs.lib;
+    user = "cindy";
+    email = "cindy@simd.me";
+    full-name = "Cindy Nilsson";
 
+    mkSystem = sensible-nix.nixosModules.mkSystem {
+      inherit user email full-name;
+      nvim-config = nvim;
+      outPath = self.outPath;
+      wallpaper = ./background.jpg;
+    };
     clusterData = {
       raspberrypi = {
-        ip = "10.0.0.1";
         id = "@PI_ST_ID@";
       };
       homecomputer = {
-        ip = "10.0.0.2";
         id = "@HOME_ST_ID@";
       };
       "lenovo-yoga" = {
-        ip = "10.0.0.3";
         id = "@YOGA_ST_ID@";
       };
     };
     keys = import ./ssh {};
 
-    #tunnels = import ./lib/wireguard.nix {
-    # inherit lib;
-    #   port = 51820;
-    #   interface = "wlan0";
-    #  endpoint = "simd.me";
-    # privateKeyFile = "/etc/wireguard/private.key";
-    # publicKey = keys.raspberrypi;
-    # peers = {
-    #   homecomputer = keys.home_computer;
-    #   "lenovo-yoga" = keys.lenovo;
-    # };
-    # serverName = "raspberrypi";
-    #};
+    tunnels = import ./lib/wireguard.nix {
+      inherit lib;
+      port = 51820;
+      interface = "wlan0";
+      endpoint = "simd.me";
+      privateKeyFile = "/etc/wireguard/private.key";
+      # publicKey = keys.raspberrypi;
+      ipBase = "10.55.0.1";
+      peers = {
+        # homecomputer = keys.home_computer;
+        # "lenovo-yoga" = keys.lenovo;
+      };
+      serverName = "raspberrypi";
+    };
 
     syncthingNodes = import ./lib/syncthing.nix {
-      inherit lib;
+      inherit lib user;
       clusterMap = clusterData;
-      user = "cindy";
-      syncPath = "/etc/nixos";
-    };
-    mkSystem = sensible-nix.nixosModules.mkSystem {
-      user = "cindy";
-      email = "cindy@simd.me";
-      full-name = "Cindy Nilsson";
-      nvim-config = nvim;
-      outPath = self.outPath;
-      wallpaper = ./background.jpg;
     };
     common_packages = {pkgs}:
       with pkgs; [
+        evtest
+        nh
+        nixos-anywhere
+        unstable.jujutsu
+        docker
+        bitwarden-cli
+        unzip
+        docker-compose
+      ];
+    common_de_packages = {pkgs}:
+      with pkgs; [
+        unstable.signal-desktop
+        monocraft
+        bruno
+        rpi-imager
+        gimp
+        protonvpn-gui
         hyprmon
         moonlight-qt
         libreoffice
         inkscape
-        evtest
-        unstable.signal-desktop
-        nh
-        monocraft
-        nixos-anywhere
-        unstable.jujutsu
-        docker
-        gimp
-        bitwarden-cli
-        protonvpn-gui
-        unzip
-        bruno
-        docker-compose
-        rpi-imager
-      ];
-    common_de_packages = {pkgs}:
-      with pkgs; [
         gajim
         wasistlos
       ];
@@ -96,9 +93,9 @@
         disko = true;
 
         extraModules = [
-          #tunnels.homecomputer
+          # tunnels.homecomputer
 
-          #syncthingNodes."homecomputer"
+          ./lib/syncthing.nix
           ({
             pkgs,
             config,
@@ -140,9 +137,9 @@
         disko = true;
 
         extraModules = [
-          # tunnels."lenovo-yoga"
+          #tunnels."lenovo-yoga"
 
-          # syncthingNodes."lenovo-yoga"
+          ./lib/syncthing.nix
           ({
             pkgs,
             config,
@@ -161,7 +158,7 @@
               enable = true;
               setSocketVariable = true;
             };
-            environment.systemPackages = with pkgs;
+            environment.systempackages = with pkgs;
               [
                 heroic
                 sage
@@ -182,21 +179,34 @@
           }: {
             nixpkgs.overlays = [
               (final: prev: {
-                python312Packages = prev.python312Packages.override {
-                  overrides = pyFinal: pyPrev: {
-                    whatthepatch = pyPrev.whatthepatch.overridePythonAttrs (old: {
-                      doCheck = false;
-                    });
-                    python-lsp-server = pyPrev.python-lsp-server.overridePythonAttrs (old: {
-                      doCheck = false;
-                    });
-                  };
+                unstable = import inputs.nixpkgs-unstable {
+                  system = prev.system;
+                  config = prev.config; # Inherit allowUnfree and other settings
+                  overlays = [
+                    (uFinal: uPrev: {
+                      python312Packages = uPrev.python312Packages.override {
+                        overrides = pyFinal: pyPrev: {
+                          python-lsp-server = pyPrev.python-lsp-server.overridePythonAttrs (old: {
+                            doCheck = false;
+                          });
+                          whatthepatch = pyPrev.whatthepatch.overridePythonAttrs (old: {
+                            doCheck = false;
+                          });
+                        };
+                      };
+                    })
+                  ];
                 };
               })
             ];
+
+            environment.systempackages = with pkgs;
+              [
+              ]
+              ++ common_packages {inherit pkgs;};
           })
-          #syncthingNodes."raspberrypi"
-          #tunnels.raspberrypi
+          ./lib/syncthing.nix
+          tunnels.raspberrypi
           inputs.hardware.nixosModules.raspberry-pi-4
           "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
         ];
