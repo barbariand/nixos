@@ -49,6 +49,10 @@
     "Kalmarlanstrafik" = {
       priority = TRAVELING;
     };
+    "#Telia-3C92E0" = {
+      pskRaw = "ext:PSK_ANDERS";
+      priority = TRUSTED;
+    };
     "eduroam" = {
       auth = ''
         key_mgmt=WPA-EAP

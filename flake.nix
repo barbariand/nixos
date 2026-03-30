@@ -82,6 +82,7 @@
         unzip
         bruno
         docker-compose
+        rpi-imager
       ];
     common_de_packages = {pkgs}:
       with pkgs; [
@@ -147,6 +148,13 @@
             config,
             ...
           }: {
+            nixpkgs.overlays = [
+              (finalPkgs: previousPkgs: {
+                heroic = previousPkgs.heroic.override {
+                  extraPkgs = drvPkgs: with drvPkgs; [gamescope];
+                };
+              })
+            ];
             virtualisation.docker.enable = true;
             users.extraGroups.docker.members = ["cindy"];
             virtualisation.docker.rootless = {
@@ -155,6 +163,7 @@
             };
             environment.systemPackages = with pkgs;
               [
+                heroic
                 sage
               ]
               ++ common_packages {inherit pkgs;} ++ common_de_packages {inherit pkgs;};
