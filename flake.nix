@@ -20,7 +20,6 @@
     experimentalModule = {...}: {
       nix.settings.experimental-features = lib.mkForce ["nix-command" "flakes" "pipe-operators"];
     };
-    nixpkgs.nix.settings.experimental-features = ["nix-command" "flakes"];
     lib = nixpkgs.lib;
     user = "cindy";
     email = "cindy@simd.me";
@@ -33,6 +32,7 @@
       outPath = self.outPath;
       wallpaper = ./background.jpg;
     };
+
     clusterMap = {
       raspberrypi = {
         id = "@PI_ST_ID@";
@@ -50,26 +50,27 @@
     };
     keys = import ./keys;
 
-    # tunnels = import ./lib/wireguard.nix {
-    #   inherit lib interface;
-    #   port = 51820;
-    #   endpoint = "simd.me";
-    #   privateKeyFile = "/etc/wireguard/private.key";
-    #   # publicKey = keys.raspberrypi;
-    #   ipBase = "10.55.0.1";
-    #   peers = {
-    #     # homecomputer = keys.home_computer;
-    #     # "lenovo-yoga" = keys.lenovo;
-    #   };
-    #   serverName = "raspberrypi";
-    # };
+    tunnels = import ./lib/wireguard.nix {
+      inherit lib interface;
+      port = 51820;
+      endpoint = "simd.me";
+      privateKeyFile = "/etc/wireguard/private.key";
+      # publicKey = keys.raspberrypi;
+      ipBase = "10.55.0.1";
+      peers = {
+        # homecomputer = keys.home_computer;
+        # "lenovo-yoga" = keys.lenovo;
+      };
+      serverName = "raspberrypi";
+    };
 
     syncthingModules = import ./lib/syncthing.nix {
       inherit clusterMap interface;
       syncedFolders = {
-        label = "nixos-config";
-        id = "x4k9z-q1p2m";
-        path = "/etc/nixos";
+        "nixos-config" = {
+          id = "x4k9z-q1p2m";
+          path = "/etc/nixos";
+        };
       };
     };
     common_packages = {pkgs}:
@@ -172,7 +173,7 @@
               enable = true;
               setSocketVariable = true;
             };
-            environment.systempackages = with pkgs;
+            environment.systemPackages = with pkgs;
               [
                 heroic
                 sage
@@ -215,13 +216,13 @@
               })
             ];
 
-            environment.systempackages = with pkgs;
+            environment.systemPackages = with pkgs;
               [
               ]
               ++ common_packages {inherit pkgs;};
           })
           syncthingModules
-          # tunnels.raspberrypi
+          tunnels.raspberrypi
           inputs.hardware.nixosModules.raspberry-pi-4
           "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
         ];

@@ -20,7 +20,6 @@ assert lib.asserts.assertMsg (builtins.isString user) "user must be a string."; 
     overrideFolders = true;
 
     overrideDevices = true;
-    inherit user;
 
     settings = rec {
       devices =
@@ -28,7 +27,7 @@ assert lib.asserts.assertMsg (builtins.isString user) "user must be a string."; 
 
       folders =
         lib.mapAttrs (name: cfg: {
-          label = cfg.label;
+          label = name;
           id = cfg.id;
           path = cfg.path;
 
@@ -37,7 +36,7 @@ assert lib.asserts.assertMsg (builtins.isString user) "user must be a string."; 
           type = "sendreceive";
           devices = builtins.attrNames devices;
         })
-        folders;
+        syncedFolders;
     };
   };
 
