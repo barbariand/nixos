@@ -106,18 +106,19 @@ assert lib.asserts.assertMsg (builtins.isString interface) "The wifi interface y
 assert lib.asserts.assertMsg (builtins.isAttrs peers && (lib.lists.all (v: builtins.isString v) <| builtins.attrValues peers)) "peers should be an set with a name and a public key (string).";
 assert lib.asserts.assertMsg (builtins.isString ipBase && builtins.match "^[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+$" ipBase != null) "The ipBase should be an ipv4 address.";
 assert lib.asserts.assertMsg ((lib.lists.count (v: true) <| builtins.attrNames peers) > 0 -> builtins.isString publicKey) "Server public key is required for peers"; let
-  ipBase' = i: let
-    rawValues = lib.strings.splitString "." ipBase;
-    values = map (section: lib.strings.toInt section) rawValues;
-  in
-    assert lib.lists.count (v: true) values == 4;
-    assert lib.lists.all (v: v < 255) values;
-    # FIXME: allow handling more than 253 peers on the tunnel network.
-    assert lib.asserts.assertMsg ((lib.lists.count (v: true) <| builtins.attrNames peers) < (253 - builtins.elemAt values 3)) "Too many peers, can only handle 253 peers per tunnel.";
-      builtins.elemAt values i;
-  peerIPs = builtins.attrNames peers |> lib.lists.count (v: true) |> builtins.genList (i: "${builtins.toString <| ipBase' 0}.${builtins.toString <| ipBase' 1}.${builtins.toString <| ipBase' 2}.${builtins.toString <| (ipBase' 3) + i + 1}/32");
+  ipParts = lib.strings.splitString "." ipBase;
+  ipBase' = i: lib.strings.toInt (builtins.elemAt ipParts i);
+
+  tunnelSubnet = "${builtins.toString (ipBase' 0)}.${builtins.toString (ipBase' 1)}.${builtins.toString (ipBase' 2)}.0/24";
+
+  peerIPs =
+    builtins.attrNames peers
+    |> lib.lists.count (v: true)
+    |> builtins.genList (i: "${builtins.toString (ipBase' 0)}.${builtins.toString (ipBase' 1)}.${builtins.toString (ipBase' 2)}.${builtins.toString (ipBase' 3 + i + 1)}/32");
+
   server = {
     boot.kernel.sysctl = {"net.ipv4.ip_forward" = true;};
+
     networking = {
       wireguard = {
         enable = true;
@@ -125,24 +126,19 @@ assert lib.asserts.assertMsg ((lib.lists.count (v: true) <| builtins.attrNames p
         interfaces.${tunnel} = {
           privateKeyFile = privateKeyFile;
           listenPort = port;
-          # IP that the client need to allow access to.
-          ips = [
-            "${ipBase}/32"
-          ];
-          # Peers that should be allowed to access the server.
+          ips = ["${ipBase}/24"];
+
           peers =
             builtins.attrNames peers
-            |> lib.lists.imap0 (
-              i: name: {
-                name = name;
-                allowedIPs = [(builtins.elemAt peerIPs i)];
-                publicKey = builtins.elemAt (builtins.attrValues peers) i;
-              }
-            )
+            |> lib.lists.imap0 (i: name: {
+              name = name;
+              allowedIPs = [(builtins.elemAt peerIPs i)];
+              publicKey = builtins.elemAt (builtins.attrValues peers) i;
+            })
             |> builtins.filter (v: v.publicKey != null);
         };
       };
-      # Allow access through the firewall and enable masquarading of the IP addresses.
+
       firewall.allowedUDPPorts = [port];
       nftables = {
         enable = true;
@@ -152,7 +148,13 @@ assert lib.asserts.assertMsg ((lib.lists.count (v: true) <| builtins.attrNames p
             chain forward {
               type filter hook forward priority filter; policy accept;
               ct state established,related accept
+
+              # Regel för att nå internet via servern
               iifname "${tunnel}" oifname "${interface}" counter accept
+
+              # NY REGEL: Tillåt trafik att "vända" i tunneln.
+              # Detta gör att en klient kan prata med en annan via servern.
+              iifname "${tunnel}" oifname "${tunnel}" counter accept
             }
           }
 
@@ -166,6 +168,7 @@ assert lib.asserts.assertMsg ((lib.lists.count (v: true) <| builtins.attrNames p
       };
     };
   };
+
   client = ip: {
     networking = {
       firewall.allowedUDPPorts = [port];
@@ -174,13 +177,13 @@ assert lib.asserts.assertMsg ((lib.lists.count (v: true) <| builtins.attrNames p
         useNetworkd = true;
         interfaces.${tunnel} = {
           privateKeyFile = privateKeyFile;
-          ips = [ip];
+          ips = ["${lib.head (lib.splitString "/" ip)}/24"];
           peers = [
             {
               inherit publicKey;
               endpoint = "${endpoint}:${builtins.toString port}";
               name = serverName;
-              allowedIPs = [ipBase];
+              allowedIPs = [tunnelSubnet];
               persistentKeepalive = 21;
             }
           ];
@@ -188,11 +191,12 @@ assert lib.asserts.assertMsg ((lib.lists.count (v: true) <| builtins.attrNames p
       };
     };
   };
+
   clients =
     builtins.attrNames peers
     |> lib.lists.imap0 (i: name: {
       name = name;
-      value = client <| builtins.elemAt peerIPs i;
+      value = client (builtins.elemAt peerIPs i);
     })
     |> builtins.listToAttrs;
 in
