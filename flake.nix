@@ -17,10 +17,15 @@
     nvim,
     ...
   } @ inputs: let
+    experimentalModule = {...}: {
+      nix.settings.experimental-features = lib.mkForce ["nix-command" "flakes" "pipe-operators"];
+    };
+    nixpkgs.nix.settings.experimental-features = ["nix-command" "flakes"];
     lib = nixpkgs.lib;
     user = "cindy";
     email = "cindy@simd.me";
     full-name = "Cindy Nilsson";
+    interface = "wlan0";
 
     mkSystem = sensible-nix.nixosModules.mkSystem {
       inherit user email full-name;
@@ -28,7 +33,7 @@
       outPath = self.outPath;
       wallpaper = ./background.jpg;
     };
-    clusterData = {
+    clusterMap = {
       raspberrypi = {
         id = "@PI_ST_ID@";
       };
@@ -39,29 +44,37 @@
         id = "@YOGA_ST_ID@";
       };
     };
-    keys = import ./ssh {};
 
-    tunnels = import ./lib/wireguard.nix {
-      inherit lib;
-      port = 51820;
-      interface = "wlan0";
-      endpoint = "simd.me";
-      privateKeyFile = "/etc/wireguard/private.key";
-      # publicKey = keys.raspberrypi;
-      ipBase = "10.55.0.1";
-      peers = {
-        # homecomputer = keys.home_computer;
-        # "lenovo-yoga" = keys.lenovo;
-      };
-      serverName = "raspberrypi";
+    devices = {
+      raspberrypi = "";
     };
+    keys = import ./keys;
 
-    syncthingNodes = import ./lib/syncthing.nix {
-      inherit lib user;
-      clusterMap = clusterData;
+    # tunnels = import ./lib/wireguard.nix {
+    #   inherit lib interface;
+    #   port = 51820;
+    #   endpoint = "simd.me";
+    #   privateKeyFile = "/etc/wireguard/private.key";
+    #   # publicKey = keys.raspberrypi;
+    #   ipBase = "10.55.0.1";
+    #   peers = {
+    #     # homecomputer = keys.home_computer;
+    #     # "lenovo-yoga" = keys.lenovo;
+    #   };
+    #   serverName = "raspberrypi";
+    # };
+
+    syncthingModules = import ./lib/syncthing.nix {
+      inherit clusterMap interface;
+      syncedFolders = {
+        label = "nixos-config";
+        id = "x4k9z-q1p2m";
+        path = "/etc/nixos";
+      };
     };
     common_packages = {pkgs}:
       with pkgs; [
+        syncthing
         evtest
         nh
         nixos-anywhere
@@ -94,8 +107,8 @@
 
         extraModules = [
           # tunnels.homecomputer
-
-          ./lib/syncthing.nix
+          experimentalModule
+          syncthingModules
           ({
             pkgs,
             config,
@@ -139,7 +152,8 @@
         extraModules = [
           #tunnels."lenovo-yoga"
 
-          ./lib/syncthing.nix
+          experimentalModule
+          syncthingModules
           ({
             pkgs,
             config,
@@ -172,6 +186,7 @@
         system = "aarch64-linux";
         disko = false;
         extraModules = [
+          experimentalModule
           ({
             pkgs,
             config,
@@ -205,8 +220,8 @@
               ]
               ++ common_packages {inherit pkgs;};
           })
-          ./lib/syncthing.nix
-          tunnels.raspberrypi
+          syncthingModules
+          # tunnels.raspberrypi
           inputs.hardware.nixosModules.raspberry-pi-4
           "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
         ];

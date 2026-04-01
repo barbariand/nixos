@@ -2,18 +2,24 @@
 # Utility to build a cluster of syncthing nodes isolated to a VPN
 */
 {
-  lib,
   clusterMap, # { hostname = id; }
+  syncedFolders,
+  interface ? "wg0",
+}: {
+  lib,
   user,
-  sync_folders,
-  tunnel ? "wg0",
+  ...
 }:
 assert lib.asserts.assertMsg (builtins.isAttrs clusterMap) "clusterMap must be an attribute set.";
 assert lib.asserts.assertMsg (builtins.isString user) "user must be a string."; {
   # Brandvägg isolerad till wireguard-interfacet
-  networking.firewall.interfaces.${tunnel}.allowedTCPPorts = [22000 8384];
+  networking.firewall.interfaces.${interface}.allowedTCPPorts = [22000 8384];
   home-manager.users.${user}.services.syncthing = {
     enable = true;
+
+    overrideFolders = true;
+
+    overrideDevices = true;
     inherit user;
 
     settings = rec {
