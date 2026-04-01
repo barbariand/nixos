@@ -57,8 +57,8 @@
       publicKey = "z52vjMTykETjl7/tEXlEEAsKVJni5ocinvx5f21e91U=";
       ipBase = "10.55.0.1";
       peers = {
-        # homecomputer = "";
-        # "lenovo-yoga" = "";
+        homecomputer = "";
+        "lenovo-yoga" = "";
       };
       serverName = "raspberrypi";
     };
