@@ -30,6 +30,29 @@
     apiTokenFile = "/etc/secrets/cloudflare-token";
     domains = ["simd.me"];
   };
+  services.unbound = {
+    enable = true;
+    settings = {
+      server = {
+        interface = ["0.0.0.0"];
+        access-control = ["192.168.1.0/24 allow"];
+        # This is the "Split-DNS" magic
+        local-zone = ''"simd.me." static'';
+        local-data = ''"simd.me. IN A 192.168.1.3"'';
+      };
+      forward-zone = [
+        {
+          name = ".";
+          forward-addr = ["1.1.1.1" "8.8.8.8"];
+        }
+      ];
+    };
+  };
 
+  # Open DNS port 53 on the Pi's firewall
+  networking.firewall.allowedUDPPorts = [
+    51820 # WireGuard
+    53 # DNS/Unbound
+  ];
   nixpkgs.hostPlatform = lib.mkDefault "aarch64-linux";
 }
