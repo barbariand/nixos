@@ -48,18 +48,17 @@
     devices = {
       raspberrypi = "";
     };
-    keys = import ./keys;
 
     tunnels = import ./lib/wireguard.nix {
       inherit lib interface;
       port = 51820;
       endpoint = "simd.me";
       privateKeyFile = "/etc/wireguard/private.key";
-      # publicKey = keys.raspberrypi;
+      publicKey = "z52vjMTykETjl7/tEXlEEAsKVJni5ocinvx5f21e91U=";
       ipBase = "10.55.0.1";
       peers = {
-        # homecomputer = keys.home_computer;
-        # "lenovo-yoga" = keys.lenovo;
+        # homecomputer = "";
+        # "lenovo-yoga" = "";
       };
       serverName = "raspberrypi";
     };
@@ -107,7 +106,7 @@
         disko = true;
 
         extraModules = [
-          # tunnels.homecomputer
+          tunnels.homecomputer
           experimentalModule
           syncthingModules
           ({
@@ -151,7 +150,7 @@
         disko = true;
 
         extraModules = [
-          #tunnels."lenovo-yoga"
+          tunnels."lenovo-yoga"
 
           experimentalModule
           syncthingModules
