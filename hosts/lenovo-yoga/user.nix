@@ -3,6 +3,7 @@
     # gui
     hyprland = {
       enable = true;
+      hypridle.enable = false;
       monitors = ["eDP-1,1920x1200@59.99900,0x0,1"];
       live_wallpaper = {
         enable = true;

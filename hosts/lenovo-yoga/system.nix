@@ -1,8 +1,8 @@
 {pkgs, ...}: let
   PHONE = 1000;
+  EDUROAM = 950;
   TRUSTED = 900;
   TRAVELING = 200;
-  EDUROAM = 0;
   networks = {
     "CindyPhone" = {
       priority = PHONE;

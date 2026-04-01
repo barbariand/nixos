@@ -58,7 +58,7 @@
       ipBase = "10.55.0.1";
       peers = {
         homecomputer = "";
-        "lenovo-yoga" = "";
+        "lenovo-yoga" = "Sm9H/b+pr8OJkVxj57ntfucm3SMFWNMFE42hB0Ygn04=";
       };
       serverName = "raspberrypi";
     };
