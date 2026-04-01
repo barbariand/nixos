@@ -35,18 +35,14 @@
 
     clusterMap = {
       raspberrypi = {
-        id = "@PI_ST_ID@";
+        id = "GFDQ3LP-LXUFOFQ-TT5P4EG-NTW23RF-SXR2GVS-XNFUFOE-IISNZ4R-I5ZARAW";
       };
       homecomputer = {
-        id = "@HOME_ST_ID@";
+        id = "CSUGSY3-3UAQVQF-7ITSVFQ-KJZ7RAY-Q3PBWKX-OAHMTIC-NMPYM2M-N55QNAS";
       };
       "lenovo-yoga" = {
-        id = "@YOGA_ST_ID@";
+        id = "QN3QYRB-BZPFGRD-2AOT3AD-XLKJ22N-LM275P4-QCXRIBZ-7GEZ6UX-PZFBNAE";
       };
-    };
-
-    devices = {
-      raspberrypi = "";
     };
 
     tunnels = import ./lib/wireguard.nix {
