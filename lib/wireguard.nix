@@ -1,88 +1,83 @@
 /*
-# Utility to build a server-client type wireguard tunnel to access home network
-NOTE: This is still p2p, but it is not designed to work symmetrically
+# WireGuard Star Topology Utility
+This module provides a helper function to build a server-client star topology
+model using WireGuard. In this model, all traffic between clients (peers) is
+routed through a central server, enabling peer-to-peer communication and
+optional internet routing.
 
 ## Parameters
-| name         | type                        | description                                                                                                 |
-------------------------------------------------------------------------------------------------------------------------------------------------------------
-| lib          | attrset                     | Nixos standard library.                                                                                     |
-| port         | port number                 | This number correspond to the port that wireguard should listen to.                                         |
-| interface    | string                      | The network interface that should be used by wireguard.                                                     |
-| endpoint     | string                      | A domain or ip address that allows the peer to connect to your server. Port is automatically appended.      |
-| publicKey    | string                      | The servers public key. Generated from the private key that is automatically generated.                     |
-| ipBase       | ipv4 string                 | The ipv4 address that will be assigned to the server and peers will come directly after the server address. |
-| peers        | name and public key attrset | An attribute set with peer names connected to their public key or null.                                     |
-| serverName   | string                      | customizable name of internal representation of the server.                                                 |
-| tunnel       | string                      | Name of tunnel.                                                                                             |
-| use_nftables | bool                        | Override the usage of iptables with nftables and automatically setup the firewall.                          |
+| Name            | Type             | Description                                                                                             |
+|-----------------|------------------|---------------------------------------------------------------------------------------------------------|
+| lib             | attrset          | The standard NixOS library (nixpkgs.lib).                                                               |
+| port            | int              | The UDP port WireGuard will listen on (1-65535).                                                        |
+| interface       | string           | The physical network interface (e.g., "eth0" or "enp1s0") used for WAN connectivity.                    |
+| endpoint        | string           | The public domain or IP address of the server. The port is automatically appended for clients.          |
+| privateKeyFile  | string (path)    | Absolute path to the WireGuard private key file on the local file system.                               |
+| publicKey       | string (optional)| The server's public key. Required if clients (peers) are defined.                                       |
+| ipBase          | string (IPv4)    | The base IPv4 address for the tunnel (default: "10.0.0.1"). Server gets this IP; peers get subsequent IPs.|
+| peers           | attrset          | A mapping of peer names to their respective public keys. { client_name = "public_key"; }.               |
+| serverName      | string           | Internal identifier for the server module in the returned attribute set (default: "server").            |
+| tunnel          | string           | The name of the virtual WireGuard interface (default: "wg0").                                           |
 
-## Description
-Create a tight wireguard configuration to be deployed across multiple machines.
-Singular server multiple clients model.
+## Key Generation
+Before using this utility, you must generate keys on each machine.
+Run the following command:
+`wg genkey | sudo tee /etc/wireguard/private.key | wg pubkey`
+
+1. Save the output (Public Key) to use in your Nix configuration.
+2. Ensure the `privateKeyFile` parameter matches the path where you saved the
+key.
 
 ## Usage
-NOTE: To allow generation of public/private key on the server, omit peers and
-(optionally) publicKey.
-
-NOTE: Nixos lib can be acquired from the flake through
-the input nixpkgs by calling nixpkgs.lib.
+The function returns an attribute set containing NixOS modules.
+One for the server (keyed by `serverName`) and one for each peer defined in the
+`peers` set.
 
 By using the function you implicitly create a tunnel between a abstract server
 and a number of abstract peers.
 
-The function will return a set with modules definitions for each peer and the
-server.
-
-## Example output of flake
-
+### Bootstrap Phase (No Peers)
+To generate keys initially, run the server without peers.
 ```nix
-{ nixpkgs, ... }: let
-  tunnel = build_wireguard_tunnel {
-    lib = nixpkgs.lib;
+{ sensible-nix, nixpkgs, ... }:
+let
+  tunnel = import ./wireguard-util.nix {
+    inherit (nixpkgs) lib;
     port = 51820;
     interface = "eth0";
-    endpoint = "myhome.com";
-    publicKey = "...";
-    peers = {
-      client_1 = "...";
-      ...
-    };
+    endpoint = "vpn.example.com";
+    privateKeyFile = "/var/lib/wireguard/private.key";
   };
 in {
-  nixosConfigurations = {
-    server = nixpkgs.lib.nixosSystem {
-      modules = [ tunnel.server ];
-      ...
-    };
-    my_laptop = nixpkgs.lib.nixosSystem {
-      modules = [ tunnel.client_1 ];
-      ...
-    };
-    ...
+  nixosConfigurations.server = nixpkgs.lib.nixosSystem {
+    modules = [ tunnel.server ];
   };
 }
 ```
+#Full Configuration
 
-## Example server without peers
-
-This should be the primary state of the tunnel to allow bootstrapping the
-server and generate the necessary keys.
-
+Once keys are generated, populate the peers and publicKey fields.
 ```nix
-{ nixpkgs, ... }: let
-  tunnel = build_wireguard_tunnel {
-    lib = nixpkgs.lib;
+{ sensible-nix, nixpkgs, ... }:
+let
+  tunnel = import ./wireguard-util.nix {
+    inherit (nixpkgs) lib;
     port = 51820;
     interface = "eth0";
-    endpoint = "myhome.com";
+    endpoint = "vpn.example.com";
+    publicKey = "SERVER_PUBLIC_KEY_HERE";
+    privateKeyFile = "/etc/wireguard/private.key";
+    peers = {
+      laptop = "LAPTOP_PUBLIC_KEY_HERE";
+      phone  = "PHONE_PUBLIC_KEY_HERE";
+    };
   };
 in {
-  nixosConfigurations = {
-    server = nixpkgs.lib.nixosSystem {
-      modules = [ tunnel.server ];
-      ...
-    };
-    ...
+  nixosConfigurations.server = nixpkgs.lib.nixosSystem {
+    modules = [ tunnel.server ];
+  };
+  nixosConfigurations.laptop = nixpkgs.lib.nixosSystem {
+    modules = [ tunnel.laptop ];
   };
 }
 ```
@@ -98,7 +93,6 @@ in {
   peers ? {},
   serverName ? "server",
   tunnel ? "wg0",
-  use_nftables ? true,
 }:
 assert lib.asserts.assertMsg (builtins.isString privateKeyFile) "privateKeyFile must be a path.";
 assert lib.asserts.assertMsg (builtins.isInt port && port > 0 && port <= 65535) "The port number need to be between 1 and 65535.";
@@ -149,11 +143,8 @@ assert lib.asserts.assertMsg ((lib.lists.count (v: true) <| builtins.attrNames p
               type filter hook forward priority filter; policy accept;
               ct state established,related accept
 
-              # Regel för att nå internet via servern
               iifname "${tunnel}" oifname "${interface}" counter accept
 
-              # NY REGEL: Tillåt trafik att "vända" i tunneln.
-              # Detta gör att en klient kan prata med en annan via servern.
               iifname "${tunnel}" oifname "${tunnel}" counter accept
             }
           }

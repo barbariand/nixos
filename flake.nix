@@ -1,7 +1,7 @@
 {
   description = "A example usecase of the flake.nix";
   inputs = {
-    sensible-nix.url = "github:urgobalt/sensible-nix";
+    sensible-nix.url = "github:urgobalt/sensible-nix/multi-monitor-official-support-hyprkool";
 
     hardware.url = "github:NixOS/nixos-hardware";
 
@@ -56,6 +56,7 @@
       publicKey = "z52vjMTykETjl7/tEXlEEAsKVJni5ocinvx5f21e91U=";
       ipBase = "10.55.0.1";
       peers = {
+        phone = "HtWcEPpV156RJ5b/NKC0z9U7Fu4nh4935s1Jj21tZ0U=";
         homecomputer = "akkbT+7oQtZJ/FfVw69c6lFqlMw7c1lxuRmsf8iV2Rs=";
         "lenovo-yoga" = "Sm9H/b+pr8OJkVxj57ntfucm3SMFWNMFE42hB0Ygn04=";
       };
@@ -224,6 +225,10 @@
           inputs.hardware.nixosModules.raspberry-pi-4
           "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
         ];
+      };
+      server_one = mkSystem "server_one" {
+        system = "x86_64-linux";
+        disko = true;
       };
     };
   };
