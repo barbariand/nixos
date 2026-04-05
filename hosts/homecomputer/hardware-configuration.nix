@@ -17,6 +17,8 @@
   boot.kernelModules = ["kvm-amd" "xone-dongle"];
   hardware.enableRedistributableFirmware = true;
 
+  boot.binfmt.emulatedSystems = ["aarch64-linux"];
+
   boot.loader.efi.canTouchEfiVariables = true;
   hardware.xone.enable = true;
   hardware.xpadneo.enable = true;

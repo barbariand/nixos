@@ -24,7 +24,7 @@
   boot.kernelParams = [
     "usbcore.autosuspend=-1"
   ];
-boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
+  boot.binfmt.emulatedSystems = ["aarch64-linux"];
   hardware.graphics = {
     enable = true;
     enable32Bit = true;

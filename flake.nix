@@ -1,15 +1,16 @@
 {
-  description = "A example usecase of the flake.nix";
+  description = "SIMD.ME flake";
+
   inputs = {
-    sensible-nix.url = "github:urgobalt/sensible-nix/multi-monitor-official-support-hyprkool";
-
+    sensible-nix.url = "github:urgobalt/sensible-nix/adding_configurable_overlays";
+    nixpkgs-unstable.follows = "sensible-nix/nixpkgs-unstable";
     hardware.url = "github:NixOS/nixos-hardware";
-
     nvim = {
       url = "github:urgobalt/nvim/main";
       flake = false;
     };
   };
+
   outputs = {
     self,
     nixpkgs,
@@ -17,219 +18,106 @@
     nvim,
     ...
   } @ inputs: let
-    experimentalModule = {...}: {
-      nix.settings.experimental-features = lib.mkForce ["nix-command" "flakes" "pipe-operators"];
-    };
     lib = nixpkgs.lib;
     user = "cindy";
     email = "cindy@simd.me";
+    interface = "wg0";
     full-name = "Cindy Nilsson";
-    interface = "wlan0";
 
-    mkSystem = sensible-nix.nixosModules.mkSystem {
-      inherit user email full-name;
-      nvim-config = nvim;
-      outPath = self.outPath;
-      wallpaper = ./background.jpg;
-    };
+    tunnels = import ./hosts/tunnels.nix {inherit lib interface;};
+    syncthingModules = import ./hosts/syncthing.nix {inherit interface;};
+    globalPackages = {pkgs}: with pkgs; [wireguard-tools syncthing evtest nh nixos-anywhere unstable.jujutsu docker bitwarden-cli unzip docker-compose];
+    clientPackages = {pkgs}: with pkgs; [unstable.signal-desktop monocraft bruno rpi-imager gimp protonvpn-gui hyprmon moonlight-qt libreoffice inkscape gajim wasistlos];
+    k3sCluster = import ./lib/k3s.nix {
+      inherit lib;
+      controllerHostname = "raspberrypi";
+      controllerIp = "10.55.0.1";
+      tokenFileFn = config: config.age.secrets.k3s-token.path;
+      clusterInterface = interface;
 
-    clusterMap = {
-      raspberrypi = {
-        id = "GFDQ3LP-LXUFOFQ-TT5P4EG-NTW23RF-SXR2GVS-XNFUFOE-IISNZ4R-I5ZARAW";
-        ip = "10.55.0.1"; # Server/Pi IP
-      };
-      homecomputer = {
-        id = "CSUGSY3-3UAQVQF-7ITSVFQ-KJZ7RAY-Q3PBWKX-OAHMTIC-NMPYM2M-N55QNAS";
-        ip = "10.55.0.2";
-      };
-      "lenovo-yoga" = {
-        id = "QN3QYRB-BZPFGRD-2AOT3AD-XLKJ22N-LM275P4-QCXRIBZ-7GEZ6UX-PZFBNAE";
-        ip = "10.55.0.3";
+      nodes = {
+        server_one = {ip = "10.55.0.4";};
       };
     };
-
-    tunnels = import ./lib/wireguard.nix {
-      inherit lib interface;
-      port = 51820;
-      endpoint = "simd.me";
-      privateKeyFile = "/etc/wireguard/private.key";
-      publicKey = "z52vjMTykETjl7/tEXlEEAsKVJni5ocinvx5f21e91U=";
-      ipBase = "10.55.0.1";
-      peers = {
-        phone = "HtWcEPpV156RJ5b/NKC0z9U7Fu4nh4935s1Jj21tZ0U=";
-        homecomputer = "akkbT+7oQtZJ/FfVw69c6lFqlMw7c1lxuRmsf8iV2Rs=";
-        "lenovo-yoga" = "Sm9H/b+pr8OJkVxj57ntfucm3SMFWNMFE42hB0Ygn04=";
+    mkCluster = import ./lib/mkCluster.nix {
+      inherit lib;
+      mkSystem = sensible-nix.nixosModules.mkSystem {
+        inherit user email full-name;
+        nvim-config = nvim;
+        outPath = self.outPath;
+        wallpaper = ./background.jpg;
       };
-      serverName = "raspberrypi";
-    };
 
-    syncthingModules = import ./lib/syncthing.nix {
-      inherit clusterMap interface;
-      syncedFolders = {
-        "nixos-config" = {
-          id = "x4k9z-q1p2m";
-          path = "/etc/nixos";
-        };
-      };
+      globalPackages = globalPackages;
+      clientPackages = clientPackages;
+
+      globalExtraModules = [./hosts/common.nix];
+      clientExtraModules = [syncthingModules ./hosts/docker-client.nix];
+      namedGlobalExtraModules = [tunnels];
+      namedServerExtraModules = [k3sCluster];
     };
-    common_packages = {pkgs}:
-      with pkgs; [
-        syncthing
-        evtest
-        nh
-        nixos-anywhere
-        unstable.jujutsu
-        docker
-        bitwarden-cli
-        unzip
-        docker-compose
-      ];
-    common_de_packages = {pkgs}:
-      with pkgs; [
-        unstable.signal-desktop
-        monocraft
-        bruno
-        rpi-imager
-        gimp
-        protonvpn-gui
-        hyprmon
-        moonlight-qt
-        libreoffice
-        inkscape
-        gajim
-        wasistlos
-      ];
   in {
-    nixosConfigurations = {
-      homecomputer = mkSystem "homecomputer" {
+    nixosConfigurations = mkCluster {
+      homecomputer = {
         system = "x86_64-linux";
-        disko = true;
-
+        extraPackages = pkgs: with pkgs; [heroic krita modrinth-app opentabletdriver];
         extraModules = [
-          tunnels.homecomputer
-          experimentalModule
-          syncthingModules
-          ({
-            pkgs,
-            config,
-            ...
-          }: {
+          ({pkgs, ...}: {
+            nixpkgs.config.allowUnfreePredicate = pkg:
+              builtins.elem (pkgs.lib.getName pkg) [
+                "modrinth-app"
+              ];
             nixpkgs.overlays = [
-              (finalPkgs: previousPkgs: {
-                heroic = previousPkgs.heroic.override {
-                  extraPkgs = drvPkgs: with drvPkgs; [gamescope];
+              (final: prev: {
+                heroic = prev.heroic.override {
+                  extraPkgs = p: [p.gamescope];
                 };
               })
             ];
-            fonts.packages = with pkgs; [
-              corefonts
-              comfortaa #
-              (google-fonts.override {
-                fonts = [
-                  "Sniglet"
-                  "Fredoka One"
-                  "Balsamiq Sans"
-                  "Chewy"
-                ];
-              })
-            ];
-            environment.systemPackages = with pkgs;
-              [
-                heroic
-                krita
-                modrinth-app
-                opentabletdriver
-              ]
-              ++ common_packages {inherit pkgs;} ++ common_de_packages {inherit pkgs;};
             security.polkit.enable = true;
           })
         ];
       };
-      lenovo-yoga = mkSystem "lenovo-yoga" {
+
+      "lenovo-yoga" = {
         system = "x86_64-linux";
-        disko = true;
-
-        extraModules = [
-          tunnels."lenovo-yoga"
-
-          experimentalModule
-          syncthingModules
-          ({
-            pkgs,
-            config,
-            ...
-          }: {
-            nixpkgs.overlays = [
-              (finalPkgs: previousPkgs: {
-                heroic = previousPkgs.heroic.override {
-                  extraPkgs = drvPkgs: with drvPkgs; [gamescope];
-                };
-              })
-            ];
-            virtualisation.docker.enable = true;
-            users.extraGroups.docker.members = ["cindy"];
-            virtualisation.docker.rootless = {
-              enable = true;
-              setSocketVariable = true;
-            };
-            environment.systemPackages = with pkgs;
-              [
-                heroic
-                sage
-              ]
-              ++ common_packages {inherit pkgs;} ++ common_de_packages {inherit pkgs;};
-          })
-        ];
+        extraPackages = pkgs: with pkgs; [heroic sage];
       };
 
-      raspberrypi = mkSystem "raspberrypi" {
+      raspberrypi = {
         system = "aarch64-linux";
+        server = true;
         disko = false;
         extraModules = [
-          experimentalModule
-          ({
-            pkgs,
-            config,
-            ...
-          }: {
-            nixpkgs.overlays = [
-              (final: prev: {
-                unstable = import inputs.nixpkgs-unstable {
-                  system = prev.system;
-                  config = prev.config; # Inherit allowUnfree and other settings
-                  overlays = [
-                    (uFinal: uPrev: {
-                      python312Packages = uPrev.python312Packages.override {
-                        overrides = pyFinal: pyPrev: {
-                          python-lsp-server = pyPrev.python-lsp-server.overridePythonAttrs (old: {
-                            doCheck = false;
-                          });
-                          whatthepatch = pyPrev.whatthepatch.overridePythonAttrs (old: {
-                            doCheck = false;
-                          });
-                        };
-                      };
-                    })
-                  ];
-                };
-              })
-            ];
-
-            environment.systemPackages = with pkgs;
-              [
-              ]
-              ++ common_packages {inherit pkgs;};
-          })
           syncthingModules
-          tunnels.raspberrypi
           inputs.hardware.nixosModules.raspberry-pi-4
           "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
         ];
       };
-      server_one = mkSystem "server_one" {
+
+      server_one = {
         system = "x86_64-linux";
-        disko = true;
+        server = true;
       };
     };
+
+    devShells = lib.genAttrs ["x86_64-linux" "aarch64-linux"] (system: let
+      pkgs = nixpkgs.legacyPackages.${system};
+    in {
+      default = pkgs.mkShell {
+        name = "simd-shell";
+        buildInputs = with pkgs; [
+          just
+          jq
+          wireguard-tools
+          nh
+        ];
+
+        shellHook = ''
+          alias d="just deploy"
+          alias u="just update"
+        '';
+      };
+    });
   };
 }
