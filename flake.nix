@@ -27,7 +27,7 @@
     tunnels = import ./hosts/tunnels.nix {inherit lib interface;};
     syncthingModules = import ./hosts/syncthing.nix {inherit interface;};
     globalPackages = {pkgs}: with pkgs; [wireguard-tools syncthing evtest nh nixos-anywhere unstable.jujutsu docker bitwarden-cli unzip docker-compose];
-    clientPackages = {pkgs}: with pkgs; [unstable.signal-desktop monocraft bruno rpi-imager gimp protonvpn-gui hyprmon moonlight-qt libreoffice inkscape gajim wasistlos];
+    clientPackages = {pkgs}: with pkgs; [wireshark unstable.signal-desktop monocraft bruno rpi-imager gimp protonvpn-gui hyprmon moonlight-qt libreoffice inkscape gajim wasistlos];
     k3sCluster = import ./lib/k3s.nix {
       inherit lib;
       controllerHostname = "raspberrypi";

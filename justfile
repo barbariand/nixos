@@ -4,7 +4,7 @@ set shell := ["bash", "-uc"]
 
 # Variables
 flake_uri := "."
-user := "cindy"
+user := "root"
 
 
 # Build the current config
@@ -18,7 +18,7 @@ check:
 # Internal deploy
 deploy host *extra_flags:
     @echo "Building Flake: {{flake_uri}}#{{host}}"
-    @TARGET_IP=$(nix eval .#nixosConfigurations.{{host}}.config.networking.wireguard.interfaces.wg0.ips --apply 'ips: builtins.head (builtins.split "/" (builtins.head ips))' --raw); \
+    @TARGET_IP=$(nix eval .#nixosConfigurations.{{host}}.config.networking.wireguard.interfaces.wg0.ips --apply 'ips: builtins.head (builtins.split "/" (builtins.head ips))' --quiet --raw); \
     echo "Deploying to:   {{user}}@$TARGET_IP"; \
     nixos-rebuild switch --flake {{flake_uri}}#{{host}} \
         --target-host {{user}}@$TARGET_IP \

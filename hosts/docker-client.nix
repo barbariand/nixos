@@ -15,5 +15,6 @@
 
   # Lägger till din användare ('cindy') i docker-gruppen
   # så att du har rättigheter att prata med tjänsten.
-  users.users.${user}.extraGroups = ["docker"];
+  programs.wireshark.enable = true;
+  users.users.${user}.extraGroups = ["docker" "wireshark"];
 }
