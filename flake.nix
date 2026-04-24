@@ -51,8 +51,8 @@
       globalPackages = globalPackages;
       clientPackages = clientPackages;
 
-      globalExtraModules = [./hosts/common.nix];
-      clientExtraModules = [syncthingModules ./hosts/docker-client.nix];
+      globalExtraModules = [syncthingModules ./hosts/common.nix];
+      clientExtraModules = [./hosts/docker-client.nix];
       namedGlobalExtraModules = [tunnels];
       namedServerExtraModules = [k3sCluster];
     };

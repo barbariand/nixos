@@ -19,9 +19,11 @@
     privateKeyFile = "/etc/wireguard/private.key";
   };
 
+  sshPeers = lib.filterAttrs (n: v: n != "phone") peers;
+
   sshModule = import ../lib/ssh-tools.nix {
-    inherit lib ipBase;
-    peers = {"${serverName}" = publicKey;} // peers;
+    inherit lib ipBase serverName;
+    peers = sshPeers;
   };
 in
   lib.mapAttrs (name: wgConfig: [wgConfig sshModule]) wireguardTunnels
