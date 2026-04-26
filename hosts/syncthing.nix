@@ -22,5 +22,10 @@ import ../lib/syncthing.nix {
       id = "x4k9z-q1p2m";
       path = "/etc/nixos";
     };
+
+    "bsk-latex" = {
+      id = "a6gbd-afyse";
+      path = "/home/cindy/code/bsk";
+    };
   };
 }

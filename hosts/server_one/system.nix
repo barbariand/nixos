@@ -1,5 +1,5 @@
 {...}: {
   config.modules = {
-    declarative-password.enable = false;
+    declarative-password.enable = true;
   };
 }

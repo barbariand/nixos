@@ -5,6 +5,7 @@
     sensible-nix.url = "github:urgobalt/sensible-nix/adding_configurable_overlays";
     nixpkgs-unstable.follows = "sensible-nix/nixpkgs-unstable";
     hardware.url = "github:NixOS/nixos-hardware";
+    nix-minecraft.url = "github:Infinidoge/nix-minecraft";
     nvim = {
       url = "github:urgobalt/nvim/main";
       flake = false;
@@ -15,6 +16,7 @@
     self,
     nixpkgs,
     sensible-nix,
+    nix-minecraft,
     nvim,
     ...
   } @ inputs: let
@@ -98,6 +100,10 @@
       server_one = {
         system = "x86_64-linux";
         server = true;
+        extraModules = [
+          nix-minecraft.nixosModules.minecraft-servers
+          ./hosts/server_one/minecraft.nix
+        ];
       };
     };
 
@@ -121,3 +127,4 @@
     });
   };
 }
+>>>>>>> conflict 1 of 1 ends
