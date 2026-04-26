@@ -25,38 +25,6 @@
   boot.extraModulePackages = [];
   boot.kernelParams = ["cgroup_enable=memory" "cgroup_enable=cpuset" "cgroup_memory=1"];
 
-  services.cloudflare-dyndns = {
-    enable = true;
-    apiTokenFile = "/etc/secrets/cloudflare-token";
-    domains = ["simd.me"];
-  };
-  services.unbound = {
-    enable = true;
-    settings = {
-      server = {
-        interface = ["0.0.0.0"];
-        access-control = ["127.0.0.0/8 allow" "192.168.1.0/24 allow" "10.55.0.0/24 allow"];
-
-        local-zone = ''"simd.me." static'';
-        local-data = [
-          ''"simd.me. IN A 192.168.1.3"''
-        ];
-      };
-      forward-zone = [
-        {
-          name = ".";
-          forward-addr = ["1.1.1.1" "8.8.8.8"];
-        }
-      ];
-    };
-  };
-  # Open DNS port 53 on the Pi's firewall
-  services.resolved.enable = false;
-  networking.firewall.allowedUDPPorts = [
-    51820 # WireGuard
-    53 # DNS/Unbound
-  ];
-  networking.firewall.allowedTCPPorts = [53];
 
   nixpkgs.hostPlatform = lib.mkDefault "aarch64-linux";
 }

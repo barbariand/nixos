@@ -53,8 +53,8 @@
       globalPackages = globalPackages;
       clientPackages = clientPackages;
 
-      globalExtraModules = [syncthingModules ./hosts/common.nix];
-      clientExtraModules = [./hosts/docker-client.nix];
+      globalExtraModules = [./hosts/networking.nix ./hosts/common.nix ./hosts/user_groups.nix];
+      clientExtraModules = [syncthingModules ./hosts/docker-client.nix];
       namedGlobalExtraModules = [tunnels];
       namedServerExtraModules = [k3sCluster];
     };
@@ -62,7 +62,7 @@
     nixosConfigurations = mkCluster {
       homecomputer = {
         system = "x86_64-linux";
-        extraPackages = pkgs: with pkgs; [heroic krita modrinth-app opentabletdriver];
+        extraPackages = pkgs: with pkgs; [prismlauncher heroic krita modrinth-app opentabletdriver];
         extraModules = [
           ({pkgs, ...}: {
             nixpkgs.config.allowUnfreePredicate = pkg:
@@ -91,6 +91,8 @@
         server = true;
         disko = false;
         extraModules = [
+          ./hosts/raspberrypi/vaultwarden.nix
+          ./hosts/raspberrypi/networking.nix
           syncthingModules
           inputs.hardware.nixosModules.raspberry-pi-4
           "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
@@ -101,7 +103,12 @@
         system = "x86_64-linux";
         server = true;
         extraModules = [
+          ./lib/ark-server.nix
+          ./hosts/server_one/ark-server.nix
           nix-minecraft.nixosModules.minecraft-servers
+          ({...}: {
+            nixpkgs.overlays = [nix-minecraft.overlay];
+          })
           ./hosts/server_one/minecraft.nix
         ];
       };
@@ -127,4 +134,3 @@
     });
   };
 }
->>>>>>> conflict 1 of 1 ends

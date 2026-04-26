@@ -5,7 +5,12 @@
 }: {
   # Aktiverar moderna Nix-funktioner globalt på alla maskiner
   nix.settings.experimental-features = lib.mkForce ["nix-command" "flakes" "pipe-operators"];
-
+documentation = {
+    enable = true;
+    man.enable = true;
+    # Detta är den viktigaste raden:
+    man.generateCaches = false;
+    };
   # Overlays för att fixa problematiska Python-paket genom att stänga av check/tester
   nixpkgs.overlays = [
     (uFinal: uPrev: {

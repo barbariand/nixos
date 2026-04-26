@@ -18,8 +18,30 @@
   boot.extraModulePackages = [];
   boot.loader.systemd-boot.enable = true;
 
-  swapDevices = [];
+  zramSwap.enable = true;
+
+  swapDevices = [
+    {
+      device = "/var/lib/swapfile";
+      size = 8192;
+    }
+  ];
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+
+  networking.firewall.allowedUDPPorts = [
+# WireGuard
+    51820
+# Minecraft
+    25565
+# ARK survival evolved
+7777 7778 27015
+  ];
+  networking.firewall.allowedTCPPorts = [
+# Minecraft
+    25565
+    # ARK RCON
+27020
+  ];
 }

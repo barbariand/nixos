@@ -1,19 +1,28 @@
-{pkgs, ...}: {
+{pkgs,lib, ...}: {
   services.minecraft-servers = {
     enable = true;
     eula = true;
-    servers.stoneblock4 = {
+
+    dataDir = "/var/lib/minecraft";
+    servers.stoneblock = {
       enable = true;
-      package = pkgs.openjdk17;
+      autoStart = true;
+# Inkludera verktyg i PATH för systemd-tjänsten
+      path = [ pkgs.jdk21_headless pkgs.bash pkgs.coreutils pkgs.file ];
+          managementSystem.tmux.enable = false;
+          managementSystem.systemd-socket.enable = true;
+      # VIKTIGT: Skriv jvmOpts på en enda rad utan manuella radbrytningar
+      jvmOpts = "";
 
-      dataDir = "/var/lib/minecraft/stoneblock4";
+      package = pkgs.writeShellScriptBin "start-stoneblock" ''
+        # Gå till rätt mapp så att @libraries/ i run.sh hittas
+        cd "/var/lib/minecraft/stoneblock"
+        echo "Fixing shit"
+        echo "Running shit now lets goo"
+        # Kör skriptet och skicka vidare alla argument ($@)
+        exec ./run.sh "$@"
+      '';
 
-      serverProperties = {
-        server-port = 25565;
-        motd = "Stoneblock 4 på NixOS";
-      };
-
-      jvmOpts = "-Xms8G -Xmx12G -XX:+UseG1GC -XX:+ParallelRefProcEnabled";
     };
   };
 }
