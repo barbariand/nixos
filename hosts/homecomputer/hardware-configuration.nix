@@ -36,10 +36,15 @@
   };
   swapDevices = [];
   services.xserver.digimend.enable = true;
-  hardware.graphics = {
-    enable = true;
-    enable32Bit = true;
-  };
+hardware.graphics = {
+  enable = true;
+  enable32Bit = true;
+  extraPackages = with pkgs; [
+    nvidia-vaapi-driver
+    libva-vdpau-driver
+    libvdpau-va-gl
+  ];
+};
 
   hardware.nvidia = {
     modesetting.enable = true;
@@ -49,9 +54,8 @@
     nvidiaSettings = true;
     package = config.boot.kernelPackages.nvidiaPackages.latest;
   };
-
   services.tailscale.enable = true;
-
+  services.xserver.videoDrivers = ["nvidia"];
 # networking.firewall.allowedUDPPorts = [
 #   # Wireguard
 #   51820
@@ -63,7 +67,6 @@
 #   22 # SSH
 #   25147 27015 27036 # ARK server
 # ];
-#   services.xserver.videoDrivers = ["nvidia"];
   # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
   # (the default) this is the recommended approach. When using systemd-networkd it's
   # still possible to use this option, but it's recommended to use it in conjunction
