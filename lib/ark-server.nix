@@ -4,7 +4,6 @@ with lib;
 
 let
   cfg = config.services.ark-server;
-  # En hjälpare för att köra kommandon i Steams miljö
   steam-run_path = "${pkgs.steam-run}/bin/steam-run";
   steamcmd_path= "${pkgs.steamcmd}/bin/steamcmd";
 in {
@@ -14,7 +13,7 @@ in {
     serverDir = mkOption {
       type = types.path;
       default = "/var/lib/ark-server";
-      description = "Platsen där serverfilerna installeras. /var/lib är standard för tjänstedata.";
+      description = "Platsen där serverfilerna installeras.";
     };
 
     user = mkOption {
@@ -45,7 +44,7 @@ in {
   config = mkIf cfg.enable {
     boot.kernel.sysctl = {
       "fs.file-max" = 100000;
-      "kernel.unprivileged_userns_clone" = 1; # Behövs ofta för Steam-miljön
+      "kernel.unprivileged_userns_clone" = 1;
     };
 
     users.users.${cfg.user} = {
@@ -57,11 +56,9 @@ in {
     };
     users.groups.${cfg.user} = {};
 
-    # 3. Brandvägg
     networking.firewall.allowedUDPPorts = [ cfg.port (cfg.port + 1) cfg.queryPort ];
     networking.firewall.allowedTCPPorts = [ cfg.rconPort ];
 
-    # 4. Själva tjänsten
     systemd.services.ark-server = {
       description = "ARK Survival Evolved Server";
       after = [ "network.target" ];
@@ -72,30 +69,60 @@ in {
         User = cfg.user;
         Group = cfg.user;
         WorkingDirectory = cfg.serverDir;
-
         TimeoutStartSec = 0;
-        # Systemd hanterar mappen i /var/lib automatiskt
         StateDirectory = "ark-server";
-
-        # Höjer gränsen för öppna filer specifikt för denna process
         LimitNOFILE = 1000000;
 
-        # Uppdatera/Installera spelet innan start
+        # --- DEBUG-VÄNLIG UPDATE ---
         ExecStartPre = pkgs.writeShellScript "ark-update" ''
+          set -x # Skriver ut varje kommando som körs till loggen
           export HOME=${cfg.serverDir}
+
+          echo "--- STARTAR UPPDATERING ---"
           ${steam-run_path} ${steamcmd_path} \
             +force_install_dir "${cfg.serverDir}" \
             +login anonymous \
             +app_update 376030 validate \
             +quit
+
+          echo "--- KONFIGURERAR STEAM-MILJÖ ---"
+          mkdir -p $HOME/.steam/sdk64
+
+          # Vi letar efter steamclient.so. ARK kan ibland flytta på den vid uppdateringar.
+          # Vi försöker hitta den om den inte finns på standardplatsen.
+          SRC_LIB="${cfg.serverDir}/Engine/Binaries/ThirdParty/Steamv132/Linux64/steamclient.so"
+
+          if [ ! -f "$SRC_LIB" ]; then
+            echo "VARNING: Kunde inte hitta steamclient.so på standardplatsen."
+            echo "Söker efter filen i ${cfg.serverDir}..."
+            SRC_LIB=$(find "${cfg.serverDir}" -name "steamclient.so" | head -n 1)
+          fi
+
+          if [ -n "$SRC_LIB" ] && [ -f "$SRC_LIB" ]; then
+            echo "Länkar $SRC_LIB till förväntade sökvägar..."
+            ln -sf "$SRC_LIB" $HOME/.steam/sdk64/steamclient.so
+            ln -sf "$SRC_LIB" "${cfg.serverDir}/ShooterGame/Binaries/Linux/steamclient.so"
+            ls -l $HOME/.steam/sdk64/steamclient.so
+          else
+            echo "FEL: steamclient.so kunde inte hittas någonstans!"
+          fi
+
+          echo "346110" > "${cfg.serverDir}/ShooterGame/Binaries/Linux/steam_appid.txt"
         '';
 
-        # Starta servern
+        # --- DEBUG-VÄNLIG START ---
         ExecStart = pkgs.writeShellScript "ark-start" ''
+          set -x
           export HOME=${cfg.serverDir}
+          export LD_LIBRARY_PATH="${cfg.serverDir}/ShooterGame/Binaries/Linux:$LD_LIBRARY_PATH"
+
+          echo "--- KONTROLLERAR MILJÖ INNAN START ---"
+          echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+          echo "Arbetskatalog: $(pwd)"
+          ls -l ./steamclient.so || echo "Ingen steamclient.so i binärmappen"
+
           cd "${cfg.serverDir}/ShooterGame/Binaries/Linux"
 
-          # Bygg upp argumentsträngen
           ARGS="${cfg.map}?listen"
           ARGS="$ARGS?SessionName=${cfg.sessionName}"
           ARGS="$ARGS?MaxPlayers=${toString cfg.maxPlayers}"
@@ -111,7 +138,9 @@ in {
             ARGS="$ARGS?ModIds=${cfg.mods}"
           fi
 
-          ${steam-run_path} ./ShooterGameServer "$ARGS" \
+          echo "Startar server med argument: $ARGS"
+
+          exec ${steam-run_path} ./ShooterGameServer "$ARGS" \
             -server -log -servergamelog -crossplay -automanagedmods
         '';
 
@@ -120,10 +149,11 @@ in {
       };
     };
 
-    # Nödvändiga paket på systemnivå
     environment.systemPackages = with pkgs; [
       steamcmd
       steam-run
+      file # Bra för att kolla binärtyper
+      findutils # För 'find'-kommandot i debuggen
     ];
   };
 }

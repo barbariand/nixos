@@ -85,7 +85,18 @@
         system = "x86_64-linux";
         extraPackages = pkgs: with pkgs; [heroic sage];
       };
-
+      pi_sd = {
+        system = "aarch64-linux";
+        server = true;
+        disko = false;
+        hostnameOverride = "raspberrypi"; # Gör att maskinen heter raspberrypi trots flakens namn
+        extraModules = [
+          ./hosts/raspberrypi/vaultwarden.nix
+          ./hosts/raspberrypi/networking.nix
+          syncthingModules
+          "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
+        ];
+      };
       raspberrypi = {
         system = "aarch64-linux";
         server = true;

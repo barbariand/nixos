@@ -7,10 +7,13 @@
     domains = ["minecraft.simd.me" "ark.simd.me" "simd.me" "dns.simd.me" ];
   };
 
-services.resolved = lib.mkForce {
-  enable = true;
-  # Låt Pi:n använda Cloudflare internt om Unbound inte är uppe än
-  fallbackDns = [ "1.1.1.1" ];
+  services.resolved = lib.mkForce {
+    enable = true;
+    # Låt Pi:n använda Cloudflare internt om Unbound inte är uppe än
+    fallbackDns = [ "1.1.1.1" ];
+    extraConfig = ''
+      DNSStubListener=no
+    '';
   };
 
   users.users.unbound.extraGroups = [ "acme" "nginx" ];
@@ -26,19 +29,21 @@ services.resolved = lib.mkForce {
         tls-service-pem = "/var/lib/acme/simd.me/fullchain.pem";
         tls-port = 853;
 
-        local-zone = ''"simd.me." static'';
+        local-zone = ''"simd.me." transparent'';
+        domain-insecure = [ "simd.me." ];
         local-data = [
           ''"simd.me. IN A 192.168.1.3"''
-          ''"dns.simd.me. IN A 192.168.1.3"''
-          ''"vault.simd.me. IN A 192.168.1.3"''
-          ''"minecraft.simd.me. IN A 192.168.1.3"''
+            ''"dns.simd.me. IN A 192.168.1.3"''
+            ''"vault.simd.me. IN A 192.168.1.3"''
+            ''"minecraft.simd.me. IN A 192.168.1.3"''
+            ''"ark.simd.me. IN A 192.168.1.3"''
         ];
       };
       forward-zone = [
-        {
-          name = ".";
-          forward-addr = [ "1.1.1.1" "8.8.8.8" ];
-        }
+      {
+        name = ".";
+        forward-addr = [ "1.1.1.1" "8.8.8.8" ];
+      }
       ];
     };
   };
@@ -65,7 +70,7 @@ services.resolved = lib.mkForce {
     virtualHosts."dns.simd.me" = {
       useACMEHost = "simd.me";
       forceSSL = true;
-      # Ingen proxyPass behövs om Nginx bara används för ACME-utmaningen
+    # Ingen proxyPass behövs om Nginx bara används för ACME-utmaningen
     };
 
     appendConfig = ''
@@ -107,31 +112,31 @@ services.resolved = lib.mkForce {
     '';
   };
 
-security.acme = {
-  acceptTerms = true;
-  defaults = {
-    group = "nginx";
-    email = "cindy@simd.me";
-    dnsProvider = "cloudflare";
-    credentialsFile = "/var/lib/acme/secrets/cloudflare-acme-env";
-    dnsResolver = "1.1.1.1:53";
-    webroot = null;
-    reloadServices = [ "unbound" "nginx" ];
-  };
+  security.acme = {
+    acceptTerms = true;
+    defaults = {
+      group = "nginx";
+      email = "cindy@simd.me";
+      dnsProvider = "cloudflare";
+      credentialsFile = "/var/lib/acme/secrets/cloudflare-acme-env";
+      dnsResolver = "1.1.1.1:53";
+      webroot = null;
+      reloadServices = [ "unbound" "nginx" ];
+    };
 
-  certs."simd.me" = {
-    domain = "simd.me";
-    extraDomainNames = [ "*.simd.me" ];
+    certs."simd.me" = {
+      domain = "simd.me";
+      extraDomainNames = [ "*.simd.me" ];
+    };
   };
-};
-networking.nameservers = lib.mkForce [ "1.1.1.1" "8.8.8.8" ];
-networking.firewall.allowedUDPPorts = [
-  51820 53 853
-  7777 7778 27015 # ARK Game & Query portar
-];
+  networking.nameservers = lib.mkForce [ "1.1.1.1" "8.8.8.8" ];
+  networking.firewall.allowedUDPPorts = [
+    51820 53 853
+      7777 7778 27015 # ARK Game & Query portar
+  ];
 
-networking.firewall.allowedTCPPorts = [
-  53 80 443 25565 853
-  22
-];
+  networking.firewall.allowedTCPPorts = [
+    53 80 443 25565 853
+      22
+  ];
 }

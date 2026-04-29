@@ -167,6 +167,7 @@ assert lib.asserts.assertMsg ((lib.lists.count (v: true) <| builtins.attrNames p
         enable = true;
         useNetworkd = true;
         interfaces.${tunnel} = {
+          listenPort = port;
           privateKeyFile = privateKeyFile;
           ips = ["${lib.head (lib.splitString "/" ip)}/24"];
           peers = [
