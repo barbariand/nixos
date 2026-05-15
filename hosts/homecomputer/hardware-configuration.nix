@@ -45,7 +45,17 @@ hardware.graphics = {
     libvdpau-va-gl
   ];
 };
+boot.tmp.useTmpfs = true;
+boot.tmp.tmpfsSize = "50%";
+programs.ccache = {
+    enable = true;
+    cacheDir = "/var/cache/ccache";
+  };
 
+  # Låt Nix-byggaren använda ccache-mappen i sandlådan
+  nix.settings = {
+    extra-sandbox-paths = [ "/var/cache/ccache" ];
+  };
   hardware.nvidia = {
     modesetting.enable = true;
     powerManagement.enable = false;

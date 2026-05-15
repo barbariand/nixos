@@ -7,12 +7,12 @@ flake_uri := "."
 user := "root"
 
 # Build the current config lokalt
-build:
-    nh os switch {{flake_uri}}
+build *extra_flags:
+    nh os switch {{flake_uri}} {{extra_flags}}
 
 # Check flake for syntax errors
-check:
-    nix flake check
+check *extra_flags:
+    nix flake check {{extra_flags}}
 
 # Deploy till en fjärrmaskin (t.ex. server eller hallonpaj)
 deploy host *extra_flags:
@@ -23,6 +23,12 @@ deploy host *extra_flags:
         --target-host {{user}}@$TARGET_IP \
         {{extra_flags}}
 
+deploy_custom_ip host ip *extra_flags:
+    @echo "Building & Deploying Flake for host: {{host}}"
+    nh os switch {{flake_uri}} \
+        --hostname {{host}} \
+        --target-host {{user}}@{{ip}} \
+        {{extra_flags}}
 jq := require("jq")
 # Refresh the dynamic commands
 update:

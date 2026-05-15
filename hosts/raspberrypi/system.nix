@@ -68,6 +68,7 @@
   };
 in {
   config.modules = {
+    declarative-password.enable = true;
     wifi = {
       enable = true;
       networks = networks;

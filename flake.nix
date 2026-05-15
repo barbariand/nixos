@@ -102,11 +102,16 @@
         server = true;
         disko = false;
         extraModules = [
+        ({...}:{
+          fileSystems."/" = {
+            device = "/dev/disk/by-label/NIXOS_SD";
+            fsType = "ext4";
+          };
+        })
           ./hosts/raspberrypi/vaultwarden.nix
           ./hosts/raspberrypi/networking.nix
           syncthingModules
           inputs.hardware.nixosModules.raspberry-pi-4
-          "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
         ];
       };
 

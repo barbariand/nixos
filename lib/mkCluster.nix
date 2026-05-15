@@ -33,11 +33,11 @@
 
     hostModules =
       globalExtraModules
-      ++ (getNamedModules "namedGlobalExtraModules" namedGlobalExtraModules name)
+      ++ (getNamedModules "namedGlobalExtraModules" namedGlobalExtraModules actualHostName)
       ++ (
         if isServer
-        then serverExtraModules ++ (getNamedModules "namedServerExtraModules" namedServerExtraModules name)
-        else clientExtraModules ++ (getNamedModules "namedClientExtraModules" namedClientExtraModules name)
+        then serverExtraModules ++ (getNamedModules "namedServerExtraModules" namedServerExtraModules actualHostName)
+        else clientExtraModules ++ (getNamedModules "namedClientExtraModules" namedClientExtraModules actualHostName)
       )
       ++ (cfg.extraModules or []);
 

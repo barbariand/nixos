@@ -90,25 +90,20 @@ in {
   privateKeyFile,
   publicKey ? null,
   ipBase ? "10.0.0.1",
-  peers ? {},
+  peers ? [], # Ändrat till en lista som default
   serverName ? "server",
   tunnel ? "wg0",
 }:
 assert lib.asserts.assertMsg (builtins.isString privateKeyFile) "privateKeyFile must be a path.";
 assert lib.asserts.assertMsg (builtins.isInt port && port > 0 && port <= 65535) "The port number need to be between 1 and 65535.";
-assert lib.asserts.assertMsg (builtins.isString interface) "The wifi interface you want to tunnel through.";
-assert lib.asserts.assertMsg (builtins.isAttrs peers && (lib.lists.all (v: builtins.isString v) <| builtins.attrValues peers)) "peers should be an set with a name and a public key (string).";
+assert lib.asserts.assertMsg (builtins.isString interface) "The interface you want to tunnel through.";
+assert lib.asserts.assertMsg (builtins.isList peers) "peers should be a list of sets containing name and publicKey.";
 assert lib.asserts.assertMsg (builtins.isString ipBase && builtins.match "^[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+$" ipBase != null) "The ipBase should be an ipv4 address.";
-assert lib.asserts.assertMsg ((lib.lists.count (v: true) <| builtins.attrNames peers) > 0 -> builtins.isString publicKey) "Server public key is required for peers"; let
+assert lib.asserts.assertMsg ((builtins.length peers) > 0 -> builtins.isString publicKey) "Server public key is required for peers"; let
   ipParts = lib.strings.splitString "." ipBase;
   ipBase' = i: lib.strings.toInt (builtins.elemAt ipParts i);
 
   tunnelSubnet = "${builtins.toString (ipBase' 0)}.${builtins.toString (ipBase' 1)}.${builtins.toString (ipBase' 2)}.0/24";
-
-  peerIPs =
-    builtins.attrNames peers
-    |> lib.lists.count (v: true)
-    |> builtins.genList (i: "${builtins.toString (ipBase' 0)}.${builtins.toString (ipBase' 1)}.${builtins.toString (ipBase' 2)}.${builtins.toString (ipBase' 3 + i + 1)}/32");
 
   server = {
     boot.kernel.sysctl = {"net.ipv4.ip_forward" = true;};
@@ -122,14 +117,13 @@ assert lib.asserts.assertMsg ((lib.lists.count (v: true) <| builtins.attrNames p
           listenPort = port;
           ips = ["${ipBase}/24"];
 
+          # Loopa direkt över listan, ordningen bevaras exakt!
           peers =
-            builtins.attrNames peers
-            |> lib.lists.imap0 (i: name: {
-              name = name;
-              allowedIPs = [(builtins.elemAt peerIPs i)];
-              publicKey = builtins.elemAt (builtins.attrValues peers) i;
-            })
-            |> builtins.filter (v: v.publicKey != null);
+            lib.lists.imap0 (i: peer: {
+              name = peer.name;
+              allowedIPs = [ "${builtins.toString (ipBase' 0)}.${builtins.toString (ipBase' 1)}.${builtins.toString (ipBase' 2)}.${builtins.toString (ipBase' 3 + i + 1)}/32" ];
+              publicKey = peer.publicKey;
+            }) peers;
         };
       };
 
@@ -142,13 +136,10 @@ assert lib.asserts.assertMsg ((lib.lists.count (v: true) <| builtins.attrNames p
             chain forward {
               type filter hook forward priority filter; policy accept;
               ct state established,related accept
-
               iifname "${tunnel}" oifname "${interface}" counter accept
-
               iifname "${tunnel}" oifname "${tunnel}" counter accept
             }
           }
-
           table inet nat {
             chain postrouting {
               type nat hook postrouting priority srcnat;
@@ -184,12 +175,12 @@ assert lib.asserts.assertMsg ((lib.lists.count (v: true) <| builtins.attrNames p
     };
   };
 
+  # Generera klientset från listan
   clients =
-    builtins.attrNames peers
-    |> lib.lists.imap0 (i: name: {
-      name = name;
-      value = client (builtins.elemAt peerIPs i);
-    })
-    |> builtins.listToAttrs;
+    lib.lists.imap0 (i: peer: {
+      name = peer.name;
+      value = client "${builtins.toString (ipBase' 0)}.${builtins.toString (ipBase' 1)}.${builtins.toString (ipBase' 2)}.${builtins.toString (ipBase' 3 + i + 1)}/32";
+    }) peers
+    |> lib.listToAttrs;
 in
   {${serverName} = server;} // clients

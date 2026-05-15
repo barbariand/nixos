@@ -57,6 +57,14 @@
     enable = true;
     recommendedProxySettings = true;
     recommendedTlsSettings = true;
+    virtualHosts."_" = {
+      default = true;
+      useACMEHost = "simd.me";
+      addSSL = true; # Catches unhandled HTTPS traffic on port 443
+      locations."/" = {
+        return = "444"; # Closes the connection immediately without sending response headers
+      };
+    };
     virtualHosts."vault.simd.me" = {
       useACMEHost = "simd.me";
       forceSSL = true;
@@ -81,6 +89,7 @@
         server {
           listen 25565;
           proxy_pass minecraft_backend;
+          proxy_bind $server_addr;
         }
         # ARK Game Port
         upstream ark_game_backend {
