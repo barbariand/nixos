@@ -1,13 +1,28 @@
 {
   description = "SIMD.ME flake";
 
-  inputs = {
-    sensible-nix.url = "github:urgobalt/sensible-nix/adding_configurable_overlays";
-    nixpkgs-unstable.follows = "sensible-nix/nixpkgs-unstable";
+inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-26.05";
+    nixpkgs-unstable.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+
+    home-manager = {
+      url = "github:nix-community/home-manager/release-26.05";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    sensible-nix = {
+      url = "github:urgobalt/sensible-nix/vesktop_client_test";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs-unstable.follows = "nixpkgs-unstable";
+      inputs.home-manager.follows = "home-manager";
+    };
+    nix-minecraft = {
+      url = "github:Infinidoge/nix-minecraft";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     hardware.url = "github:NixOS/nixos-hardware";
-    nix-minecraft.url = "github:Infinidoge/nix-minecraft";
     nvim = {
-      url = "github:urgobalt/nvim/main";
+      url = "github:barbariand/nvim";
       flake = false;
     };
   };
@@ -28,8 +43,8 @@
 
     tunnels = import ./hosts/tunnels.nix {inherit lib interface;};
     syncthingModules = import ./hosts/syncthing.nix {inherit interface;};
-    globalPackages = {pkgs}: with pkgs; [wireguard-tools syncthing evtest nh nixos-anywhere unstable.jujutsu docker bitwarden-cli unzip docker-compose];
-    clientPackages = {pkgs}: with pkgs; [wireshark unstable.signal-desktop monocraft bruno rpi-imager gimp protonvpn-gui hyprmon moonlight-qt libreoffice inkscape gajim wasistlos];
+    globalPackages = {pkgs}: with pkgs; [rustup wireguard-tools syncthing evtest nh nixos-anywhere unstable.jujutsu docker bitwarden-cli unzip docker-compose];
+    clientPackages = {pkgs}: with pkgs; [wireshark unstable.signal-desktop monocraft bruno rpi-imager gimp proton-vpn hyprmon moonlight-qt libreoffice inkscape gajim karere];
     k3sCluster = import ./lib/k3s.nix {
       inherit lib;
       controllerHostname = "raspberrypi";
@@ -53,7 +68,7 @@
       globalPackages = globalPackages;
       clientPackages = clientPackages;
 
-      globalExtraModules = [./hosts/networking.nix ./hosts/common.nix ./hosts/user_groups.nix];
+      globalExtraModules = [./hosts/ccache.nix ./hosts/networking.nix ./hosts/common.nix ./hosts/user_groups.nix];
       clientExtraModules = [syncthingModules ./hosts/docker-client.nix];
       namedGlobalExtraModules = [tunnels];
       namedServerExtraModules = [k3sCluster];
@@ -62,9 +77,11 @@
     nixosConfigurations = mkCluster {
       homecomputer = {
         system = "x86_64-linux";
-        extraPackages = pkgs: with pkgs; [prismlauncher heroic krita modrinth-app opentabletdriver];
+        extraPackages = pkgs: with pkgs; [prismlauncher heroic krita opentabletdriver];
         extraModules = [
+          ./hosts/llm.nix
           ({pkgs, ...}: {
+            services.flatpak.enable = true;
             nixpkgs.config.allowUnfreePredicate = pkg:
               builtins.elem (pkgs.lib.getName pkg) [
                 "modrinth-app"
@@ -102,12 +119,7 @@
         server = true;
         disko = false;
         extraModules = [
-        ({...}:{
-          fileSystems."/" = {
-            device = "/dev/disk/by-label/NIXOS_SD";
-            fsType = "ext4";
-          };
-        })
+          "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
           ./hosts/raspberrypi/vaultwarden.nix
           ./hosts/raspberrypi/networking.nix
           syncthingModules

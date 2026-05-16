@@ -14,7 +14,7 @@
 
   boot.loader.grub.enable = false;
   boot.loader.generic-extlinux-compatible.enable = true;
-
+  boot.kernelPackages = lib.mkForce pkgs.linuxPackages;
   # todo: remove this when this is fixed: https://github.com/NixOS/nixpkgs/issues/154163
   # related: https://github.com/NixOS/nixpkgs/issues/109280
   # related: https://discourse.nixos.org/t/cannot-build-raspberry-pi-sdimage-module-dw-hdmi-not-found/71804
@@ -24,7 +24,7 @@
   boot.kernelModules = [];
   boot.extraModulePackages = [];
   boot.kernelParams = ["cgroup_enable=memory" "cgroup_enable=cpuset" "cgroup_memory=1"];
-
+  boot.zfs.forceImportRoot = false;
 
   nixpkgs.hostPlatform = lib.mkDefault "aarch64-linux";
 }

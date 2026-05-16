@@ -1,18 +1,18 @@
 # Automatically generated host commands
 import "hosts.justfile"
 set shell := ["bash", "-uc"]
-
+override-input := "--override-input sensible-nix ~/code_home/old-sensible-nix/"
 # Variables
 flake_uri := "."
 user := "root"
 
 # Build the current config lokalt
 build *extra_flags:
-    nh os switch {{flake_uri}} {{extra_flags}}
+    nh os switch {{flake_uri}} --  {{override-input}} {{extra_flags}}
 
 # Check flake for syntax errors
 check *extra_flags:
-    nix flake check {{extra_flags}}
+    nix flake check -- {{override-input}}{{extra_flags}}
 
 # Deploy till en fjärrmaskin (t.ex. server eller hallonpaj)
 deploy host *extra_flags:
@@ -21,6 +21,7 @@ deploy host *extra_flags:
     nh os switch {{flake_uri}} \
         --hostname {{host}} \
         --target-host {{user}}@$TARGET_IP \
+        -- {{override-input}}\
         {{extra_flags}}
 
 deploy_custom_ip host ip *extra_flags:
@@ -28,6 +29,7 @@ deploy_custom_ip host ip *extra_flags:
     nh os switch {{flake_uri}} \
         --hostname {{host}} \
         --target-host {{user}}@{{ip}} \
+        -- {{override-input}}\
         {{extra_flags}}
 jq := require("jq")
 # Refresh the dynamic commands

@@ -1,4 +1,8 @@
-{pkgs,lib, ...}: {
+{
+  pkgs,
+  lib,
+  ...
+}: {
   services.minecraft-servers = {
     enable = true;
     eula = true;
@@ -7,10 +11,10 @@
     servers.stoneblock = {
       enable = true;
       autoStart = true;
-# Inkludera verktyg i PATH för systemd-tjänsten
-      path = [ pkgs.jdk21_headless pkgs.bash pkgs.coreutils pkgs.file ];
-          managementSystem.tmux.enable = false;
-          managementSystem.systemd-socket.enable = true;
+      # Inkludera verktyg i PATH för systemd-tjänsten
+      path = [pkgs.jdk21_headless pkgs.bash pkgs.coreutils pkgs.file];
+      managementSystem.tmux.enable = false;
+      managementSystem.systemd-socket.enable = true;
       # VIKTIGT: Skriv jvmOpts på en enda rad utan manuella radbrytningar
       jvmOpts = "";
 
@@ -22,7 +26,6 @@
         # Kör skriptet och skicka vidare alla argument ($@)
         exec ./run.sh "$@"
       '';
-
     };
   };
 }

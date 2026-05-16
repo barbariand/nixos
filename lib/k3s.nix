@@ -1,4 +1,3 @@
-
 /*
 # K3s Cluster Utility
 This module provides a helper function to build a K3s (Kubernetes) cluster
@@ -162,9 +161,13 @@ in {
       ip = cfg.ip;
       role = "agent";
       extraFlags = lib.concatStringsSep " " (builtins.filter (s: s != "") [
-        "--server https://${controllerIp}:6443"
         (cfg.extraFlags or "")
       ]);
+    }
+    // {
+      services.k3s = {
+        serverAddr = "https://${controllerIp}:6443";
+      };
     };
 
   workerModules = lib.mapAttrs mkWorkerModule nodes;
