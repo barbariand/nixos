@@ -14,6 +14,5 @@
       ];
     };
   };
-  networking.useNetworkd = true;
   networking.nameservers = ["192.168.1.3#dns.simd.me" "1.1.1.1"];
 }

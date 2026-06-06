@@ -10,7 +10,7 @@ inputs = {
       inputs.nixpkgs.follows = "nixpkgs";
     };
     sensible-nix = {
-      url = "github:urgobalt/sensible-nix/vesktop_client_test";
+      url = "github:urgobalt/sensible-nix/26.05";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.nixpkgs-unstable.follows = "nixpkgs-unstable";
       inputs.home-manager.follows = "home-manager";

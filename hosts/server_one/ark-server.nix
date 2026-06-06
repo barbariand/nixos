@@ -1,7 +1,7 @@
 { config, pkgs, ... }:
 {
   services.ark-server = {
-    enable = true;
+    enable = false;
     # ... dina andra inställningar (adminPassword etc)
 
     sessionName = "Cindy's Ark World";

@@ -13,8 +13,16 @@
   ];
   boot.initrd.availableKernelModules = ["nvme" "xhci_pci" "ahci" "usbhid" "usb_storage" "sd_mod" "sr_mod"];
   boot.kernelParams = ["nvidia-drm.modeset=1" "usbcore.autosuspend=-1"];
-  boot.initrd.kernelModules = [];
-  boot.kernelModules = ["kvm-amd" "xone-dongle"];
+  boot.initrd.kernelModules = [
+    "nvidia"
+    "nvidia_modeset"
+    "nvidia_uvm"
+    "nvidia_drm"
+  ];
+  boot.kernelModules = [
+    "kvm-amd"
+    "xone-dongle"
+  ];
   hardware.enableRedistributableFirmware = true;
 
   boot.binfmt.emulatedSystems = ["aarch64-linux"];
@@ -36,17 +44,17 @@
   };
   swapDevices = [];
   services.xserver.digimend.enable = true;
-hardware.graphics = {
-  enable = true;
-  enable32Bit = true;
-  extraPackages = with pkgs; [
-    nvidia-vaapi-driver
-    libva-vdpau-driver
-    libvdpau-va-gl
-  ];
-};
-boot.tmp.useTmpfs = true;
-boot.tmp.tmpfsSize = "50%";
+  hardware.graphics = {
+    enable = true;
+    enable32Bit = true;
+    extraPackages = with pkgs; [
+      nvidia-vaapi-driver
+      libva-vdpau-driver
+      libvdpau-va-gl
+    ];
+  };
+  boot.tmp.useTmpfs = true;
+  boot.tmp.tmpfsSize = "50%";
   hardware.nvidia = {
     modesetting.enable = true;
     powerManagement.enable = false;
@@ -57,17 +65,17 @@ boot.tmp.tmpfsSize = "50%";
   };
   services.tailscale.enable = true;
   services.xserver.videoDrivers = ["nvidia"];
-# networking.firewall.allowedUDPPorts = [
-#   # Wireguard
-#   51820
-#   # ARK Game & Query portar
-#   7777 7778 27015
-#   25147 27031 27032 27033 27034 27035 27036
-# ];
-# networking.firewall.allowedTCPPorts = [
-#   22 # SSH
-#   25147 27015 27036 # ARK server
-# ];
+  # networking.firewall.allowedUDPPorts = [
+  #   # Wireguard
+  #   51820
+  #   # ARK Game & Query portar
+  #   7777 7778 27015
+  #   25147 27031 27032 27033 27034 27035 27036
+  # ];
+  # networking.firewall.allowedTCPPorts = [
+  #   22 # SSH
+  #   25147 27015 27036 # ARK server
+  # ];
   # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
   # (the default) this is the recommended approach. When using systemd-networkd it's
   # still possible to use this option, but it's recommended to use it in conjunction
