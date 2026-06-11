@@ -6,18 +6,22 @@ override-input := "--override-input sensible-nix ~/code_home/old-sensible-nix/"
 flake_uri := "."
 user := "root"
 
-# Build the current config lokalt
+# build the current config lokalt
 build *extra_flags:
     nh os switch {{flake_uri}} --  {{override-input}} {{extra_flags}}
 
+# build the current config locally for boot
+boot *extra_flags:
+    nh os boot {{flake_uri}} --  {{override-input}} {{extra_flags}}
+
 # Check flake for syntax errors
 check *extra_flags:
-    nix flake check -- {{override-input}}{{extra_flags}}
+    nix flake check -- {{override-input}} {{extra_flags}}
 
 # Deploy till en fjärrmaskin (t.ex. server eller hallonpaj)
 deploy host *extra_flags:
     @echo "Building & Deploying Flake for host: {{host}}"
-    @TARGET_IP=$(nix eval .#nixosConfigurations.{{host}}.config.networking.wireguard.interfaces.wg0.ips --apply 'ips: builtins.head (builtins.split "/" (builtins.head ips))' --quiet --raw); \
+    @TARGET_IP=$(nix eval .#nixosConfigurations.{{host}}.config.networking.wireguard.interfaces.wg0.ips  --apply 'ips: builtins.head (builtins.split "/" (builtins.head ips))' --quiet --raw -- ); \
     nh os switch {{flake_uri}} \
         --hostname {{host}} \
         --target-host {{user}}@$TARGET_IP \

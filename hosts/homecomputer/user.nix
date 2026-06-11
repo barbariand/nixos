@@ -21,7 +21,10 @@
     # applets
     fuzzel.enable = true;
     chromium.enable = true;
-    social.enable = true;
+    social = {
+      enable = true;
+      useVesktop = true;
+    };
     # cli
     nvim.enable = true;
     fish.enable = true;

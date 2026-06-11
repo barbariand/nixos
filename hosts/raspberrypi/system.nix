@@ -72,6 +72,7 @@ in {
     wifi = {
       enable = true;
       networks = networks;
+      useNetworkd = true;
     };
   };
 }

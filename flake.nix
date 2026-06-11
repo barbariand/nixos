@@ -1,7 +1,7 @@
 {
   description = "SIMD.ME flake";
 
-inputs = {
+  inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-26.05";
     nixpkgs-unstable.url = "github:nixos/nixpkgs?ref=nixos-unstable";
 
@@ -38,12 +38,12 @@ inputs = {
     lib = nixpkgs.lib;
     user = "cindy";
     email = "cindy@simd.me";
-    interface = "wg0";
+    interface = "wlan0";
     full-name = "Cindy Nilsson";
 
     tunnels = import ./hosts/tunnels.nix {inherit lib interface;};
     syncthingModules = import ./hosts/syncthing.nix {inherit interface;};
-    globalPackages = {pkgs}: with pkgs; [rustup wireguard-tools syncthing evtest nh nixos-anywhere unstable.jujutsu docker bitwarden-cli unzip docker-compose];
+    globalPackages = {pkgs}: with pkgs; [rustup bacon wireguard-tools syncthing evtest nh nixos-anywhere unstable.jujutsu docker bitwarden-cli unzip docker-compose];
     clientPackages = {pkgs}: with pkgs; [wireshark unstable.signal-desktop monocraft bruno rpi-imager gimp proton-vpn hyprmon moonlight-qt libreoffice inkscape gajim karere];
     k3sCluster = import ./lib/k3s.nix {
       inherit lib;
@@ -56,6 +56,7 @@ inputs = {
         server_one = {ip = "10.55.0.4";};
       };
     };
+
     mkCluster = import ./lib/mkCluster.nix {
       inherit lib;
       mkSystem = sensible-nix.nixosModules.mkSystem {
@@ -77,24 +78,27 @@ inputs = {
     nixosConfigurations = mkCluster {
       homecomputer = {
         system = "x86_64-linux";
-        extraPackages = pkgs: with pkgs; [prismlauncher heroic krita opentabletdriver];
+        extraPackages = pkgs: with pkgs; [opencode prismlauncher heroic krita opentabletdriver];
         extraModules = [
-          ./hosts/llm.nix
           ({pkgs, ...}: {
             services.flatpak.enable = true;
+
+            # Ensure the predicate is broad enough or correctly matched
             nixpkgs.config.allowUnfreePredicate = pkg:
               builtins.elem (pkgs.lib.getName pkg) [
                 "modrinth-app"
+                "openclaw" # Use the package name, not the version-suffixed string here
               ];
-            nixpkgs.overlays = [
-              (final: prev: {
-                heroic = prev.heroic.override {
-                  extraPkgs = p: [p.gamescope];
-                };
-              })
+
+            # Explicitly permit the insecure version globally at the module level
+            nixpkgs.config.permittedInsecurePackages = [
+              "openclaw-2026.5.7"
             ];
+
             security.polkit.enable = true;
           })
+
+          ./hosts/llm.nix
         ];
       };
 

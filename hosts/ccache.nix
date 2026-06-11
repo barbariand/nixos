@@ -1,14 +1,15 @@
-{ config, pkgs, lib, ... }: {
-  # Aktivera den globala ccache-modulen i NixOS
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}: {
   programs.ccache.enable = true;
 
-  # Ange var den persistenta cachen ska lagras på disken
   programs.ccache.cacheDir = "/var/cache/ccache";
 
-  # Skruva upp maxstorleken på cachen (standard är ganska låg)
-  nix.settings.extra-sandbox-paths = [ config.programs.ccache.cacheDir ];
+  nix.settings.extra-sandbox-paths = [config.programs.ccache.cacheDir];
 
-  # Injektera ccache via en global nixpkgs-overlay
   nixpkgs.overlays = [
     (final: prev: {
       ccacheWrapper = prev.ccacheWrapper.override {

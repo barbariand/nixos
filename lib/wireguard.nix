@@ -10,7 +10,6 @@ optional internet routing.
 |-----------------|------------------|---------------------------------------------------------------------------------------------------------|
 | lib             | attrset          | The standard NixOS library (nixpkgs.lib).                                                               |
 | port            | int              | The UDP port WireGuard will listen on (1-65535).                                                        |
-| interface       | string           | The physical network interface (e.g., "eth0" or "enp1s0") used for WAN connectivity.                    |
 | endpoint        | string           | The public domain or IP address of the server. The port is automatically appended for clients.          |
 | privateKeyFile  | string (path)    | Absolute path to the WireGuard private key file on the local file system.                               |
 | publicKey       | string (optional)| The server's public key. Required if clients (peers) are defined.                                       |
@@ -121,9 +120,10 @@ assert lib.asserts.assertMsg ((builtins.length peers) > 0 -> builtins.isString p
           peers =
             lib.lists.imap0 (i: peer: {
               name = peer.name;
-              allowedIPs = [ "${builtins.toString (ipBase' 0)}.${builtins.toString (ipBase' 1)}.${builtins.toString (ipBase' 2)}.${builtins.toString (ipBase' 3 + i + 1)}/32" ];
+              allowedIPs = ["${builtins.toString (ipBase' 0)}.${builtins.toString (ipBase' 1)}.${builtins.toString (ipBase' 2)}.${builtins.toString (ipBase' 3 + i + 1)}/32"];
               publicKey = peer.publicKey;
-            }) peers;
+            })
+            peers;
         };
       };
 
@@ -154,6 +154,8 @@ assert lib.asserts.assertMsg ((builtins.length peers) > 0 -> builtins.isString p
   client = ip: {
     networking = {
       firewall.allowedUDPPorts = [port];
+      dhcpcd.denyInterfaces = [tunnel];
+      interfaces.${tunnel}.useDHCP = false;
       wireguard = {
         enable = true;
         useNetworkd = true;
@@ -180,7 +182,8 @@ assert lib.asserts.assertMsg ((builtins.length peers) > 0 -> builtins.isString p
     lib.lists.imap0 (i: peer: {
       name = peer.name;
       value = client "${builtins.toString (ipBase' 0)}.${builtins.toString (ipBase' 1)}.${builtins.toString (ipBase' 2)}.${builtins.toString (ipBase' 3 + i + 1)}/32";
-    }) peers
+    })
+    peers
     |> lib.listToAttrs;
 in
   {${serverName} = server;} // clients

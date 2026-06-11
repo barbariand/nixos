@@ -63,9 +63,9 @@
     virtualHosts."_" = {
       default = true;
       useACMEHost = "simd.me";
-      addSSL = true; # Catches unhandled HTTPS traffic on port 443
+      addSSL = true;
       locations."/" = {
-        return = "444"; # Closes the connection immediately without sending response headers
+        return = "444";
       };
     };
     virtualHosts."vault.simd.me" = {
@@ -77,11 +77,9 @@
       };
     };
 
-    # För DNS-over-TLS certifikat
     virtualHosts."dns.simd.me" = {
       useACMEHost = "simd.me";
       forceSSL = true;
-      # Ingen proxyPass behövs om Nginx bara används för ACME-utmaningen
     };
 
     appendConfig = ''
@@ -92,8 +90,8 @@
         server {
           listen 25565;
           proxy_pass minecraft_backend;
-          proxy_bind $server_addr;
         }
+
         # ARK Game Port
         upstream ark_game_backend {
           server 192.168.1.2:7777;
