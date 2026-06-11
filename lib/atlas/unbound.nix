@@ -1,54 +1,48 @@
-{ config, lib, ... }:
-
-with lib;
-
-let
-  cfg = config.sensible.atlas.unbound;
+{
+  config,
+  lib,
+  ...
+}:
+with lib; let
+  cfg = config.sensible.atlas;
 in {
-  options.sensible.atlas.unbound = {
-    enable = mkEnableOption "Atlas Unbound DNS";
-
-    serverIp = mkOption { type = types.str; };
-    baseDomain = mkOption { type = types.str; };
-    resolvers = mkOption { type = types.listOf types.str; default = [ "1.1.1.1" ]; };
-
-    localRecords = mkOption {
-      type = types.attrsOf types.str;
-      default = {};
-      description = "Mapping of subdomain to IP.";
-    };
-
-    tls = {
-      enable = mkEnableOption "DNS-over-TLS";
-      certPath = mkOption { type = types.path; };
-      keyPath = mkOption { type = types.path; };
-    };
-  };
-
-  config = mkIf cfg.enable {
+  config = mkIf (cfg.enable && cfg.unbound.enable) {
     services.unbound = {
       enable = true;
       settings = {
         server = {
-          interface = [ "0.0.0.0@853" "0.0.0.0@53" ];
-          access-control = [ "127.0.0.0/8 allow" "192.168.1.0/24 allow" ];
+          interface = ["0.0.0.0@853" "0.0.0.0@53"];
+          access-control = ["127.0.0.0/8 allow" "192.168.1.0/24 allow" "10.55.0.0/24 allow"];
 
-          tls-port = mkIf cfg.tls.enable 853;
-          tls-service-key = mkIf cfg.tls.enable "${cfg.tls.keyPath}";
-          tls-service-pem = mkIf cfg.tls.enable "${cfg.tls.certPath}";
+          tls-service-key = "/var/lib/acme/${cfg.baseDomain}/key.pem";
+          tls-service-pem = "/var/lib/acme/${cfg.baseDomain}/fullchain.pem";
+          tls-port = 853;
 
-          local-zone = ''"${cfg.baseDomain}." static'';
-          local-data = [ ''"${cfg.baseDomain}. IN A ${cfg.serverIp}"'' ]
-            ++ (mapAttrsToList (n: ip: ''"${n}.${cfg.baseDomain}. IN A ${ip}"'') cfg.localRecords);
+          local-zone = ''"${cfg.baseDomain}." transparent'';
+          domain-insecure = ["${cfg.baseDomain}."];
+
+          local-data = let
+            activeSubs = filterAttrs (n: s: s.enable && s.unbound.enable) cfg.subdomains;
+            mkRecord = name: ''"${name}.${cfg.baseDomain}. IN A ${cfg.serverIp}"'';
+          in
+            [''"${cfg.baseDomain}. IN A ${cfg.serverIp}"''] ++ (mapAttrsToList (n: v: mkRecord n) activeSubs);
         };
-        forward-zone = [{ name = "."; forward-addr = cfg.resolvers; }];
+        forward-zone = [
+          {
+            name = ".";
+            forward-addr = cfg.dns.resolvers;
+          }
+        ];
       };
     };
 
-    # Brandvägg och rättigheter
-    networking.firewall.allowedTCPPorts = [ 53 853 ];
-    networking.firewall.allowedUDPPorts = [ 53 853 ];
+    systemd.services.unbound.serviceConfig = {
+      BindReadOnlyPaths = ["/var/lib/acme/${cfg.baseDomain}"];
+      ReadWritePaths = ["/var/lib/unbound"];
+    };
 
-    systemd.services.unbound.serviceConfig.BindReadOnlyPaths = mkIf cfg.tls.enable [ (builtins.dirOf cfg.tls.certPath) ];
+    users.users.unbound.extraGroups = ["acme" "nginx"];
+    networking.firewall.allowedTCPPorts = [53 853];
+    networking.firewall.allowedUDPPorts = [53 853];
   };
 }

@@ -26,7 +26,7 @@
   hardware.enableRedistributableFirmware = true;
 
   boot.binfmt.emulatedSystems = ["aarch64-linux"];
-
+  boot.initrd.systemd.network.links."10-wol" = config.systemd.network.links."10-wol";
   boot.loader.efi.canTouchEfiVariables = true;
   hardware.xone.enable = true;
   hardware.xpadneo.enable = true;
@@ -65,6 +65,26 @@
   };
   services.tailscale.enable = true;
   services.xserver.videoDrivers = ["nvidia"];
+  systemd.network.links."10-wol" = {
+    matchConfig = {
+      Name = "enp7s0";
+    };
+    linkConfig = {
+      WakeOnLan = "magic";
+    };
+  };
+  systemd.services.set-wol = {
+    description = "Configure Wake-on-LAN for enp3s0";
+    after = ["network-pre.target"];
+    wants = ["network-pre.target"];
+    wantedBy = ["multi-user.target"];
+
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = "${pkgs.ethtool}/bin/ethtool -s enp7s0 wol g";
+    };
+  };
   # networking.firewall.allowedUDPPorts = [
   #   # Wireguard
   #   51820

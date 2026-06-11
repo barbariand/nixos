@@ -67,6 +67,7 @@
     };
   };
 in {
+  imports = [./networking.nix];
   config.modules = {
     declarative-password.enable = true;
     wifi = {

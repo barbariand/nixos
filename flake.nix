@@ -113,7 +113,7 @@
         hostnameOverride = "raspberrypi"; # Gör att maskinen heter raspberrypi trots flakens namn
         extraModules = [
           ./hosts/raspberrypi/vaultwarden.nix
-          ./hosts/raspberrypi/networking.nix
+          ./lib/atlas.nix
           syncthingModules
           "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
         ];
