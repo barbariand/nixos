@@ -62,5 +62,7 @@
     # wierd xpad fix
     SUBSYSTEM=="usb", ATTR{idVendor}=="2dc8", ATTR{idProduct}=="6013", MODE="0660", GROUP="users"
         KERNEL=="ttyACM0", MODE="0777"
+
   '';
+  services.avahi.enable = true;
 }

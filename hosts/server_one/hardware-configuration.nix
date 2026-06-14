@@ -43,6 +43,7 @@
   networking.firewall.allowedTCPPorts = [
     # Minecraft
     25565
+    25566
     # ARK RCON
     27020
   ];

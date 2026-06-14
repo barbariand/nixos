@@ -3,13 +3,15 @@
 This module acts as a declarative map for your infrastructure.
 
 ## Global Options
-| Option                           | Type             | Description                                                                 |
-|----------------------------------|------------------|-----------------------------------------------------------------------------|
-| sensible.atlas.enable            | bool             | Global toggle for the Atlas manager.                                        |
-| sensible.atlas.baseDomain        | string           | The root domain (e.g., "example.com"). No default.                          |
-| sensible.atlas.serverIp          | string           | Internal IPv4 for all generated A-records.                                  |
-| sensible.atlas.internalNetworks  | list of str      | Trusted subnets for internal visibility (e.g., ["192.168.1.0/24"]).         |
-| sensible.atlas.dns.resolvers     | list of str      | Upstream DNS servers for host and Unbound.                                  |
+| Option                                    | Type             | Description                                                                 |
+|-------------------------------------------|------------------|-----------------------------------------------------------------------------|
+| sensible.atlas.enable                     | bool             | Global toggle for the Atlas manager.                                        |
+| sensible.atlas.baseDomain                 | string           | The root domain (e.g., "example.com"). No default.                          |
+| sensible.atlas.serverIp                   | string           | Internal IPv4 for all generated A-records.                                  |
+| sensible.atlas.internalNetworks           | list of str      | Trusted subnets for internal visibility (e.g., ["192.168.1.0/24"]).         |
+| sensible.atlas.dns.resolvers              | list of str      | Upstream DNS servers for host and Unbound.                                  |
+| sensible.atlas.firewall.extraTCPPorts     | list of int      | Any extra TCP ports to allow thourgh the firewall.                          |
+| sensible.atlas.firewall.extraUDPPorts     | list of int      | Any extra UDP ports to allow thourgh the firewall.                          |
 
 ## Subdomain Options
 Each attribute under `sensible.atlas.subdomains.<name>` supports:
@@ -143,6 +145,25 @@ in {
       default = ["1.1.1.1" "8.8.8.8"];
     };
 
+    dns.views = mkOption {
+      type = types.attrsOf (types.submodule {
+        options = {
+          accessControl = mkOption {
+            type = types.listOf types.str;
+            default = [];
+            description = "List of network CIDRs mapping to this DNS view.";
+          };
+          localData = mkOption {
+            type = types.listOf types.str;
+            default = [];
+            description = "Custom local-data lines overriding or defining records for this specific view.";
+          };
+        };
+      });
+      default = {};
+      description = "Declarative Split-Horizon DNS views for specific subnets.";
+    };
+
     acme = {
       enable = mkEnableOption "Atlas ACME Wildcard";
       email = mkOption {type = types.str;};
@@ -171,6 +192,17 @@ in {
     subdomains = mkOption {
       type = types.attrsOf (types.submodule subdomainOpts);
       default = {};
+    };
+
+    firewall = {
+      allowedTCPPorts = mkOption {
+        type = types.listOf types.port;
+        default = [];
+      };
+      allowedUDPPorts = mkOption {
+        type = types.listOf types.port;
+        default = [];
+      };
     };
   };
 }

@@ -2,6 +2,7 @@
   description = "SIMD.ME flake";
 
   inputs = {
+    llm-agents.url = "github:numtide/llm-agents.nix";
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-26.05";
     nixpkgs-unstable.url = "github:nixos/nixpkgs?ref=nixos-unstable";
 
@@ -10,7 +11,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     sensible-nix = {
-      url = "github:urgobalt/sensible-nix/26.05";
+      url = "github:urgobalt/sensible-nix/networkd_wifi";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.nixpkgs-unstable.follows = "nixpkgs-unstable";
       inputs.home-manager.follows = "home-manager";
@@ -69,9 +70,16 @@
       globalPackages = globalPackages;
       clientPackages = clientPackages;
 
-      globalExtraModules = [./hosts/ccache.nix ./hosts/networking.nix ./hosts/common.nix ./hosts/user_groups.nix];
+      globalExtraModules = [
+        ./hosts/ccache.nix
+        ./hosts/networking.nix
+        ./hosts/common.nix
+        ./hosts/user_groups.nix
+        ./modules/atlas.nix
+        ./modules/homepage.nix
+      ];
       clientExtraModules = [syncthingModules ./hosts/docker-client.nix];
-      namedGlobalExtraModules = [tunnels];
+      namedGlobalExtraModules = [tunnels (import ./hosts/logging.nix {inherit lib;})];
       namedServerExtraModules = [k3sCluster];
     };
   in {
@@ -80,17 +88,22 @@
         system = "x86_64-linux";
         extraPackages = pkgs: with pkgs; [opencode prismlauncher heroic krita opentabletdriver];
         extraModules = [
+          ({config, ...}: {
+            nixpkgs.overlays = [inputs.llm-agents.overlays.default];
+            environment.systemPackages = [inputs.llm-agents.pi];
+            home-manager.users.cindy.home.sessionPath = [
+              "${config.home-manager.users.cindy.home.homeDirectory}/.npm-packages"
+            ];
+          })
           ({pkgs, ...}: {
             services.flatpak.enable = true;
 
-            # Ensure the predicate is broad enough or correctly matched
             nixpkgs.config.allowUnfreePredicate = pkg:
               builtins.elem (pkgs.lib.getName pkg) [
                 "modrinth-app"
-                "openclaw" # Use the package name, not the version-suffixed string here
+                "openclaw"
               ];
 
-            # Explicitly permit the insecure version globally at the module level
             nixpkgs.config.permittedInsecurePackages = [
               "openclaw-2026.5.7"
             ];
@@ -110,12 +123,13 @@
         system = "aarch64-linux";
         server = true;
         disko = false;
-        hostnameOverride = "raspberrypi"; # Gör att maskinen heter raspberrypi trots flakens namn
+        hostnameOverride = "raspberrypi";
         extraModules = [
-          ./hosts/raspberrypi/vaultwarden.nix
-          ./lib/atlas.nix
-          syncthingModules
           "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
+          ./hosts/raspberrypi/vaultwarden.nix
+          ./hosts/raspberrypi/homepage.nix
+          ./hosts/raspberrypi/networking.nix
+          syncthingModules
         ];
       };
       raspberrypi = {
@@ -125,6 +139,7 @@
         extraModules = [
           "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
           ./hosts/raspberrypi/vaultwarden.nix
+          ./hosts/raspberrypi/homepage.nix
           ./hosts/raspberrypi/networking.nix
           syncthingModules
           inputs.hardware.nixosModules.raspberry-pi-4
@@ -135,7 +150,7 @@
         system = "x86_64-linux";
         server = true;
         extraModules = [
-          ./lib/ark-server.nix
+          ./modules/ark-server.nix
           ./hosts/server_one/ark-server.nix
           nix-minecraft.nixosModules.minecraft-servers
           ({...}: {

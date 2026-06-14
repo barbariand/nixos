@@ -108,6 +108,7 @@ assert lib.asserts.assertMsg ((builtins.length peers) > 0 -> builtins.isString p
     boot.kernel.sysctl = {"net.ipv4.ip_forward" = true;};
 
     networking = {
+      useNetworkd = true;
       wireguard = {
         enable = true;
         useNetworkd = true;
@@ -153,6 +154,7 @@ assert lib.asserts.assertMsg ((builtins.length peers) > 0 -> builtins.isString p
 
   client = ip: {
     networking = {
+      useNetworkd = true;
       firewall.allowedUDPPorts = [port];
       dhcpcd.denyInterfaces = [tunnel];
       interfaces.${tunnel}.useDHCP = false;

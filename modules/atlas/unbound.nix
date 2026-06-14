@@ -12,7 +12,14 @@ in {
       settings = {
         server = {
           interface = ["0.0.0.0@853" "0.0.0.0@53"];
-          access-control = ["127.0.0.0/8 allow" "192.168.1.0/24 allow" "10.55.0.0/24 allow"];
+
+          access-control = map (net: "${net} allow") cfg.internalNetworks;
+
+          access-control-view = flatten (mapAttrsToList (
+              viewName: viewCfg:
+                map (cidr: "${cidr} ${viewName}") viewCfg.accessControl
+            )
+            cfg.dns.views);
 
           tls-service-key = "/var/lib/acme/${cfg.baseDomain}/key.pem";
           tls-service-pem = "/var/lib/acme/${cfg.baseDomain}/fullchain.pem";
@@ -27,6 +34,15 @@ in {
           in
             [''"${cfg.baseDomain}. IN A ${cfg.serverIp}"''] ++ (mapAttrsToList (n: v: mkRecord n) activeSubs);
         };
+
+        view =
+          mapAttrsToList (viewName: viewCfg: {
+            name = viewName;
+            local-zone = ''"${cfg.baseDomain}." transparent'';
+            local-data = viewCfg.localData;
+          })
+          cfg.dns.views;
+
         forward-zone = [
           {
             name = ".";

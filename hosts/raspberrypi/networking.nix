@@ -1,9 +1,4 @@
-{
-  config,
-  pkgs,
-  lib,
-  ...
-}: {
+{config, ...}: {
   config.sensible.atlas = {
     enable = true;
     baseDomain = "simd.me";
@@ -12,6 +7,19 @@
     internalNetworks = ["127.0.0.0/8" "192.168.1.0/24" "10.55.0.0/24"];
 
     dns.resolvers = ["1.1.1.1" "8.8.8.8"];
+
+    dns.views = {
+      wireguard = {
+        accessControl = ["10.55.0.0/24"];
+        localData = [
+          "\"vault.simd.me. IN A 10.55.0.1\""
+          "\"openclaw.simd.me. IN A 10.55.0.1\""
+          "\"logs.simd.me. IN A 10.55.0.1\""
+          "\"grafana.simd.me. IN A 10.55.0.1\""
+          "\"homepage.simd.me. IN A 10.55.0.1\""
+        ];
+      };
+    };
 
     acme = {
       enable = true;
@@ -28,6 +36,11 @@
     };
 
     subdomains = {
+      wireguard = {
+        enable = true;
+
+        nginx.proxyPass = null;
+      };
       vault = {
         enable = true;
         nginx.proxyPass = "http://127.0.0.1:8222";
@@ -38,6 +51,15 @@
         nginx.proxyPass = null;
       };
 
+      mc = {
+        enable = true;
+        nginx.enable = false;
+        streams.game = {
+          port = 25566;
+          protocol = "tcp";
+          backend = "10.55.0.4:25566";
+        };
+      };
       minecraft = {
         enable = true;
         nginx.enable = false;
@@ -55,17 +77,17 @@
           game = {
             port = 7777;
             protocol = "udp";
-            backend = "192.168.1.2:7777";
+            backend = "192.168.1.4:7777";
           };
           query = {
             port = 27015;
             protocol = "udp";
-            backend = "192.168.1.2:27015";
+            backend = "192.168.1.4:27015";
           };
           raw = {
             port = 7778;
             protocol = "udp";
-            backend = "192.168.1.2:7778";
+            backend = "192.168.1.4:7778";
           };
         };
       };
@@ -73,11 +95,30 @@
       openclaw = {
         enable = true;
         visibility = "internal";
-        nginx.proxyPass = "http://192.168.1.3:9000";
+        nginx.proxyPass = "http://10.55.0.2:9000";
+      };
+
+      logs = {
+        enable = true;
+        visibility = "internal";
+        nginx.proxyPass = "http://127.0.0.1:3100";
+      };
+      grafana = {
+        enable = true;
+        visibility = "internal";
+        nginx.proxyPass = "http://127.0.0.1:3000";
+      };
+
+      homepage = {
+        enable = true;
+        visibility = "internal";
+        nginx.proxyPass = "http://127.0.0.1:8082";
       };
     };
-  };
 
-  networking.firewall.allowedTCPPorts = [22];
-  networking.firewall.allowedUDPPorts = [51820];
+    firewall = {
+      allowedTCPPorts = [22];
+      allowedUDPPorts = [51820];
+    };
+  };
 }

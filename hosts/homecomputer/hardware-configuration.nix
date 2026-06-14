@@ -24,7 +24,10 @@
     "xone-dongle"
   ];
   hardware.enableRedistributableFirmware = true;
-
+  environment.sessionVariables = {
+    __GL_SHADER_DISK_CACHE_SIZE = "12000000000";
+    __GL_SHADER_DISK_CACHE_SKIP_CLEANUP = "1";
+  };
   boot.binfmt.emulatedSystems = ["aarch64-linux"];
   boot.initrd.systemd.network.links."10-wol" = config.systemd.network.links."10-wol";
   boot.loader.efi.canTouchEfiVariables = true;

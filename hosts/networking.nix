@@ -7,12 +7,18 @@
     enable = true;
     settings.Resolve = {
       DNSOverTLS = "opportunistic";
-      Domains = ["~."];
       FallbackDNS = [
-        "1.1.1.1#cloudflare-dns.com"
-        "9.9.9.9#dns.quad9.net"
+        "1.1.1.1"
+        "9.9.9.9"
       ];
     };
   };
-  networking.nameservers = ["192.168.1.3#dns.simd.me" "1.1.1.1"];
+  networking.nameservers = ["1.1.1.1"];
+  systemd.network.networks."40-wg0" = {
+    matchConfig.Name = "wg0";
+    networkConfig = {
+      DNS = "10.55.0.1#dns.simd.me";
+      Domains = "~internal.simd.me homepage.simd.me grafana.simd.me logs.simd.me";
+    };
+  };
 }

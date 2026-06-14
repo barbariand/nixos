@@ -16,7 +16,7 @@ boot *extra_flags:
 
 # Check flake for syntax errors
 check *extra_flags:
-    nix flake check -- {{override-input}} {{extra_flags}}
+    nix flake check {{override-input}} {{extra_flags}}
 
 # Deploy till en fjärrmaskin (t.ex. server eller hallonpaj)
 deploy host *extra_flags:
