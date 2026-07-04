@@ -10,7 +10,7 @@
       url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    sensible-nix = {
+    sensible = {
       url = "github:urgobalt/sensible-nix/networkd_wifi";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.nixpkgs-unstable.follows = "nixpkgs-unstable";
@@ -26,12 +26,18 @@
       url = "github:barbariand/nvim";
       flake = false;
     };
+    agenix = {
+      url = "github:ryantm/agenix";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+      };
+    };
   };
 
   outputs = {
     self,
     nixpkgs,
-    sensible-nix,
+    sensible,
     nix-minecraft,
     nvim,
     ...
@@ -44,8 +50,11 @@
 
     tunnels = import ./hosts/tunnels.nix {inherit lib interface;};
     syncthingModules = import ./hosts/syncthing.nix {inherit interface;};
-    globalPackages = {pkgs}: with pkgs; [rustup bacon wireguard-tools syncthing evtest nh nixos-anywhere unstable.jujutsu docker bitwarden-cli unzip docker-compose];
+    loggingModules = import ./hosts/logging.nix {inherit lib;};
+
+    globalPackages = {pkgs}: with pkgs; [git rustup bacon wireguard-tools syncthing evtest nh nixos-anywhere unstable.git unstable.jujutsu docker bitwarden-cli unzip docker-compose];
     clientPackages = {pkgs}: with pkgs; [wireshark unstable.signal-desktop monocraft bruno rpi-imager gimp proton-vpn hyprmon moonlight-qt libreoffice inkscape gajim karere];
+
     k3sCluster = import ./lib/k3s.nix {
       inherit lib;
       controllerHostname = "raspberrypi";
@@ -58,108 +67,212 @@
       };
     };
 
-    mkCluster = import ./lib/mkCluster.nix {
-      inherit lib;
-      mkSystem = sensible-nix.nixosModules.mkSystem {
-        inherit user email full-name;
-        nvim-config = nvim;
-        outPath = self.outPath;
-        wallpaper = ./background.jpg;
+    # Helper function to replace your old getNamedModules logic
+    getNamed = hostName: modulesSets:
+      lib.concatMap (
+        modSet:
+          if modSet ? ${hostName}
+          then
+            (
+              if builtins.isList modSet.${hostName}
+              then modSet.${hostName}
+              else [modSet.${hostName}]
+            )
+          else []
+      )
+      modulesSets;
+
+    clientBaseModules = [
+      syncthingModules
+      ./hosts/docker-client.nix
+      ({pkgs, ...}: {environment.systemPackages = clientPackages {inherit pkgs;};})
+    ];
+
+    serverBaseModules = [];
+
+    systemConfigs = sensible.nixosModules.default {
+      default = {
+        username = user;
+        specialArgs = {
+          inherit email interface full-name inputs self;
+          nvim-config = nvim;
+          outPath = self.outPath;
+          wallpaper = ./background.jpg;
+        };
+        modules = [
+          inputs.agenix.nixosModules.default
+          ({
+            user,
+            pkgs,
+            ...
+          }: {
+            home-manager.users.${user}.imports = [
+              inputs.agenix.homeManagerModules.default
+              ./secrets/home.nix
+            ];
+          })
+          ({
+            config,
+            user,
+            pkgs,
+            ...
+          }: {
+            sensible = {
+              secrets = {
+                enable = true;
+                password = "root";
+                passwordFile = config.age.secrets.user-password.path;
+              };
+              neovim = {
+                enable = true;
+                features = ["rust" "python" "html-css-js" "tailwindcss"];
+              };
+              wallpaper.source = ./background.jpg;
+            };
+          })
+          ./secrets/system.nix
+          ./hosts/ccache.nix
+          ./hosts/networking.nix
+          ./hosts/common.nix
+          ./hosts/user_groups.nix
+          ./modules/atlas.nix
+          ./modules/homepage.nix
+          ({pkgs, ...}: {
+            environment.systemPackages = globalPackages {inherit pkgs;};
+          })
+        ];
       };
 
-      globalPackages = globalPackages;
-      clientPackages = clientPackages;
+      systems = {
+        homecomputer = {
+          system = "x86_64-linux";
+          stateVersion = "26.05";
+          disko = true;
+          modules =
+            clientBaseModules
+            ++ (getNamed "homecomputer" [tunnels loggingModules])
+            ++ [
+              ({pkgs, ...}: {environment.systemPackages = with pkgs; [opencode parsec-bin prismlauncher heroic krita opentabletdriver];})
+              ({
+                config,
+                pkgs,
+                inputs,
+                ...
+              }: {
+                nixpkgs.overlays = [inputs.llm-agents.overlays.shared-nixpkgs];
+                environment.systemPackages = with pkgs; [llm-agents.pi];
+                home-manager.users.${user}.home.sessionPath = [
+                  "${config.home-manager.users.${user}.home.homeDirectory}/.npm-packages"
+                ];
+              })
+              ({pkgs, ...}: {
+                services.flatpak.enable = true;
+                nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (pkgs.lib.getName pkg) ["modrinth-app" "openclaw"];
+                nixpkgs.config.permittedInsecurePackages = ["openclaw-2026.5.7"];
+                security.polkit.enable = true;
+              })
+              ./hosts/llm.nix
+              ./hosts/homecomputer/disk-config.nix
+              ./hosts/homecomputer/hardware-configuration.nix
+              ./hosts/homecomputer/system.nix
+            ];
+        };
 
-      globalExtraModules = [
-        ./hosts/ccache.nix
-        ./hosts/networking.nix
-        ./hosts/common.nix
-        ./hosts/user_groups.nix
-        ./modules/atlas.nix
-        ./modules/homepage.nix
-      ];
-      clientExtraModules = [syncthingModules ./hosts/docker-client.nix];
-      namedGlobalExtraModules = [tunnels (import ./hosts/logging.nix {inherit lib;})];
-      namedServerExtraModules = [k3sCluster];
+        "lenovo-yoga" = {
+          system = "x86_64-linux";
+          stateVersion = "26.05";
+
+          disko = true;
+          modules =
+            clientBaseModules
+            ++ (getNamed "lenovo-yoga" [tunnels loggingModules])
+            ++ [
+              ({pkgs, ...}: {environment.systemPackages = with pkgs; [heroic sage];})
+              (
+                import
+                ./hosts/wifi.nix
+                {}
+              )
+              ./hosts/lenovo-yoga/disk-config.nix
+              ./hosts/lenovo-yoga/hardware-configuration.nix
+              ./hosts/lenovo-yoga/system.nix
+            ];
+        };
+
+        pi_sd = {
+          system = "aarch64-linux";
+          stateVersion = "26.05";
+          disko = false;
+          modules =
+            serverBaseModules
+            ++ (getNamed "raspberrypi" [tunnels loggingModules k3sCluster])
+            ++ [
+              {networking.hostName = lib.mkForce "raspberrypi";}
+              "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
+
+              (
+                import
+                ./hosts/wifi.nix
+                {}
+              )
+              ./hosts/raspberrypi/disk-config.nix
+              ./hosts/raspberrypi/hardware-configuration.nix
+              ./hosts/raspberrypi/system.nix
+              ./hosts/raspberrypi/vaultwarden.nix
+              ./hosts/raspberrypi/homepage.nix
+              ./hosts/raspberrypi/networking.nix
+              syncthingModules
+            ];
+        };
+
+        raspberrypi = {
+          system = "aarch64-linux";
+          stateVersion = "26.05";
+          disko = false;
+          modules =
+            serverBaseModules
+            ++ (getNamed "raspberrypi" [tunnels loggingModules k3sCluster])
+            ++ [
+              "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
+              (
+                import
+                ./hosts/wifi.nix
+                {}
+              )
+              ./hosts/raspberrypi/disk-config.nix
+              ./hosts/raspberrypi/hardware-configuration.nix
+              ./hosts/raspberrypi/system.nix
+              ./hosts/raspberrypi/vaultwarden.nix
+              ./hosts/raspberrypi/homepage.nix
+              ./hosts/raspberrypi/networking.nix
+              syncthingModules
+              inputs.hardware.nixosModules.raspberry-pi-4
+            ];
+        };
+
+        server_one = {
+          system = "x86_64-linux";
+          stateVersion = "26.05";
+
+          disko = true;
+          modules =
+            serverBaseModules
+            ++ (getNamed "server_one" [tunnels loggingModules k3sCluster])
+            ++ [
+              ./modules/ark-server.nix
+              ./hosts/server_one/ark-server.nix
+              nix-minecraft.nixosModules.minecraft-servers
+              ({...}: {nixpkgs.overlays = [nix-minecraft.overlay];})
+              ./hosts/server_one/minecraft.nix
+              ./hosts/server_one/disk-config.nix
+              ./hosts/server_one/system.nix
+              ./hosts/server_one/hardware-configuration.nix
+            ];
+        };
+      };
     };
   in {
-    nixosConfigurations = mkCluster {
-      homecomputer = {
-        system = "x86_64-linux";
-        extraPackages = pkgs: with pkgs; [opencode prismlauncher heroic krita opentabletdriver];
-        extraModules = [
-          ({config, ...}: {
-            nixpkgs.overlays = [inputs.llm-agents.overlays.default];
-            environment.systemPackages = [inputs.llm-agents.pi];
-            home-manager.users.cindy.home.sessionPath = [
-              "${config.home-manager.users.cindy.home.homeDirectory}/.npm-packages"
-            ];
-          })
-          ({pkgs, ...}: {
-            services.flatpak.enable = true;
-
-            nixpkgs.config.allowUnfreePredicate = pkg:
-              builtins.elem (pkgs.lib.getName pkg) [
-                "modrinth-app"
-                "openclaw"
-              ];
-
-            nixpkgs.config.permittedInsecurePackages = [
-              "openclaw-2026.5.7"
-            ];
-
-            security.polkit.enable = true;
-          })
-
-          ./hosts/llm.nix
-        ];
-      };
-
-      "lenovo-yoga" = {
-        system = "x86_64-linux";
-        extraPackages = pkgs: with pkgs; [heroic sage];
-      };
-      pi_sd = {
-        system = "aarch64-linux";
-        server = true;
-        disko = false;
-        hostnameOverride = "raspberrypi";
-        extraModules = [
-          "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
-          ./hosts/raspberrypi/vaultwarden.nix
-          ./hosts/raspberrypi/homepage.nix
-          ./hosts/raspberrypi/networking.nix
-          syncthingModules
-        ];
-      };
-      raspberrypi = {
-        system = "aarch64-linux";
-        server = true;
-        disko = false;
-        extraModules = [
-          "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
-          ./hosts/raspberrypi/vaultwarden.nix
-          ./hosts/raspberrypi/homepage.nix
-          ./hosts/raspberrypi/networking.nix
-          syncthingModules
-          inputs.hardware.nixosModules.raspberry-pi-4
-        ];
-      };
-
-      server_one = {
-        system = "x86_64-linux";
-        server = true;
-        extraModules = [
-          ./modules/ark-server.nix
-          ./hosts/server_one/ark-server.nix
-          nix-minecraft.nixosModules.minecraft-servers
-          ({...}: {
-            nixpkgs.overlays = [nix-minecraft.overlay];
-          })
-          ./hosts/server_one/minecraft.nix
-        ];
-      };
-    };
+    nixosConfigurations = systemConfigs.nixosConfigurations;
 
     devShells = lib.genAttrs ["x86_64-linux" "aarch64-linux"] (system: let
       pkgs = nixpkgs.legacyPackages.${system};
@@ -172,7 +285,6 @@
           wireguard-tools
           nh
         ];
-
         shellHook = ''
           alias d="just deploy"
           alias u="just update"

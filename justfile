@@ -1,7 +1,7 @@
 # Automatically generated host commands
 import "hosts.justfile"
 set shell := ["bash", "-uc"]
-override-input := "--override-input sensible-nix ~/code_home/old-sensible-nix/"
+override-input := "--override-input sensible ~/code_home/sensible-nix/"
 # Variables
 flake_uri := "."
 user := "root"
