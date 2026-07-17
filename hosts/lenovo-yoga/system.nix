@@ -1,6 +1,12 @@
 {pkgs, ...}: {
   config.sensible = {
+    # gui
+    hyprland.enable = true;
+    launcher = "walker";
     podman.enable = false;
+    starship.enable = true;
+    direnv.enable = true;
+    zoxide.enable = true;
     steam = {
       enable = true;
       gamemode = true;
@@ -11,13 +17,7 @@
     };
     #plasma.enable=true;
 
-    # gui
-    hyprland = {
-      enable = true;
-      # monitors = [",highres,auto,1"];
-    };
-
-    monitors = ["eDP-1,1920x1080@60.00,auto,1"];
+    monitors = ["eDP-1,highres,auto,1"];
     live_wallpaper = {
       autostart = true;
       enable = true;
@@ -36,8 +36,9 @@
     discord = {
       enable = true;
       package = pkgs.vesktop;
-      pname = "vesktop";
+      package-class = "vesktop";
     };
+    terminal.default ="kitty";
     # cli
     shell = {
       fish.enable = true;

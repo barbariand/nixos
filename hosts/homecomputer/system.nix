@@ -36,6 +36,7 @@
     discord = {
       enable = true;
       package = pkgs.vesktop;
+      package-class = "vesktop";
     };
     # cli
     shell = {

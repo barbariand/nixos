@@ -1,5 +1,5 @@
 let
-  ssh = import ../ssh.nix;
+  ssh = import ../ssh-keys.nix;
   default = ssh.users ++ ssh.systems;
 in
   with ssh; {
@@ -9,7 +9,7 @@ in
     "k3s-token.age".publicKeys = default;
     "grafana.age".publicKeys = default;
     "homepage.env.age".publicKeys = default;
-    
+
     # Email
     # "personal-email.age".publicKeys = ssh.users;
     # "professional-email.age".publicKeys = ssh.users;

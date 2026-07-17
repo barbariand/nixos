@@ -22,10 +22,6 @@
     };
 
     hardware.url = "github:NixOS/nixos-hardware";
-    nvim = {
-      url = "github:barbariand/nvim";
-      flake = false;
-    };
     agenix = {
       url = "github:ryantm/agenix";
       inputs = {
@@ -39,7 +35,6 @@
     nixpkgs,
     sensible,
     nix-minecraft,
-    nvim,
     ...
   } @ inputs: let
     lib = nixpkgs.lib;
@@ -52,8 +47,63 @@
     syncthingModules = import ./hosts/syncthing.nix {inherit interface;};
     loggingModules = import ./hosts/logging.nix {inherit lib;};
 
-    globalPackages = {pkgs}: with pkgs; [git rustup bacon wireguard-tools syncthing evtest nh nixos-anywhere unstable.git unstable.jujutsu docker bitwarden-cli unzip docker-compose];
-    clientPackages = {pkgs}: with pkgs; [wireshark unstable.signal-desktop monocraft bruno rpi-imager gimp proton-vpn hyprmon moonlight-qt libreoffice inkscape gajim karere];
+    globalPackages = {pkgs}:
+      with pkgs; [
+        rustup
+        bacon
+        wireguard-tools
+        syncthing
+        evtest
+        nh
+        nixos-anywhere
+        unstable.git
+        unstable.jujutsu
+        docker
+        bitwarden-cli
+        unzip
+        docker-compose
+
+        btop
+        eza
+        trashy
+        bat
+        fd
+        ripgrep
+        mlocate
+        bluetui
+        brightnessctl
+        pamixer
+        gcc
+        gnumake
+        xdg-utils
+        wget
+        tldr
+        just
+        gh
+        speedtest-rs
+        sqlite
+        aspell
+        aspellDicts.sv
+        aspellDicts.en
+        aspellDicts.en-computers
+        aspellDicts.en-science
+      ];
+    clientPackages = {pkgs}:
+      with pkgs; [
+        wireshark
+        unstable.signal-desktop
+        monocraft
+        bruno
+        rpi-imager
+        gimp
+        proton-vpn
+        hyprmon
+        moonlight-qt
+        libreoffice
+        inkscape
+        gajim
+        karere
+      ];
 
     k3sCluster = import ./lib/k3s.nix {
       inherit lib;
@@ -95,7 +145,6 @@
         username = user;
         specialArgs = {
           inherit email interface full-name inputs self;
-          nvim-config = nvim;
           outPath = self.outPath;
           wallpaper = ./background.jpg;
         };
@@ -130,6 +179,7 @@
               wallpaper.source = ./background.jpg;
             };
           })
+          ./ssh.nix
           ./secrets/system.nix
           ./hosts/ccache.nix
           ./hosts/networking.nix
