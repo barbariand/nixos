@@ -3,13 +3,13 @@
     disk = {
       main = {
         type = "disk";
-        device = "/dev/disk/by-id/wwn-0x5002538d40cf2003";
+        device = "/dev/disk/by-id/ata-Samsung_SSD_850_EVO_250GB_S2R6NX0H476708Y";
         content = {
           type = "gpt";
           partitions = {
-            ESP = {
-              type = "EF00";
-              size = "2G";
+            esp = {
+              type = "ef00";
+              size = "2g";
               content = {
                 type = "filesystem";
                 format = "vfat";
@@ -39,6 +39,10 @@
                 type = "filesystem";
                 format = "ext4";
                 mountpoint = "/Games";
+                mountOptions = [
+                  "defaults"
+                  "nofail"
+                ];
               };
             };
           };

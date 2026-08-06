@@ -78,7 +78,7 @@
         xdg-utils
         wget
         tldr
-        just
+        unstable.just
         gh
         speedtest-rs
         sqlite
@@ -87,9 +87,11 @@
         aspellDicts.en
         aspellDicts.en-computers
         aspellDicts.en-science
+        bitwarden-cli
       ];
     clientPackages = {pkgs}:
       with pkgs; [
+      krita
         wireshark
         unstable.signal-desktop
         monocraft
@@ -149,6 +151,7 @@
           wallpaper = ./background.jpg;
         };
         modules = [
+
           inputs.agenix.nixosModules.default
           ({
             user,
@@ -237,7 +240,9 @@
             clientBaseModules
             ++ (getNamed "lenovo-yoga" [tunnels loggingModules])
             ++ [
-              ({pkgs, ...}: {environment.systemPackages = with pkgs; [heroic sage];})
+              ({pkgs, ...}: {
+services.flatpak.enable = true;
+              environment.systemPackages = with pkgs; [heroic sage];})
               (
                 import
                 ./hosts/wifi.nix
@@ -326,11 +331,12 @@
 
     devShells = lib.genAttrs ["x86_64-linux" "aarch64-linux"] (system: let
       pkgs = nixpkgs.legacyPackages.${system};
+      pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${system};
     in {
       default = pkgs.mkShell {
         name = "simd-shell";
         buildInputs = with pkgs; [
-          just
+          pkgs-unstable.just
           jq
           wireguard-tools
           nh

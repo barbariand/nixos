@@ -1,7 +1,10 @@
 {pkgs, ...}: {
   config.sensible = {
     # gui
-    hyprland.enable = true;
+   hyprland = {
+      enable = true;
+      debug = true; # Förhindrar att disable_logs sätts till true
+    };
     launcher = "walker";
     podman.enable = false;
     starship.enable = true;
@@ -9,8 +12,7 @@
     zoxide.enable = true;
     steam = {
       enable = true;
-      gamemode = true;
-      extraPackages = [pkgs.mangohud pkgs.proton-ge-bin];
+      extraPackages = with pkgs; [gamescope gamemode mangohud proton-ge-bin];
     };
     display-manager = {
       global_auto_login = true;

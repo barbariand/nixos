@@ -1,47 +1,46 @@
-# Automatically generated host commands
+set unstable
 import "hosts.justfile"
+
 set shell := ["bash", "-uc"]
-override-input := "--override-input sensible ~/code_home/sensible-nix/"
-# Variables
+
+# Variabler
 flake_uri := "."
 user := "root"
+override-input := "--override-input sensible ~/code_home/sensible-nix/"
+jq := require("jq")
 
-# build the current config lokalt
+# Funktioner för att centralisera argumenthanteringen
+nh(action, options, flags) := "nh os " + action + " " + flake_uri + " " + options + " -- " + override-input + " " + flags
+nix(action, flags) := "nix " + action + " " + override-input + " " + flags
+
+# Bygg nuvarande konfiguration lokalt
 build *extra_flags:
-    nh os switch {{flake_uri}} --  {{override-input}} {{extra_flags}}
+    {{ nh("switch", "", extra_flags) }}
 
-# build the current config locally for boot
+# Bygg nuvarande konfiguration för nästa uppstart
 boot *extra_flags:
-    nh os boot {{flake_uri}} --  {{override-input}} {{extra_flags}}
+    {{ nh("boot", "", extra_flags) }}
 
-# Check flake for syntax errors
+# Kontrollera flake för syntaxfel
 check *extra_flags:
-    nix flake check {{override-input}} {{extra_flags}}
+    {{ nix("flake check", extra_flags) }}
 
 # Deploy till en fjärrmaskin (t.ex. server eller hallonpaj)
 deploy host *extra_flags:
-    @echo "Building & Deploying Flake for host: {{host}}"
-    @TARGET_IP=$(nix eval .#nixosConfigurations.{{host}}.config.networking.wireguard.interfaces.wg0.ips  --apply 'ips: builtins.head (builtins.split "/" (builtins.head ips))' --quiet --raw -- ); \
-    nh os switch {{flake_uri}} \
-        --hostname {{host}} \
-        --target-host {{user}}@$TARGET_IP \
-        -- {{override-input}}\
-        {{extra_flags}}
+    @echo "Building & Deploying Flake for host: {{ host }}"
+    @TARGET_IP=$({{ nix("eval", ".#nixosConfigurations." + host + ".config.networking.wireguard.interfaces.wg0.ips --apply 'ips: builtins.head (builtins.split \"/\" (builtins.head ips))' --quiet --raw") }}); \
+    {{ nh("switch", "--hostname " + host + " --target-host " + user + "@$TARGET_IP", extra_flags) }}
 
 deploy_custom_ip host ip *extra_flags:
-    @echo "Building & Deploying Flake for host: {{host}}"
-    nh os switch {{flake_uri}} \
-        --hostname {{host}} \
-        --target-host {{user}}@{{ip}} \
-        -- {{override-input}}\
-        {{extra_flags}}
-jq := require("jq")
-# Refresh the dynamic commands
+    @echo "Building & Deploying Flake for host: {{ host }}"
+    {{ nh("switch", "--hostname " + host + " --target-host " + user + "@" + ip, extra_flags) }}
+
+# Uppdatera dynamiska kommandon
 update:
-    @nix eval .#nixosConfigurations --apply "builtins.attrNames" --json | {{jq}} -r '.[]' | \
+    @{{ nix("eval", ".#nixosConfigurations --apply 'builtins.attrNames' --json") }} | {{ jq }} -r '.[]' | \
     awk '{print $1 " *extra_flags:\n    @just deploy " $1 " {{ '{{' }}extra_flags{{ '}}' }}"}' > hosts.justfile
     @echo "Justfile updated. Run 'just --list' to see new hosts."
 
-# Clean the generated hosts file
+# Rensa den genererade host-filen
 clean-hosts:
-    echo "" > hosts.justfile
+    @echo "" > hosts.justfile
