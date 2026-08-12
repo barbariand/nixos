@@ -1,5 +1,6 @@
 {pkgs, ...}: {
   config.sensible = {
+    wireguard."wg0".enable = true;
     # gui
     hyprland = {
       enable = true;

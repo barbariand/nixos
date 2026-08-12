@@ -34,9 +34,10 @@ deploy host *extra_flags:
 deploy_custom_ip host ip *extra_flags:
     @echo "Building & Deploying Flake for host: {{ host }}"
     {{ nh("switch", "--hostname " + host + " --target-host " + user + "@" + ip, extra_flags) }}
-
-# Uppdatera dynamiska kommandon
 update:
+  nix flake update --flake .
+# Uppdatera dynamiska kommandon
+update-hosts:
     @{{ nix("eval", ".#nixosConfigurations --apply 'builtins.attrNames' --json") }} | {{ jq }} -r '.[]' | \
     awk '{print $1 " *extra_flags:\n    @just deploy " $1 " {{ '{{' }}extra_flags{{ '}}' }}"}' > hosts.justfile
     @echo "Justfile updated. Run 'just --list' to see new hosts."
