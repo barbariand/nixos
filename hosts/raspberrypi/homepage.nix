@@ -1,7 +1,7 @@
 {config, ...}: {
   config.sensible.homepage = {
-    environmentFile = config.age.secrets."homepage.env".path;
-    allowedHosts = [
+    environmentfile = config.age.secrets."homepage.env".path;
+    allowedhosts = [
       "homepage.simd.me"
       "127.0.0.1:8082"
       "localhost:8082"
@@ -10,7 +10,7 @@
     port = 8082;
 
     settings = {
-      title = "NixOS Infrastructure Hub";
+      title = "nixos infrastructure hub";
       theme = "dark";
       layout = {
         iconStyle = "nord";
@@ -29,23 +29,21 @@
 
     services = [
       {
-        "Monitoring & Logs" = [
+        "monitoring & logs" = [
           {
-            "Loki Engine" = {
+            "loki engine" = {
               icon = "grafana-loki";
               href = "https://grafana.simd.me";
-              description = "Loki log ingestion rate";
+              description = "loki log ingestion rate";
               widget = {
                 type = "customapi";
-
-                url = "https://logs.simd.me/loki/api/v1/query_range?query=sum(count_over_time({job=~\".%2B\"}[5m]))";
-                method = "GET";
+                url = "https://logs.simd.me/loki/api/v1/query?query=sum(count_over_time(%7Bjob%3D~%22.%2B%22%7D%5B5m%5D))";
+                method = "get";
                 refreshInterval = 10000;
-
                 mappings = [
                   {
-                    label = "Log Lines (5m)";
-                    target = "$.data.result[0].values[-1:][0][1]";
+                    label = "log lines (5m)";
+                    target = "$.data.result[0].value[1]";
                     format = "number";
                   }
                 ];
@@ -55,32 +53,32 @@
         ];
       }
       {
-        "Infrastructure & Automation" = [
+        "infrastructure & automation" = [
           {
-            "Raspberry Pi Gateway" = {
+            "raspberry pi gateway" = {
               icon = "raspberry-pi";
               href = "https://dns.simd.me";
-              description = "Nginx reverse proxy & Unbound DNS server";
+              description = "nginx reverse proxy & unbound dns server";
               ping = "10.55.0.1";
             };
           }
           {
-            "OpenClaw Host" = {
+            "openclaw host" = {
               icon = "windows";
               href = "https://openclaw.simd.me";
-              description = "Gaming rig and OpenClaw execution environment";
+              description = "gaming rig and openclaw execution environment";
               ping = "10.55.0.2";
             };
           }
         ];
       }
       {
-        "K3s Cluster Resources" = [
+        "k3s cluster resources" = [
           {
-            "Kubernetes API" = {
+            "kubernetes api" = {
               icon = "kubernetes";
               href = "https://10.55.0.1:6443";
-              description = "Internal K3s control plane bound to WireGuard IP";
+              description = "internal k3s control plane bound to wireguard ip";
               ping = "10.55.0.1";
             };
           }
@@ -90,20 +88,20 @@
 
     bookmarks = [
       {
-        "Log Shortcuts (LogQL)" = [
+        "log shortcuts (logql)" = [
           {
-            "Nginx Errors" = [
+            "nginx errors" = [
               {
-                abbr = "NX";
-                href = "https://grafana.simd.me/explore?left=%5B%22now-1h%22,%22now%22,%22Loki%22,%7B%22expr%22:%22%7Bunit%3D%5C%22nginx.service%5C%22%7D%20%7C%3D%20%5C%22error%5C%22%22%7D%5D";
+                abbr = "nx";
+                href = "https://grafana.simd.me/explore?left=%5b%22now-1h%22,%22now%22,%22loki%22,%7b%22expr%22:%22%7bunit%3d%5c%22nginx.service%5c%22%7d%20%7c%3d%20%5c%22error%5c%22%22%7d%5d";
               }
             ];
           }
           {
-            "K3s Core Logs" = [
+            "k3s core logs" = [
               {
-                abbr = "K3S";
-                href = "https://grafana.simd.me/explore?left=%5B%22now-1h%22,%22now%22,%22Loki%22,%7B%22expr%22:%22%7Bunit%3D%5C%22k3s.service%5C%22%7D%22%7D%5D";
+                abbr = "k3s";
+                href = "https://grafana.simd.me/explore?left=%5b%22now-1h%22,%22now%22,%22loki%22,%7b%22expr%22:%22%7bunit%3d%5c%22k3s.service%5c%22%7d%22%7d%5d";
               }
             ];
           }

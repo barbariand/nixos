@@ -6,6 +6,7 @@
       fish.enable = true;
       default = "fish";
     };
+    terminal.default = "kitty";
     pass.enable = true;
     tmux.enable = true;
   };

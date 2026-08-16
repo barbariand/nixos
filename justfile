@@ -31,6 +31,12 @@ deploy host *extra_flags:
     @TARGET_IP=$({{ nix("eval", ".#nixosConfigurations." + host + ".config.networking.wireguard.interfaces.wg0.ips --apply 'ips: builtins.head (builtins.split \"/\" (builtins.head ips))' --quiet --raw") }}); \
     {{ nh("switch", "--hostname " + host + " --target-host " + user + "@$TARGET_IP", extra_flags) }}
 
+deploy_boot_reboot host ip *extra_flags:
+    @echo "Building & Setting Boot Profile for: {{ host }}"
+    {{ nh("boot", "--hostname " + host + " --target-host " + user + "@" + ip, extra_flags) }}
+    @echo "Rebooting {{ host }}..."
+    ssh {{ user }}@{{ ip }} "systemctl reboot"
+
 deploy_custom_ip host ip *extra_flags:
     @echo "Building & Deploying Flake for host: {{ host }}"
     {{ nh("switch", "--hostname " + host + " --target-host " + user + "@" + ip, extra_flags) }}

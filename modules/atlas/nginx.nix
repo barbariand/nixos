@@ -10,14 +10,14 @@ with lib; let
   internalAcls = concatMapStringsSep "\n" (net: "allow ${net};") cfg.internalNetworks + "\ndeny all;";
 
   # Extrahera och bygg alla streams
-  streamList = flatten (mapAttrsToList (
-    subName: sub:
-      mapAttrsToList (streamName: streamCfg: {
-        upstreamName = "${subName}_${streamName}_backend";
-        inherit (streamCfg) port protocol backend;
-      })
-      sub.streams
-  ) (filterAttrs (n: s: s.enable) cfg.subdomains));
+streamList = flatten (mapAttrsToList (
+  subName: sub:
+    mapAttrsToList (streamName: streamCfg: {
+      upstreamName = "${replaceStrings ["."] ["_"] subName}_${streamName}_backend";
+      inherit (streamCfg) port protocol backend;
+    })
+    sub.streams
+) (filterAttrs (n: s: s.enable) cfg.subdomains));
 
   buildUpstream = s: ''
     upstream ${s.upstreamName} {

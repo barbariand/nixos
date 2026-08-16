@@ -74,7 +74,10 @@
           modules =
             clientBaseModules
             ++ (helpers.getNamed "homecomputer" [ loggingModules ])
+
             ++ [
+
+              ({ pkgs,... }: { environment.systemPackages = with pkgs;[prismlauncher]; })
               ./hosts/homecomputer/default.nix
             ];
         };

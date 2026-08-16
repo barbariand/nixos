@@ -52,6 +52,18 @@
       password = "root";
       passwordFile = config.age.secrets.user-password.path;
     };
+    sysinfo.default = "fastfetch";
+    starship.enable = true;
+    direnv.enable = true;
+    zoxide.enable = true;
+
+    dunst.enable = false;
+    terminal.default = "kitty";
+    shell = {
+      fish.enable = true;
+      default = "fish";
+    };
+    tmux.enable = true;
     neovim = {
       enable = true;
       features = ["rust" "python" "html-css-js" "tailwindcss"];

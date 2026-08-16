@@ -23,7 +23,7 @@ with lib;
 
           topology = {
             prefixLength = mkOption { 
-              type = types.ints.between 0 32; 
+              type = types.ints.unsigned; 
               default = 24; 
             };
 

@@ -4,7 +4,7 @@
   ...
 }: {
   services.ark-server = {
-    enable = true;
+    enable = false;
 
     sessionName = "Cindy's Ark World";
     adminPassword = "ditt-hemliga-lösenord";

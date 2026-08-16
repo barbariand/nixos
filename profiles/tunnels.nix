@@ -2,7 +2,7 @@
   imports = [
     (import ../lib/ssh-tools.nix {
       ignorePeers = [ "phone" ];
-      sshUser = "root";
+      sshUser = "cindy";
     })
   ];
   sensible.wireguard."wg0".privateKeyFile = "/etc/wireguard/private.key";

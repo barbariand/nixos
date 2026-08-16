@@ -8,9 +8,6 @@
     };
     launcher = "walker";
     podman.enable = false;
-    starship.enable = true;
-    direnv.enable = true;
-    zoxide.enable = true;
     steam = {
       enable = true;
       extraPackages = with pkgs; [gamescope gamemode mangohud proton-ge-bin];
@@ -26,7 +23,6 @@
       enable = true;
       default = "/home/cindy/wallpaper.mp4";
     };
-    dunst.enable = false;
     swaync.enable = true;
     waybar.enable = true;
     browser = {
@@ -41,13 +37,6 @@
       package = pkgs.vesktop;
       package-class = "vesktop";
     };
-    terminal.default ="kitty";
-    # cli
-    shell = {
-      fish.enable = true;
-      default = "fish";
-    };
-    tmux.enable = true;
     # system
     xdg = {
       enable = true;

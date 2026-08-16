@@ -38,7 +38,6 @@
     subdomains = {
       wireguard = {
         enable = true;
-
         nginx.proxyPass = null;
       };
       vault = {
@@ -58,6 +57,15 @@
           port = 25566;
           protocol = "tcp";
           backend = "10.55.0.4:25566";
+        };
+      };
+      "minecraft.ivar" = {
+        enable = true;
+        nginx.enable = false;
+        streams.game = {
+          port = 25567;
+          protocol = "tcp";
+          backend = "10.55.0.4:25567";
         };
       };
       minecraft = {
