@@ -90,6 +90,8 @@
             clientBaseModules
             ++ (helpers.getNamed "lenovo-yoga" [ loggingModules ])
             ++ [
+
+              ({ pkgs,... }: { environment.systemPackages = with pkgs;[davinci-resolve blender ffmpeg-full]; })
               ./profiles/wifi.nix
               ./hosts/lenovo-yoga/default.nix
             ];
