@@ -24,10 +24,22 @@
       "nixos-config" = {
         id = "x4k9z-q1p2m";
         path = "/etc/nixos";
+        isGitRepo = true;
+        fsWatcherDelayS = 15;
       };
       "bsk-latex" = {
         id = "a6gbd-afyse";
         path = "/home/cindy/code/bsk/";
+        isGitRepo = true;
+        ignorePatterns = [
+          "*.aux"
+          "*.log"
+          "*.out"
+          "*.toc"
+          "*.synctex.gz"
+          "*.fls"
+          "*.fdb_latexmk"
+        ];
       };
     };
   };
