@@ -32,13 +32,62 @@
   ];
 
   environment.systemPackages = with pkgs; [
-    rustup bacon wireguard-tools syncthing evtest nh
-    nixos-anywhere unstable.git unstable.jujutsu
-    bitwarden-cli unzip btop eza trashy
-    bat fd ripgrep mlocate bluetui brightnessctl pamixer
-    gcc gnumake xdg-utils wget tldr unstable.just gh
-    speedtest-rs sqlite aspell aspellDicts.sv aspellDicts.en
-    aspellDicts.en-computers aspellDicts.en-science bitwarden-cli
+      # Nix & System Management
+      nh
+      nixos-anywhere
+
+      # Development: Toolchains & Build Tools
+      bacon
+      gcc
+      gnumake
+      rustup
+      unstable.just
+
+      # Development: Version Control & Forge CLIs
+      gh
+      unstable.git
+      unstable.jujutsu
+
+      # Development: Python Tooling
+      basedpyright
+      ruff
+
+      # Modern Core Utilities & Replacements
+      bat
+      btop
+      eza
+      fd
+      ripgrep
+      trashy
+
+      # Classic System Utilities & Hardware Inspection
+      brightnessctl
+      evtest
+      mlocate
+      pamixer
+      tldr
+      unzip
+      wget
+      xdg-utils
+
+      # Networking, Connectivity & Sync
+      bluetui
+      speedtest-rs
+      syncthing
+      wireguard-tools
+
+      # Security & Password Management
+      bitwarden-cli
+
+      # Databases
+      sqlite
+
+      # Spell Checking & Dictionaries
+      aspell
+      aspellDicts.en
+      aspellDicts.en-computers
+      aspellDicts.en-science
+      aspellDicts.sv
   ];
 
   home-manager.users.${user}.imports = [
@@ -66,7 +115,7 @@
     tmux.enable = true;
     neovim = {
       enable = true;
-      features = ["rust" "python" "html-css-js" "tailwindcss"];
+      features = ["rust" "html-css-js" "tailwindcss"];
     };
     wallpaper.source = ../background.jpg;
   };

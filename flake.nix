@@ -77,7 +77,7 @@
 
             ++ [
 
-              ({ pkgs,... }: { environment.systemPackages = with pkgs;[prismlauncher]; })
+              ({ pkgs,... }: { environment.systemPackages = with pkgs;[prismlauncher davinci-resolve blender]; })
               ./hosts/homecomputer/default.nix
             ];
         };
