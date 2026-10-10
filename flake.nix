@@ -79,6 +79,7 @@
 
               ({ pkgs,... }: { environment.systemPackages = with pkgs;[prismlauncher davinci-resolve blender]; })
               ./hosts/homecomputer/default.nix
+              ./profiles/llm.nix
             ];
         };
 

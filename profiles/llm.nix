@@ -5,17 +5,18 @@
   config,
   ...
 }: {
+  nix.settings = {
+    extra-substituters = [
+      "https://cache.nixos-cuda.org"
+    ];
+    extra-trusted-public-keys = [
+      "cache.nixos-cuda.org:74DUi4Ye579gUqzH4ziL9IyiJBlDpMRn9MBN8oNan9M="
+    ];
+  };
   services.ollama = {
     enable = true;
     package = pkgs.ollama-cuda;
   };
-  nixpkgs.overlays = [
-    (final: prev: {
-      ollama-cuda = prev.ollama-cuda.override {
-        stdenv = prev.ccacheStdenv;
-      };
-    })
-  ];
 
   home-manager.users.${user} = {
     home.sessionVariables = {
