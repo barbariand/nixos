@@ -19,6 +19,13 @@
           "\"homepage.simd.me. IN A 10.55.0.1\""
         ];
       };
+      wg_ollama = {
+        accessControl = ["10.56.0.0/24"];
+        localData = [
+          # Inject DNS so friends resolve the domain to the Pi's WG IP
+          "\"ollama.simd.me. IN A 10.56.0.1\""
+        ];
+      };
     };
 
     acme = {
@@ -36,6 +43,11 @@
     };
 
     subdomains = {
+      ollama = {
+        enable = true;
+        visibility = "internal";
+        nginx.proxyPass = "http://10.55.0.2:11434"; 
+      };
       wireguard = {
         enable = true;
         nginx.proxyPass = null;

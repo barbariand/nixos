@@ -92,7 +92,7 @@
             ++ (helpers.getNamed "lenovo-yoga" [ loggingModules ])
             ++ [
 
-              ({ pkgs,... }: { environment.systemPackages = with pkgs;[davinci-resolve blender ffmpeg-full]; })
+              ({ pkgs,... }: { environment.systemPackages = with pkgs;[dnsutils davinci-resolve blender ffmpeg-full]; })
               ./profiles/wifi.nix
               ./hosts/lenovo-yoga/default.nix
             ];
@@ -126,6 +126,17 @@
             ];
         };
 
+        build_server = {
+          system = "x86_64-linux";
+          stateVersion = "26.05";
+          disko = true;
+          modules =
+            serverBaseModules
+            ++ (helpers.getNamed "build_server" [ loggingModules ])
+            ++ [
+              ./hosts/build_server/default.nix
+            ];
+        };
         server_one = {
           system = "x86_64-linux";
           stateVersion = "26.05";
@@ -155,6 +166,8 @@
           jq
           wireguard-tools
           nh
+          ssh-to-age
+          agenix-cli
         ];
         shellHook = ''
           alias d="just deploy"
