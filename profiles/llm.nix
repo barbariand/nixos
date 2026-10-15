@@ -17,8 +17,9 @@
     enable = true;
     package = pkgs.ollama-cuda;
     host = "0.0.0.0";
+    port = 11434;
   };
-
+  networking.firewall.interfaces."wg0".allowedTCPPorts = [ 11434 ];
   home-manager.users.${user} = {
     home.sessionVariables = {
       NPM_CONFIG_PREFIX = "${config.home-manager.users.${user}.home.homeDirectory}/.npm-global";

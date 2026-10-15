@@ -34,6 +34,7 @@
       "nvidia-drm.modeset=1"
       "nvidia-drm.fbdev=1"
       "usbcore.autosuspend=-1"
+      "nvidia.NVreg_PreserveVideoMemoryAllocations=1"
     ];
 
     loader = {
@@ -67,16 +68,9 @@
       modesetting.enable = true;
       powerManagement.enable = false;
       powerManagement.finegrained = false;
-      open = true;
+      open = false;
       nvidiaSettings = true;
-      package = config.boot.kernelPackages.nvidiaPackages.mkDriver {
-          version = "610.57.04";
-          sha256_64bit = "sha256-suk1xmuDuwDAyFe8jg7g/VLekoa0DJzB7sKafOfrEW0=";
-          sha256_aarch64 = "sha256-QCefrMBCmpOwuOyXv1k5Gj0iB2CYlPgnG3JToUw/j54=";
-          openSha256 = "sha256-rQHOOOY4KL92Ww3KDwh+j4eGU7oNAH8LutZC5wmFnPo=";
-          settingsSha256 = "sha256-ZEMo8I8Zc2Tq6RVDNYpAH+f094dUaZiBqO+5f6lIjRI=";
-          persistencedSha256 = "sha256-aXmD2VY1RLlgAnlHhOUMWzvMyhI6JTClcFLm4imF/mA=";
-      };
+      package = pkgs.unstable.linuxPackages_zen.nvidiaPackages.latest;
     };
 
     xone.enable = true;
@@ -117,6 +111,14 @@
   environment.sessionVariables = {
     GBM_BACKEND = "nvidia-drm";
     __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+    LIBVA_DRIVER_NAME = "nvidia";
+    AQ_DRM_DEVICES = "/dev/dri/card1";
+
+    # Skydd mot Xid 32 och trasiga pushbuffers vid buffer flips
+    __GL_GSYNC_ALLOWED = "0";
+    __GL_VRR_ALLOWED = "0";
+    PROTON_ENABLE_NGX_UPDATER = "0";
+
     WLR_NO_HARDWARE_CURSORS = "1";
     NVD_BACKEND = "direct";
     __GL_SHADER_DISK_CACHE_SIZE = "12000000000";

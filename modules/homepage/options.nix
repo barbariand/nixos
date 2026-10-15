@@ -59,13 +59,13 @@ with lib;
             description = "Hosts that homepage-dashboard will be running under.";
           };
 
-          environmentFile = mkOption {
-            type = types.nullOr types.path;
-            default = null;
+          environmentFiles = mkOption {
+            type = types.listOf types.path;
+            default = [];
             description = ''
-              Path to an environment file containing secrets (e.g., HOMEPAGE_VAR_GRAFANA_TOKEN).
+              List of paths to environment files containing secrets (e.g., HOMEPAGE_VAR_GRAFANA_TOKEN).
               These variables can be used in the configuration using the {{HOMEPAGE_VAR_NAME}} syntax.
-              Usually points to a file decrypted by agenix.
+              Usually points to files decrypted by agenix.
             '';
           };
         };

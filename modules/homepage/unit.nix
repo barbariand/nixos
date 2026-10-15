@@ -18,7 +18,7 @@ in
         widgets = cfg.widgets;
         bookmarks = cfg.bookmarks;
         services = cfg.services;
-        environmentFile = cfg.environmentFile;
+        environmentFiles = cfg.environmentFiles;
         allowedHosts = lib.concatStringsSep "," cfg.allowedHosts;
       };
 

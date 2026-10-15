@@ -7,44 +7,51 @@
   ];
 
   sensible.wireguard = {
-    "wg-ollama"= {
-      privateKeyFile = "/var/lib/wireguard/private.key";
+    # Ollama
+    "wg1" = {
+      privateKeyFile = "/etc/wireguard/ollama.key";
       topology = {
         prefixLength = 24;
-
         nodes = {
           raspberrypi = {
-            publicKey = "z52vjMTykETjl7/tEXlEEAsKVJni5ocinvx5f21e91U=";
+            publicKey = "UgSUhfl9ORc4b5e59U2NdhXhfyDz4IvnUAM9iHL8tnY=";
             ip = "10.56.0.1";
           };
-          #viktor_client = {
-          #  publicKey = "";
-          #  ip = "10.56.0.2";
-          #};
-          #viktor_client = {
-          #  publicKey = "";
-          #  ip = "10.56.0.3";
-          #};
-          #viktor_client = {
-          #  publicKey = "";
-          #  ip = "10.56.0.4";
-          #};
+          homecomputer = {
+            publicKey = "KfaPnCEKuEQE5HDOlQKddaJ+KkBuuZNetAdUk3483Bc=";
+            ip = "10.56.0.2";
+          };
+          # "lenovo-yoga" = {
+          #   ip = "10.56.0.3";
+          # };
+          # "ludvig-homecomputer" = {
+          #   ip = "10.56.0.4";
+          # };
+          # "charlotte-homecomputer" = {
+          #   ip = "10.56.0.5";
+          # };
+          "viktor-homecomputer" = {
+            publicKey = "sBag8Z0ucJIpJS8uqtiXV1B5PU1KL8FPBYp18+BFIhQ=";
+            ip = "10.56.0.36";
+          };
         };
 
         hubs = {
           raspberrypi = {
             endpoint = "wireguard.simd.me";
             port = 51821;
-            links = [ "friend_client" ];
+            links = [ "homecomputer" "viktor-homecomputer" ];
           };
         };
       };
     };
 
+    # Default
     "wg0" = {
       privateKeyFile = "/etc/wireguard/private.key";
       topology = {
         prefixLength = 24;
+
         nodes = {
           raspberrypi = {
             publicKey = "z52vjMTykETjl7/tEXlEEAsKVJni5ocinvx5f21e91U=";

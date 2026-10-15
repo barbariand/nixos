@@ -1,15 +1,40 @@
 {pkgs, ...}: {
   config.sensible = {
     wireguard."wg0".enable = true;
+    wireguard."wg1".enable = true;
     # gui
     hyprland = {
       configOpt = {
         render = {
           direct_scanout = 0;
+          expand_undersized_textures = true;
+        };
+        general = {
+          allow_tearing = false;
+        };
+        cursor = {
+          no_hardware_cursors = true;
         };
       };
       enable = true;
       debug = true; # Förhindrar att disable_logs sätts till true
+      windowRules = [
+        {
+          match = { class = "^(steam_app_.*)$"; };
+          immediate = false;
+          idle_inhibit = "focus";
+          no_blur = true;
+          no_shadow = true;
+        }
+        {
+          match = { class = "^(gamescope)$"; };
+          fullscreen = true;
+          immediate = false;
+          idle_inhibit = "focus";
+          no_blur = true;
+          no_shadow = true;
+        }
+      ];
     };
     launcher = "walker";
     steam = {
@@ -19,6 +44,7 @@
 
     display-manager = {
       global_auto_login = true;
+      plymouth.enable = false;
     };
 
     monitors = ["HDMI-A-1,3840x2160@30.00,0x0,1" "DP-2,1920x1080@60.00,3840x1088,1"];
