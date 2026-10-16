@@ -4,6 +4,10 @@
     wireguard."wg1".enable = true;
     # gui
     hyprland = {
+      idle = {
+        enable = true;
+        theme = "no-suspend";
+      };
       configOpt = {
         render = {
           direct_scanout = 0;

@@ -10,7 +10,7 @@
   ];
 
   boot = {
-    kernelPackages = pkgs.linuxPackages_zen;
+    kernelPackages = pkgs.linuxPackages;
 
     initrd = {
       availableKernelModules = [
@@ -68,9 +68,9 @@
       modesetting.enable = true;
       powerManagement.enable = false;
       powerManagement.finegrained = false;
-      open = false;
+      open = true;
       nvidiaSettings = true;
-      package = pkgs.unstable.linuxPackages_zen.nvidiaPackages.latest;
+      package = config.boot.kernelPackages.nvidiaPackages.production;
     };
 
     xone.enable = true;

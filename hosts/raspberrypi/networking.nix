@@ -17,6 +17,7 @@
           "\"logs.simd.me. IN A 10.55.0.1\""
           "\"grafana.simd.me. IN A 10.55.0.1\""
           "\"homepage.simd.me. IN A 10.55.0.1\""
+          "\"ollama.internal.simd.me. IN A 10.55.0.1\""
         ];
       };
       wg_ollama = {
@@ -133,6 +134,12 @@
         enable = true;
         visibility = "internal";
         nginx.proxyPass = "http://127.0.0.1:8082";
+      };
+
+      "ollama.internal" = {
+        enable = true;
+        visibility = "internal";
+        nginx.proxyPass = "http://10.55.0.2:11434";
       };
     };
 

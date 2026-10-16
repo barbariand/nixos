@@ -1,4 +1,3 @@
-
 {
   pkgs,
   user,
@@ -13,13 +12,14 @@
       "cache.nixos-cuda.org:74DUi4Ye579gUqzH4ziL9IyiJBlDpMRn9MBN8oNan9M="
     ];
   };
+
   services.ollama = {
     enable = true;
     package = pkgs.ollama-cuda;
     host = "0.0.0.0";
     port = 11434;
   };
-  networking.firewall.interfaces."wg0".allowedTCPPorts = [ 11434 ];
+
   home-manager.users.${user} = {
     home.sessionVariables = {
       NPM_CONFIG_PREFIX = "${config.home-manager.users.${user}.home.homeDirectory}/.npm-global";
@@ -28,6 +28,7 @@
     home.sessionPath = [
       "${config.home-manager.users.${user}.home.homeDirectory}/.npm-global/bin"
     ];
+
     programs.opencode.settings = {
       provider = {
         ollama = {
