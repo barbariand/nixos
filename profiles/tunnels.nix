@@ -8,7 +8,7 @@
 
   sensible.wireguard = {
     "wg-ollama"= {
-      privateKeyFile = "/etc/wireguard/private.key";
+      privateKeyFile = "/var/lib/wireguard/private.key";
       topology = {
         prefixLength = 24;
 

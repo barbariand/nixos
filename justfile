@@ -48,7 +48,7 @@ check *flags:
 
 [group("local")]
 update:
-    nix flake update --flake {{ flake_uri }}
+    {{ nix("flake update --flake " + flake_uri, "") }}
 
 # ==============================================================================
 # ARTEFAKTBYGGEN

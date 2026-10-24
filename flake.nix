@@ -22,7 +22,7 @@
     };
     hardware.url = "github:NixOS/nixos-hardware";
     agenix = {
-      url = "github:ryantm/agenix";
+      url = "github:ryantm/agenix/test/issue376-native-init";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };

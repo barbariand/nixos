@@ -10,7 +10,7 @@
   ];
 
   boot.initrd.availableKernelModules = ["nvme" "xhci_pci" "thunderbolt" "usb_storage" "sd_mod"];
-  boot.initrd.kernelModules = [];
+  boot.initrd.kernelModules = ["nvme" "amdgpu"];
   boot.kernelModules = ["kvm-amd" "amdgpu"];
   services.upower.enable = true;
   boot.loader.grub.splashImage = ./../../background.jpg;

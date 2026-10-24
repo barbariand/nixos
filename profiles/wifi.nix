@@ -67,7 +67,7 @@ in {
           pairwise=CCMP
           group=CCMP TKIP
           identity="dani24@eduroam.bth.se"
-          password=ext:PSK_EDUROAM
+          password="ext:PSK_EDUROAM"
           phase2="auth=MSCHAPV2"
         '';
         priority = EDUROAM;

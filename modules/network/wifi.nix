@@ -55,11 +55,15 @@ in {
         };
       };
     };
-
+    systemd.services.systemd-networkd.serviceConfig= {
+      LoadCredential = lib.mkForce [];
+      LoadCredentialEncrypted = lib.mkForce [];
+      SetCredential = lib.mkForce [];
+      SetCredentialEncrypted = lib.mkForce [];
+      };
     systemd.services.wpa_supplicant = {
-      wants = ["agenix.service"];
-      after = ["agenix.service"];
-
+      wants = ["agenix-install-secrets.service"];
+      after = ["agenix-install-secrets.service"];
       serviceConfig = {
         Restart = "on-failure";
         RestartSec = "2s";
