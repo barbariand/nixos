@@ -1,4 +1,4 @@
-{ lib }:
+{ lib, ... }:
 let
   ipLib = import ./ip.nix { inherit lib; };
   topologyLib = import ./topology.nix { inherit lib ipLib; };

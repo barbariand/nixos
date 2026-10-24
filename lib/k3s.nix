@@ -60,6 +60,7 @@ in {
   clusterInterface ? null,
   globalExtraFlags ? "",
   controllerExtraFlags ? "",
+...
 }: let
   # --- IP Validation Helper ---
   isValidIPv4 = ip: let

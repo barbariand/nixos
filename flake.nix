@@ -41,12 +41,13 @@
     full-name = "Cindy Nilsson";
 
     helpers = import ./lib/helpers.nix { inherit lib; };
-    
+    localLib = import ./lib/default.nix { inherit lib; };
+
     # Profile maps that return host-specific attributes
     loggingModules = import ./profiles/logging.nix { inherit lib; };
-    
+
     k3sCluster = import ./profiles/k3s.nix { inherit lib interface; };
-    
+
     clientBaseModules = [
       ./profiles/client.nix
     ];
@@ -60,6 +61,9 @@
           inherit email interface full-name inputs self user;
           outPath = self.outPath;
           wallpaper = ./background.jpg;
+          sensibleLib = {
+            inherit (localLib) helpers wireguard atlas sshTools;
+          };
         };
         modules = [
           ./profiles/global.nix
@@ -74,10 +78,8 @@
           modules =
             clientBaseModules
             ++ (helpers.getNamed "homecomputer" [ loggingModules ])
-
             ++ [
-
-              ({ pkgs,... }: { environment.systemPackages = with pkgs;[prismlauncher davinci-resolve blender]; })
+              ({ pkgs, ... }: { environment.systemPackages = with pkgs; [ prismlauncher davinci-resolve blender ]; })
               ./hosts/homecomputer/default.nix
               ./profiles/llm.nix
             ];
@@ -91,8 +93,7 @@
             clientBaseModules
             ++ (helpers.getNamed "lenovo-yoga" [ loggingModules ])
             ++ [
-
-              ({ pkgs,... }: { environment.systemPackages = with pkgs;[dnsutils davinci-resolve blender ffmpeg-full]; })
+              ({ pkgs, ... }: { environment.systemPackages = with pkgs; [ dnsutils davinci-resolve blender ffmpeg-full ]; })
               ./profiles/wifi.nix
               ./hosts/lenovo-yoga/default.nix
             ];
@@ -137,13 +138,14 @@
               ./hosts/build_server/default.nix
             ];
         };
+
         server_one = {
           system = "x86_64-linux";
           stateVersion = "26.05";
           disko = true;
           modules =
             serverBaseModules
-            ++ (helpers.getNamed "server_one" [loggingModules ])
+            ++ (helpers.getNamed "server_one" [ loggingModules ])
             ++ [
               ({ ... }: { nixpkgs.overlays = [ nix-minecraft.overlay ]; })
               nix-minecraft.nixosModules.minecraft-servers

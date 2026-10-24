@@ -1,10 +1,10 @@
-{ lib, ... }:
+{ sensibleLib, ... }:
 let
-  wgLib = import ../lib/wireguard { inherit lib; };
+  wgLib = sensibleLib.wireguard;
 in
 {
   imports = [
-    (import ../lib/ssh-tools.nix {
+    (sensibleLib.sshTools {
       ignorePeers = [ "phone" ];
       sshUser = "cindy";
     })

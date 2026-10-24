@@ -1,9 +1,10 @@
+{ lib, ... }:
+let
+  helpers = import ./helpers.nix { inherit lib; };
+  wireguard = import ./wireguard { inherit lib; };
+  atlas = import ./atlas { inherit lib; };
+  sshTools = import ./ssh-tools.nix;
+in
 {
-  imports = [
-    ./helpers.nix
-    ./wireguard/default.nix
-    ./k3s.nix
-    ./logging.nix
-    ./ssh-tools.nix
-  ]
+  inherit helpers wireguard atlas sshTools;
 }

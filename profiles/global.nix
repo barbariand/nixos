@@ -19,6 +19,7 @@
     man.enable = true;
     man.cache.enable = false;
   };
+
   nixpkgs.overlays = [
     (uFinal: uPrev: {
       python312 = uPrev.python312.override {
@@ -31,62 +32,62 @@
   ];
 
   environment.systemPackages = with pkgs; [
-      # Nix & System Management
-      nh
-      nixos-anywhere
+    # Nix & System Management
+    nh
+    nixos-anywhere
 
-      # Development: Toolchains & Build Tools
-      bacon
-      gcc
-      gnumake
-      rustup
-      unstable.just
+    # Development: Toolchains & Build Tools
+    bacon
+    gcc
+    gnumake
+    rustup
+    unstable.just
 
-      # Development: Version Control & Forge CLIs
-      gh
-      unstable.git
-      unstable.jujutsu
+    # Development: Version Control & Forge CLIs
+    gh
+    unstable.git
+    unstable.jujutsu
 
-      # Development: Python Tooling
-      basedpyright
-      ruff
+    # Development: Python Tooling
+    basedpyright
+    ruff
 
-      # Modern Core Utilities & Replacements
-      bat
-      btop
-      eza
-      fd
-      ripgrep
-      trashy
+    # Modern Core Utilities & Replacements
+    bat
+    btop
+    eza
+    fd
+    ripgrep
+    trashy
 
-      # Classic System Utilities & Hardware Inspection
-      brightnessctl
-      evtest
-      mlocate
-      pamixer
-      tldr
-      unzip
-      wget
-      xdg-utils
+    # Classic System Utilities & Hardware Inspection
+    brightnessctl
+    evtest
+    mlocate
+    pamixer
+    tldr
+    unzip
+    wget
+    xdg-utils
 
-      # Networking, Connectivity & Sync
-      bluetui
-      speedtest-rs
-      syncthing
-      wireguard-tools
+    # Networking, Connectivity & Sync
+    bluetui
+    speedtest-rs
+    syncthing
+    wireguard-tools
 
-      # Security & Password Management
-      bitwarden-cli
+    # Security & Password Management
+    bitwarden-cli
 
-      # Databases
-      sqlite
+    # Databases
+    sqlite
 
-      # Spell Checking & Dictionaries
-      aspell
-      aspellDicts.en
-      aspellDicts.en-computers
-      aspellDicts.en-science
-      aspellDicts.sv
+    # Spell Checking & Dictionaries
+    aspell
+    aspellDicts.en
+    aspellDicts.en-computers
+    aspellDicts.en-science
+    aspellDicts.sv
   ];
 
   home-manager.users.${user}.imports = [
