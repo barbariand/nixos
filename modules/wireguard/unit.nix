@@ -34,6 +34,47 @@
     allowedTCPPorts = wgLib.targetPortsForHost "tcp" hostName netCfg;
     allowedUDPPorts = wgLib.targetPortsForHost "udp" hostName netCfg;
   }) (lib.filterAttrs (_: v: v.isolated && wgLib.isForwardTarget hostName v) activeNetworks);
+
+  # Omvandlar peer-listan från wgLib till modern systemd-networkd wireguardPeers-syntax
+  mkSystemdPeers = netCfg:
+    map (peer: {
+      PublicKey = peer.publicKey;
+      AllowedIPs = peer.allowedIPs;
+    } // lib.optionalAttrs (peer ? endpoint && peer.endpoint != null) {
+      Endpoint = peer.endpoint;
+    } // lib.optionalAttrs (peer ? persistentKeepalive && peer.persistentKeepalive != null) {
+      PersistentKeepalive = peer.persistentKeepalive;
+    }) (wgLib.resolvePeers hostName netCfg);
+
+  # Generera .netdev-konfiguration för varje aktivt gränssnitt
+  mkNetdevs = lib.mapAttrs' (netName: netCfg: let
+    isHub = wgLib.isHubNode hostName netCfg;
+  in
+    lib.nameValuePair "30-${netName}" {
+      netdevConfig = {
+        Kind = "wireguard";
+        Name = netName;
+      };
+      wireguardConfig = {
+        PrivateKeyFile = netCfg.privateKeyFile;
+      } // lib.optionalAttrs isHub {
+        ListenPort = netCfg.topology.hubs.${hostName}.port;
+      };
+      wireguardPeers = mkSystemdPeers netCfg;
+    }
+  ) activeNetworks;
+
+  # Generera .network-konfiguration för varje aktivt gränssnitt
+  mkNetworks = lib.mapAttrs' (netName: netCfg: let
+    localNode = netCfg.topology.nodes.${hostName};
+  in
+    lib.nameValuePair "30-${netName}" {
+      matchConfig.Name = netName;
+      networkConfig = {
+        Address = "${localNode.ip}/${toString netCfg.topology.prefixLength}";
+      };
+    }
+  ) activeNetworks;
 in
   sensibleLib.sensibleConfig {
     condition = enabledNetworks != {};
@@ -43,6 +84,12 @@ in
     system = lib.mkIf (activeNetworks != {}) {
       boot.kernel.sysctl = lib.mkIf needsForwarding {
         "net.ipv4.ip_forward" = true;
+      };
+
+      systemd.network = {
+        enable = true;
+        netdevs = mkNetdevs;
+        networks = mkNetworks;
       };
 
       networking = {
@@ -59,10 +106,6 @@ in
 
         dhcpcd.denyInterfaces = builtins.attrNames activeNetworks;
         interfaces = lib.mapAttrs (_: _: {useDHCP = false;}) activeNetworks;
-
-        wireguard.interfaces = lib.mapAttrs (_: netCfg:
-          wgLib.mkInterfaceConfig hostName netCfg
-        ) activeNetworks;
 
         nftables = lib.mkIf needsForwarding {
           enable = true;

@@ -158,6 +158,39 @@
     devShells = lib.genAttrs [ "x86_64-linux" "aarch64-linux" ] (system: let
       pkgs = nixpkgs.legacyPackages.${system};
       pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${system};
+
+      gitSshFailover = pkgs.writeShellScript "git-ssh-failover" ''
+        case "$*" in
+          *git.urgobalt.dev*) ;;
+          *) exec ${pkgs.openssh}/bin/ssh "$@" ;;
+        esac
+
+        stamp="/tmp/urgobalt-down.stamp"
+        ttl=300
+        is_down=0
+
+        if [ -f "$stamp" ] && [ "$(( $(${pkgs.coreutils}/bin/date +%s) - $(${pkgs.coreutils}/bin/stat -c %Y "$stamp") ))" -lt "$ttl" ]; then
+          is_down=1
+        elif ! ${pkgs.coreutils}/bin/timeout 0.5 ${pkgs.netcat-openbsd}/bin/nc -z git.urgobalt.dev 22 2>/dev/null; then
+          ${pkgs.coreutils}/bin/touch "$stamp"
+          is_down=1
+        else
+          ${pkgs.coreutils}/bin/rm -f "$stamp" 2>/dev/null
+        fi
+
+        if [ "$is_down" -eq 1 ]; then
+          args=()
+          for arg in "$@"; do
+            arg="''${arg//urgobalt\/sensible-nix/barbariand\/sensible-nix}"
+            arg="''${arg//git@git.urgobalt.dev/git@github.com}"
+            arg="''${arg//git.urgobalt.dev/github.com}"
+            args+=("$arg")
+          done
+          exec ${pkgs.openssh}/bin/ssh "''${args[@]}"
+        fi
+
+        exec ${pkgs.openssh}/bin/ssh "$@"
+      '';
     in {
       default = pkgs.mkShell {
         name = "simd-shell";
@@ -170,6 +203,7 @@
           agenix-cli
         ];
         shellHook = ''
+          export GIT_SSH_COMMAND="${gitSshFailover}"
           alias d="just deploy"
           alias u="just update"
         '';

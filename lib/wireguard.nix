@@ -1,4 +1,21 @@
 {lib}: rec {
+  # Beräknar nätverksadressen för ett givet IP och prefix (t.ex. "10.55.0.1" med prefix 24 -> "10.55.0.0/24")
+  calcNetworkAddress = ip: prefixLength: let
+    octets = map lib.strings.toInt (lib.strings.splitString "." ip);
+
+    # Skapar nätmaskens 4 oktetter utifrån prefixlängden
+    maskOctet = idx: let
+      bits = lib.trivial.min 8 (lib.trivial.max 0 (prefixLength - (idx * 8)));
+      shifts = [0 128 192 224 240 248 252 254 255];
+    in
+      builtins.elemAt shifts bits;
+
+    netOctets = lib.imap0 (idx: octet:
+      builtins.bitAnd octet (maskOctet idx)
+    ) octets;
+  in
+    "${lib.concatStringsSep "." (map toString netOctets)}/${toString prefixLength}";
+
   mkForward = port: targetNode: {
     inherit port targetNode;
     targetPort = null;
@@ -65,8 +82,8 @@
     clientPeers = lib.mapAttrs (hName: hCfg: {
       publicKey = nodes.${hName}.publicKey;
       endpoint = "${hCfg.endpoint}:${toString hCfg.port}";
-      # systemd-networkd requires subnet routing via the hub IP
-      allowedIPs = ["${nodes.${hName}.ip}/${toString netCfg.topology.prefixLength}"];
+      # Beräknar nätverksadressen dynamiskt så att systemd-networkd inte kastar varningar om värdbitar
+      allowedIPs = [(calcNetworkAddress nodes.${hName}.ip netCfg.topology.prefixLength)];
       persistentKeepalive = 21;
     }) uplinkHubs;
   in

@@ -16,7 +16,7 @@
   boot.loader.grub.splashImage = ./../../background.jpg;
 
   # Zen-kärnan ger lägre latens och innehåller fsync-patchar för Proton/Wine
-  boot.kernelPackages = pkgs.linuxPackages_zen_lts;
+  boot.kernelPackages = pkgs.linuxPackages_zen;
 
   hardware.xpadneo.enable = true;
   hardware.xone.enable = true;
