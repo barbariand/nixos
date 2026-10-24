@@ -3,24 +3,24 @@
   config,
   sensibleLib,
   ...
-}:
-with sensibleLib; let
+}: let
   cfg = config.sensible.loki;
   hostName = config.networking.hostName;
 
   isServer = hostName == cfg.serverNode;
+  isParticipant = isServer || cfg.clients == [] || (builtins.elem hostName cfg.clients);
 
-  endpoint = if isServer
+  endpoint =
+    if isServer
     then "http://127.0.0.1:${builtins.toString cfg.port}/loki/api/v1/push"
     else "https://${cfg.domain}/loki/api/v1/push";
-
 in
   {
-    condition = cfg.enable;
+    condition = cfg.enable && isParticipant;
 
     assertions = [
       {
-        assertion = isServer -> cfg.secretKeyFile != null;
+        assertion = (cfg.enable && isServer) -> cfg.secretKeyFile != null;
         message = "sensible.loki: A 'secretKeyFile' must be provided on the server node (${cfg.serverNode}).";
       }
     ];
@@ -58,8 +58,8 @@ in
           labels     = { job = "systemd-journal", host = "${hostName}" }
         }
       '';
-    } // lib.optionalAttrs isServer {
-      services.loki = {
+
+      services.loki = lib.mkIf isServer {
         enable = true;
         configuration = {
           auth_enabled = false;
@@ -112,7 +112,7 @@ in
         };
       };
 
-      services.grafana = {
+      services.grafana = lib.mkIf isServer {
         enable = true;
         settings.server = {
           http_addr = "0.0.0.0";
@@ -120,7 +120,7 @@ in
         };
 
         settings.security = {
-          secret_key = "$__file{${cfg.secretKeyFile}}";
+          secret_key = "$__file{${toString cfg.secretKeyFile}}";
         };
 
         provision.datasources.settings.datasources = [
@@ -133,6 +133,7 @@ in
         ];
       };
 
-      networking.firewall.allowedTCPPorts = [ cfg.port cfg.grafanaPort ];
+      networking.firewall.allowedTCPPorts = lib.mkIf isServer [cfg.port cfg.grafanaPort];
     };
-  } |> sensibleConfig
+  }
+  |> sensibleLib.sensibleConfig
