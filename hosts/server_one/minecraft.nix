@@ -35,20 +35,6 @@
           exec ./run.sh
         '';
       };
-
-      gustav_kompisar = {
-        enable = true;
-        autoStart = false;
-        path = [pkgs.jdk25_headless pkgs.bash pkgs.coreutils pkgs.file];
-        managementSystem.tmux.enable = false;
-        managementSystem.systemd-socket.enable = true;
-        jvmOpts = "";
-
-        package = pkgs.writeShellScriptBin "start-stoneblock" ''
-          cd "/var/lib/minecraft/gustav_kompisar"
-          exec ./run.sh
-        '';
-      };
       gustav_kompisar = {
         enable = true;
         autoStart = true;

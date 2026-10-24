@@ -1,9 +1,7 @@
 set unstable := true
 set dotenv-load := true
-set positional-arguments := true
 set shell := ["bash", "-uc"]
 
-# Importera dynamiska host-recept om filen existerar
 import? "hosts.justfile"
 
 # --- Styling & Colors ---
@@ -15,18 +13,27 @@ BLUE   := "\\033[1;34m"
 NORMAL := "\\033[0m"
 
 # --- Konfiguration ---
-flake_uri          := "."
-user               := "root"
-sensible_override  := env("SENSIBLE_OVERRIDE", "~/code_home/sensible-nix")
-override_flag      := "--override-input sensible " + sensible_override
-experimental_flags := "nix-command flakes pipe-operators"
-default_device     := "/dev/sda"
-jq                 := require("jq")
+flake_uri      := "."
+user           := "root"
+default_device := "/dev/sda"
+jq             := require("jq")
 
-# --- Hjälpfunktioner ---
-nix(action, flags) := "nix " + action + " " + override_flag + " --extra-experimental-features '" + experimental_flags + "' " + flags
-nh(action, options, flags):= "nh os " + action + " " + flake_uri + " " + options + " -- " + override_flag + " " + flags
-nix_attr(host, attr):= flake_uri + "#nixosConfigurations." + host + ".config." + attr
+# --- Smart Override Hantering ---
+home          := env_var_or_default("HOME", "")
+override_path := env_var_or_default("SENSIBLE_OVERRIDE", home + "/code_home/sensible-nix")
+has_override  := path_exists(override_path)
+
+override_flag := if has_override == "true" { "--override-input sensible " + override_path } else { "" }
+nix_exp       := "--extra-experimental-features 'nix-command flakes pipe-operators'"
+nix_flags     := nix_exp + " " + override_flag
+
+anywhere_opts := if has_override == "true" { "--nix-options '" + override_flag + "'" } else { "" }
+nh_opts       := if has_override == "true" { "-- " + override_flag } else { "" }
+
+# --- Funktioner ---
+nix(cmd, args) := "nix " + cmd + " " + nix_flags + " " + args
+nh(cmd, args)  := "nh os " + cmd + " " + flake_uri + " " + args + " " + nh_opts
+anywhere(host, ip, extra, args) := "nixos-anywhere --flake " + flake_uri + "#" + host + " --target-host " + user + "@" + ip + " " + extra + " " + anywhere_opts + " " + args
 
 alias default := check
 
@@ -35,16 +42,16 @@ alias default := check
 # ==============================================================================
 
 [group("local")]
-build *flags:
-    {{ nh("switch", "", flags) }}
+build *args:
+    {{ nh("switch", args) }}
 
 [group("local")]
-boot *flags:
-    {{ nh("boot", "", flags) }}
+boot *args:
+    {{ nh("boot", args) }}
 
 [group("local")]
-check *flags:
-    {{ nix("flake check", flags) }}
+check *args:
+    {{ nix("flake check " + flake_uri, args) }}
 
 [group("local")]
 update:
@@ -55,19 +62,19 @@ update:
 # ==============================================================================
 
 [group("building")]
-build-sd host *flags:
+build-sd host *args:
     @echo -e "{{GREEN}}Bygger SD-avbild för {{ host }}...{{NORMAL}}"
-    {{ nix("build", flags) }} {{ nix_attr(host, "system.build.sdImage") }} --show-trace
+    {{ nix("build " + flake_uri + "#nixosConfigurations." + host + ".config.system.build.sdImage", "--show-trace " + args) }}
 
 [group("building")]
-build-netboot host *flags:
+build-netboot host *args:
     @echo -e "{{GREEN}}Bygger netboot-artefakter för {{ host }}...{{NORMAL}}"
-    {{ nix("build", flags) }} {{ nix_attr(host, "system.build.netboot-prebuilt") }} --show-trace
+    {{ nix("build " + flake_uri + "#nixosConfigurations." + host + ".config.system.build.netboot-prebuilt", "--show-trace " + args) }}
 
 [group("building")]
-build-iso host *flags:
+build-iso host *args:
     @echo -e "{{GREEN}}Bygger anpassad installations-ISO för {{ host }}...{{NORMAL}}"
-    {{ nix("build", flags) }} {{ nix_attr(host, "system.build.isoImage") }} --show-trace
+    {{ nix("build " + flake_uri + "#nixosConfigurations." + host + ".config.system.build.isoImage", "--show-trace " + args) }}
 
 # ==============================================================================
 # BARE-METAL / SD-KORT (OFFLINE-INSTALLATION)
@@ -105,7 +112,6 @@ inject-secrets-sd device=default_device:
 # PROVISIONERING & INITIAL BOOTSTRAP (NIXOS-ANYWHERE)
 # ==============================================================================
 
-# Generera maskinens SSH host-nyckel och age-nyckel lokalt för sops-nix/ragenix bootstrap
 [group("provisioning")]
 generate-host-keys host out_dir="secrets/hosts":
     @mkdir -p {{ out_dir }}/{{ host }}
@@ -120,21 +126,15 @@ generate-host-keys host out_dir="secrets/hosts":
     @echo -e "{{BLUE}}Age-mottagarnyckel för sops:{{NORMAL}}"
     @ssh-to-age < {{ out_dir }}/{{ host }}/ssh_host_ed25519_key.pub
 
-# Provisionera en maskin som kör NixOS Minimal ISO med automatisk partitionering via Disko
 [group("provisioning")]
-bootstrap host ip *flags:
+bootstrap host ip *args:
     @echo -e "{{GREEN}}Initierar bootstrap av {{ host }} på {{ ip }} (NixOS Minimal)...{{NORMAL}}"
     @if ! ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no {{ user }}@{{ ip }} "true" 2>/dev/null; then \
         echo -e "{{RED}}Kunde inte nå {{ user }}@{{ ip }} via SSH. Säkerställ att maskinen körs och nätverket är uppe.{{NORMAL}}"; \
         exit 1; \
     fi
-    nixos-anywhere \
-        --flake {{ flake_uri }}#{{ host }} \
-        --target-host {{ user }}@{{ ip }} \
-        --build-on-remote \
-        {{ flags }}
+    {{ anywhere(host, ip, "--build-on-remote", args) }}
 
-# Provisionera med Disko-partitionering samt automatisk injicering av SSH host-nycklar
 [group("provisioning")]
 bootstrap-with-secrets host ip secrets_dir="secrets/hosts":
     @echo -e "{{GREEN}}Förbereder hemligheter och bootstrap för {{ host }}...{{NORMAL}}"
@@ -145,22 +145,13 @@ bootstrap-with-secrets host ip secrets_dir="secrets/hosts":
         install -m 600 "{{ secrets_dir }}/{{ host }}/ssh_host_ed25519_key" "$TEMP_DIR/etc/ssh/ssh_host_ed25519_key"; \
         install -m 644 "{{ secrets_dir }}/{{ host }}/ssh_host_ed25519_key.pub" "$TEMP_DIR/etc/ssh/ssh_host_ed25519_key.pub"; \
     fi; \
-    nixos-anywhere \
-        --flake {{ flake_uri }}#{{ host }} \
-        --target-host {{ user }}@{{ ip }} \
-        --extra-files "$TEMP_DIR" \
-        --build-on-remote
+    {{ anywhere(host, ip, "--extra-files $TEMP_DIR --build-on-remote", "") }}
 
-# Kexec-baserad netboot-provisionering för maskiner med befintligt OS eller minimal ISO
 [group("provisioning")]
-netboot-deploy host ip *flags: (build-netboot host)
+netboot-deploy host ip *args: (build-netboot host)
     @echo -e "{{GREEN}}Deployar via kexec/netboot mot {{ ip }}...{{NORMAL}}"
-    nixos-anywhere \
-        --netboot-image result \
-        --target-host {{ user }}@{{ ip }} \
-        {{ flags }}
+    nixos-anywhere --netboot-image result --target-host {{ user }}@{{ ip }} {{ anywhere_opts }} {{ args }}
 
-# Servera netboot-artefakter över nätverket för PXE-boot
 [group("provisioning")]
 netboot-serve host port="8080": (build-netboot host)
     @echo -e "{{GREEN}}Netboot-filer tillgängliga på port {{ port }}...{{NORMAL}}"
@@ -170,24 +161,33 @@ netboot-serve host port="8080": (build-netboot host)
 # LÖPANDE DEPLOYMENT (SSH / WIREGUARD)
 # ==============================================================================
 
-# Deploya till en installerad maskin baserat på IP i WireGuard-konfigurationen
 [group("deployment")]
-deploy host *flags:
-    @echo "Identifierar WireGuard-IP och uppdaterar: {{ host }}"
-    @TARGET_IP=$({{ nix("eval", flake_uri + "#nixosConfigurations." + host + ".config.networking.wireguard.interfaces.wg0.ips --apply 'ips: builtins.head (builtins.split \"/\" (builtins.head ips))' --quiet --raw") }}); \
-    {{ nh("switch", "--hostname " + host + " --target-host " + user + "@$TARGET_IP", flags) }}
+deploy host *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo -e "{{BLUE}}Söker anslutningsmål för {{ host }}...{{NORMAL}}"
+    
+    # Kör nix eval. Kastar stderr till /dev/null så det inte blöder igenom om attributet saknas,
+    # och returnerar tomt (echo "") så att bash-variabeln blir korrekt tom om kommandot felar.
+    TARGET_IP=$({{ nix("eval", flake_uri + "#nixosConfigurations." + host + ".config.sensible.wireguard.wg0.topology.nodes." + host + ".ip --quiet --raw") }} 2>/dev/null || echo "")
 
-# Deploya med godtycklig IP/hostname över SSH
+    if [ -z "$TARGET_IP" ]; then
+        echo -e "{{YELLOW}}Ingen WireGuard-IP hittades, använder värdnamnet '{{ host }}' istället.{{NORMAL}}"
+        TARGET_IP="{{ host }}"
+    fi
+
+    echo -e "{{GREEN}}Uppdaterar {{ host }} via ${TARGET_IP}...{{NORMAL}}"
+    {{ nh("switch", "--hostname " + host + " --target-host " + user + "@${TARGET_IP} " + args) }}
+
 [group("deployment")]
-deploy-ip host ip *flags:
+deploy-ip host ip *args:
     @echo "Deployar till: {{ host }} via {{ ip }}"
-    {{ nh("switch", "--hostname " + host + " --target-host " + user + "@" + ip, flags) }}
+    {{ nh("switch", "--hostname " + host + " --target-host " + user + "@" + ip + " " + args) }}
 
-# Bygg och aktivera vid nästa omstart (användbart för kärnuppdateringar)
 [group("deployment")]
-deploy-boot-reboot host ip *flags:
+deploy-boot-reboot host ip *args:
     @echo "Bygger och sätter boot-profil för: {{ host }} via {{ ip }}"
-    {{ nh("boot", "--hostname " + host + " --target-host " + user + "@" + ip, flags) }}
+    {{ nh("boot", "--hostname " + host + " --target-host " + user + "@" + ip + " " + args) }}
     @echo "Startar om {{ host }}..."
     ssh {{ user }}@{{ ip }} "systemctl reboot"
 
@@ -197,8 +197,8 @@ deploy-boot-reboot host ip *flags:
 
 [group("tools")]
 update-hosts:
-    @{{ nix("eval", flake_uri + "#nixosConfigurations --apply 'builtins.attrNames' --json") }} | {{ jq }} -r '.[]' | \
-    awk '{print $1 " *extra_flags:\n    @just deploy " $1 " {{ '{{' }}extra_flags{{ '}}' }}"}' > hosts.justfile
+    {{ nix("eval", flake_uri + "#nixosConfigurations --apply 'builtins.attrNames' --json") }} | {{ jq }} -r '.[]' | \
+    awk '{print $1 " *args:\n    @just deploy " $1 " {{ '{{' }}args{{ '}}' }}"}' > hosts.justfile
     @echo "hosts.justfile har uppdaterats."
 
 [group("tools")]

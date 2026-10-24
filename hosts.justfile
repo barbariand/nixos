@@ -1,10 +1,12 @@
-homecomputer *extra_flags:
-    @just deploy homecomputer {{extra_flags}}
-lenovo-yoga *extra_flags:
-    @just deploy lenovo-yoga {{extra_flags}}
-pi_sd *extra_flags:
-    @just deploy pi_sd {{extra_flags}}
-raspberrypi *extra_flags:
-    @just deploy raspberrypi {{extra_flags}}
-server_one *extra_flags:
-    @just deploy server_one {{extra_flags}}
+build_server *args:
+    @just deploy build_server {{args}}
+homecomputer *args:
+    @just deploy homecomputer {{args}}
+lenovo-yoga *args:
+    @just deploy lenovo-yoga {{args}}
+pi_sd *args:
+    @just deploy pi_sd {{args}}
+raspberrypi *args:
+    @just deploy raspberrypi {{args}}
+server_one *args:
+    @just deploy server_one {{args}}

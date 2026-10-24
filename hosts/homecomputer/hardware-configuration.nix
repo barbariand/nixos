@@ -22,7 +22,7 @@
         "sd_mod"
         "sr_mod"
       ];
-      kernelModules = [];
+      kernelModules = ["nvme" "amdgpu"];
     };
 
     kernelModules = [

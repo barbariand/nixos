@@ -7,7 +7,6 @@
     };
     wireguard."wg1" = {
       enable = true;
-      interface = "eth0"; 
     };
     shell = {
       fish.enable = true;

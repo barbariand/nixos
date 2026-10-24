@@ -4,7 +4,7 @@
     baseDomain = "simd.me";
     serverIp = "192.168.1.3";
 
-    internalNetworks = ["127.0.0.0/8" "192.168.1.0/24" "10.55.0.0/24"];
+    internalNetworks = ["10.56.0.0/24" "127.0.0.0/8" "192.168.1.0/24" "10.55.0.0/24"];
 
     dns.resolvers = ["1.1.1.1" "8.8.8.8"];
 
@@ -23,7 +23,6 @@
       wg_ollama = {
         accessControl = ["10.56.0.0/24"];
         localData = [
-          # Inject DNS so friends resolve the domain to the Pi's WG IP
           "\"ollama.simd.me. IN A 10.56.0.1\""
         ];
       };
@@ -40,7 +39,7 @@
 
     cloudflare = {
       enable = true;
-      tokenFile = "/etc/secrets/cloudflare-token";
+      tokenFile = config.age.secrets.cloudflare-token.path;
     };
 
     subdomains = {

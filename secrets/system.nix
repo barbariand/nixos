@@ -5,6 +5,7 @@
   age.secrets.nix-access-tokens.file = ./nix-access-tokens.age;
   age.secrets.k3s-token.file = ./k3s-token.age;
   age.secrets.grafana.file = ./grafana.age;
+  age.secrets.cloudflare-token.file = ./cloudflare-token.age;
 
   age.secrets."homepage.env" = {
     file = ./homepage.env.age;

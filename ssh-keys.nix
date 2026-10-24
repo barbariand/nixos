@@ -5,7 +5,7 @@ rec {
 
   raspberrypi = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILhW7urXQ2zLHRSRUkIWfYqdqB8q8gyJNJ/suuEF5rJi raspberrypi";
   server_one = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINw8zWQ5+G7biSV8RIK/6uZH8F1r4a9FeESyHQcRDLI7";
-  build_server = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJXwSNaobTeUDZ6HiCwQLi9dDO+gVp35gQYCTJCqu6+G root@buildserver";
+  build_server = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILHSsfGHwdwd6CbrOl2ufvtRDUDz1nj0o9ONd8p5KQlZ root@buildserver";
 
   users = [lenovo home_computer github];
   systems = [raspberrypi server_one build_server];
