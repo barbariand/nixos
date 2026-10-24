@@ -7,6 +7,15 @@
     };
     terminal.default = "kitty";
     pass.enable = true;
-    tmux.enable = true;
+    services.harmonia = {
+      enable = true;
+      port = 5000;
+    };
+
+    nix.extraOptions.secret-key-files = [ "/etc/nix/cache-priv-key.pem" ];
+
+  boot.tmp.useTmpfs = true;
+
+    networking.firewall.allowedTCPPorts = [ 5000 ];
   };
 }
