@@ -14,4 +14,11 @@
     };
   };
   networking.nameservers = ["1.1.1.1"];
+
+  systemd.services.systemd-networkd.serviceConfig= {
+    LoadCredential = lib.mkForce [];
+    LoadCredentialEncrypted = lib.mkForce [];
+    SetCredential = lib.mkForce [];
+    SetCredentialEncrypted = lib.mkForce [];
+    };
 }

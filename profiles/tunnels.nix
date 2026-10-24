@@ -1,4 +1,8 @@
-{ config, ... }: {
+{ lib, ... }:
+let
+  wgLib = import ../lib/wireguard { inherit lib; };
+in
+{
   imports = [
     (import ../lib/ssh-tools.nix {
       ignorePeers = [ "phone" ];
@@ -7,9 +11,13 @@
   ];
 
   sensible.wireguard = {
-    # Ollama
-    "wg1" = {
+    "wg1" = wgLib.mkIsolated {
       privateKeyFile = "/var/lib/wireguard/ollama.key";
+      firewall = {
+        allowedTCPPorts = [ 53 443 853 ];
+        allowedUDPPorts = [ 53 853 ];
+      };
+
       topology = {
         prefixLength = 24;
         nodes = {
@@ -21,37 +29,23 @@
             publicKey = "KfaPnCEKuEQE5HDOlQKddaJ+KkBuuZNetAdUk3483Bc=";
             ip = "10.56.0.2";
           };
-          # "lenovo-yoga" = {
-          #   ip = "10.56.0.3";
-          # };
-          # "ludvig-homecomputer" = {
-          #   ip = "10.56.0.4";
-          # };
-          # "charlotte-homecomputer" = {
-          #   ip = "10.56.0.5";
-          # };
           "viktor-homecomputer" = {
             publicKey = "sBag8Z0ucJIpJS8uqtiXV1B5PU1KL8FPBYp18+BFIhQ=";
             ip = "10.56.0.36";
           };
         };
 
-        hubs = {
-          raspberrypi = {
-            endpoint = "wireguard.simd.me";
-            port = 51821;
-            links = [ "homecomputer" "viktor-homecomputer" ];
-          };
+        hubs.raspberrypi = {
+          endpoint = "wireguard.simd.me";
+          port = 51821;
         };
       };
     };
 
-    # Default
-    "wg0" = {
+    "wg0" = wgLib.mkMesh {
       privateKeyFile = "/var/lib/wireguard/private.key";
       topology = {
         prefixLength = 24;
-
         nodes = {
           raspberrypi = {
             publicKey = "z52vjMTykETjl7/tEXlEEAsKVJni5ocinvx5f21e91U=";
@@ -69,18 +63,19 @@
             publicKey = "CKzdaPbPUgetkV+oI1+OYcZH7PvyM2UWPEPx6i2F+yM=";
             ip = "10.55.0.4";
           };
+          build_server = {
+            publicKey = "OVhRPoOU02tFUb32tPXqyxZqnM3Z3kOo9CywVeB4jns=";
+            ip = "10.55.0.5";
+          };
           phone = {
             publicKey = "HtWcEPpV156RJ5b/NKC0z9U7Fu4nh4935s1Jj21tZ0U=";
-            ip = "10.55.0.5";
+            ip = "10.55.0.200";
           };
         };
 
-        hubs = {
-          raspberrypi = {
-            endpoint = "wireguard.simd.me";
-            port = 51820;
-            links = [ "homecomputer" "lenovo-yoga" "server_one" "phone" ];
-          };
+        hubs.raspberrypi = {
+          endpoint = "wireguard.simd.me";
+          port = 51820;
         };
       };
     };

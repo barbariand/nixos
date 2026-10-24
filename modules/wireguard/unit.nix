@@ -5,66 +5,72 @@
   ...
 }: let
   hostName = config.networking.hostName;
-  wgLib = import ../../lib/wireguard.nix {inherit lib;};
+  wgLib = import ../../lib/wireguard/default.nix {inherit lib;};
 
-  enabledNetworks = lib.filterAttrs (_: v: v.enable) config.sensible.wireguard;
-  activeNetworks = lib.filterAttrs (_: v: wgLib.isNodeInNetwork hostName v) enabledNetworks;
+  allNetworks = config.sensible.wireguard;
+  enabledNetworks = lib.filterAttrs (_: v: wgLib.isNetworkEnabled hostName v) allNetworks;
+  activeNetworks = lib.filterAttrs (_: v: wgLib.isNetworkActive hostName v) allNetworks;
 
-  routingNetworks = lib.filterAttrs (_: v: wgLib.isRoutingHub hostName v) activeNetworks;
-  policyNetworks = lib.filterAttrs (_: v: wgLib.isPolicyHub hostName v) activeNetworks;
-  trustedNetworks = lib.filterAttrs (_: v: !v.isolated) activeNetworks;
+  nftablesNetworks = lib.filterAttrs (_: v: wgLib.needsNftables hostName v) activeNetworks;
+  trustedNetworks = lib.filterAttrs (_: v: wgLib.trustInterface v) activeNetworks;
+  untrustedNetworks = lib.filterAttrs (_: v: !(wgLib.trustInterface v)) activeNetworks;
 
-  needsForwarding = routingNetworks != {} || policyNetworks != {};
+  needsForwarding = lib.any (v: (wgLib.isRoutingHub hostName v) || (wgLib.isPolicyHub hostName v)) (lib.attrValues activeNetworks);
+  needsNftables = nftablesNetworks != {};
 
-  routingTables = lib.mapAttrs' (netName: netCfg:
-    lib.nameValuePair "wg_routing_${netName}" {
+  nftTables = lib.mapAttrs' (netName: netCfg:
+    lib.nameValuePair "wg_${netName}" {
       family = "inet";
-      content = wgLib.mkRoutingTable netName netCfg;
+      content = wgLib.mkNetworkTable hostName netName netCfg allNetworks;
     }
-  ) routingNetworks;
+  ) nftablesNetworks;
 
-  policyTables = lib.mapAttrs' (netName: netCfg:
-    lib.nameValuePair "wg_policy_${netName}" {
-      family = "inet";
-      content = wgLib.mkPolicyTable hostName netName netCfg enabledNetworks;
-    }
-  ) policyNetworks;
+  perInterfaceFirewall = lib.mapAttrs (netName: netCfg: {
+    allowedTCPPorts = lib.unique (
+      (netCfg.firewall.allowedTCPPorts or [])
+      ++ (wgLib.targetPortsForHostInNetwork "tcp" hostName netName netCfg allNetworks)
+    );
+    allowedUDPPorts = lib.unique (
+      (netCfg.firewall.allowedUDPPorts or [])
+      ++ (wgLib.targetPortsForHostInNetwork "udp" hostName netName netCfg allNetworks)
+    );
+  }) untrustedNetworks;
 
-  isolatedTargetFirewall = lib.mapAttrs (_: netCfg: {
-    allowedTCPPorts = wgLib.targetPortsForHost "tcp" hostName netCfg;
-    allowedUDPPorts = wgLib.targetPortsForHost "udp" hostName netCfg;
-  }) (lib.filterAttrs (_: v: v.isolated && wgLib.isForwardTarget hostName v) activeNetworks);
-
-  # Omvandlar peer-listan från wgLib till modern systemd-networkd wireguardPeers-syntax
   mkSystemdPeers = netCfg:
-    map (peer: {
-      PublicKey = peer.publicKey;
-      AllowedIPs = peer.allowedIPs;
-    } // lib.optionalAttrs (peer ? endpoint && peer.endpoint != null) {
-      Endpoint = peer.endpoint;
-    } // lib.optionalAttrs (peer ? persistentKeepalive && peer.persistentKeepalive != null) {
-      PersistentKeepalive = peer.persistentKeepalive;
-    }) (wgLib.resolvePeers hostName netCfg);
+    map (peer:
+      {
+        PublicKey = peer.publicKey;
+        AllowedIPs = peer.allowedIPs;
+      }
+      // lib.optionalAttrs (peer ? endpoint && peer.endpoint != null) {
+        Endpoint = peer.endpoint;
+      }
+      // lib.optionalAttrs (peer ? persistentKeepalive && peer.persistentKeepalive != null) {
+        PersistentKeepalive = peer.persistentKeepalive;
+      }
+    ) (wgLib.resolvePeers hostName netCfg);
 
-  # Generera .netdev-konfiguration för varje aktivt gränssnitt
   mkNetdevs = lib.mapAttrs' (netName: netCfg: let
     isHub = wgLib.isHubNode hostName netCfg;
   in
-    lib.nameValuePair "30-${netName}" {
+    lib.nameValuePair "30-${netName}" ({
       netdevConfig = {
         Kind = "wireguard";
         Name = netName;
+      } // lib.optionalAttrs (netCfg.mtu != null) {
+        MTUBytes = toString netCfg.mtu;
       };
-      wireguardConfig = {
-        PrivateKeyFile = netCfg.privateKeyFile;
-      } // lib.optionalAttrs isHub {
-        ListenPort = netCfg.topology.hubs.${hostName}.port;
-      };
+      wireguardConfig =
+        {
+          PrivateKeyFile = netCfg.privateKeyFile;
+        }
+        // lib.optionalAttrs isHub {
+          ListenPort = netCfg.topology.hubs.${hostName}.port;
+        };
       wireguardPeers = mkSystemdPeers netCfg;
-    }
+    })
   ) activeNetworks;
 
-  # Generera .network-konfiguration för varje aktivt gränssnitt
   mkNetworks = lib.mapAttrs' (netName: netCfg: let
     localNode = netCfg.topology.nodes.${hostName};
   in
@@ -76,10 +82,10 @@
     }
   ) activeNetworks;
 in
-  sensibleLib.sensibleConfig {
+  {
     condition = enabledNetworks != {};
 
-    assertions = wgLib.mkAssertions hostName enabledNetworks;
+    assertions = wgLib.mkAssertions hostName allNetworks;
 
     system = lib.mkIf (activeNetworks != {}) {
       boot.kernel.sysctl = lib.mkIf needsForwarding {
@@ -97,20 +103,23 @@ in
 
         firewall = {
           trustedInterfaces = builtins.attrNames trustedNetworks;
-          interfaces = isolatedTargetFirewall;
+          interfaces = perInterfaceFirewall;
 
           allowedUDPPorts = lib.mapAttrsToList
             (_: v: v.topology.hubs.${hostName}.port)
             (lib.filterAttrs (_: v: wgLib.isHubNode hostName v) activeNetworks);
+
+          extraForwardRules = lib.mkIf needsNftables (wgLib.mkFirewallForwardRules hostName activeNetworks);
         };
 
         dhcpcd.denyInterfaces = builtins.attrNames activeNetworks;
         interfaces = lib.mapAttrs (_: _: {useDHCP = false;}) activeNetworks;
 
-        nftables = lib.mkIf needsForwarding {
+        nftables = lib.mkIf needsNftables {
           enable = true;
-          tables = routingTables // policyTables;
+          tables = nftTables;
         };
       };
     };
   }
+  |> sensibleLib.sensibleConfig
