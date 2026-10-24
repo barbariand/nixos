@@ -30,7 +30,6 @@
       };
     })
   ];
-
   environment.systemPackages = with pkgs; [
     # Nix & System Management
     nh
@@ -88,6 +87,17 @@
     aspellDicts.en-computers
     aspellDicts.en-science
     aspellDicts.sv
+    # Funny dependancies for pi.dev
+        clang-tools
+    gopls
+    unstable.codegraph
+    lua-language-server
+    poppler-utils
+    pyright
+    solargraph
+    svelte-language-server
+    wakatime-cli
+
   ];
 
   home-manager.users.${user}.imports = [

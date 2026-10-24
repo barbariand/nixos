@@ -55,6 +55,14 @@ in {
     subdomains = {
       vault = atlasLib.mkPublic "http://127.0.0.1:8222";
 
+      cache = (atlasLib.mkPublic "http://10.55.0.5:5000") {
+        nginx.extraConfig = ''
+          client_max_body_size 0;
+          proxy_request_buffering off;
+          proxy_buffering off;
+        '';
+      };
+
       wireguard = atlasLib.mkDnsOnly;
       dns = atlasLib.mkDnsOnly;
 

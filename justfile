@@ -35,11 +35,16 @@ nix(cmd, args) := "nix " + cmd + " " + nix_flags + " " + args
 nh(cmd, args)  := "nh os " + cmd + " " + flake_uri + " " + args + " " + nh_opts
 anywhere(host, ip, extra, args) := "nixos-anywhere --flake " + flake_uri + "#" + host + " --target-host " + user + "@" + ip + " " + extra + " " + anywhere_opts + " " + args
 
-alias default := check
+[group("local")]
+default: check
 
 # ==============================================================================
 # LOKAL DRIFT & KONTROLL
 # ==============================================================================
+
+[group("local")]
+check *args:
+    {{ nix("flake check " + flake_uri, args) }}
 
 [group("local")]
 build *args:
@@ -48,10 +53,6 @@ build *args:
 [group("local")]
 boot *args:
     {{ nh("boot", args) }}
-
-[group("local")]
-check *args:
-    {{ nix("flake check " + flake_uri, args) }}
 
 [group("local")]
 update:
@@ -172,8 +173,8 @@ deploy host *args:
     TARGET_IP=$({{ nix("eval", flake_uri + "#nixosConfigurations." + host + ".config.sensible.wireguard.wg0.topology.nodes." + host + ".ip --quiet --raw") }} 2>/dev/null || echo "")
 
     if [ -z "$TARGET_IP" ]; then
-        echo -e "{{YELLOW}}Ingen WireGuard-IP hittades, använder värdnamnet '{{ host }}' istället.{{NORMAL}}"
-        TARGET_IP="{{ host }}"
+        echo -e "{{YELLOW}}Ingen WireGuard-IP hittades"
+        exit
     fi
 
     echo -e "{{GREEN}}Uppdaterar {{ host }} via ${TARGET_IP}...{{NORMAL}}"

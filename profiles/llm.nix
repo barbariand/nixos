@@ -19,8 +19,13 @@
     host = "0.0.0.0";
     port = 11434;
   };
-
+  systemd.services.ollama.serviceConfig = {
+     EnvironmentFile = config.age.secrets.ollama.path;
+  };
   home-manager.users.${user} = {
+    home.packages = [
+      pkgs.nodejs
+    ];
     home.sessionVariables = {
       NPM_CONFIG_PREFIX = "${config.home-manager.users.${user}.home.homeDirectory}/.npm-global";
     };
@@ -29,13 +34,5 @@
       "${config.home-manager.users.${user}.home.homeDirectory}/.npm-global/bin"
     ];
 
-    programs.opencode.settings = {
-      provider = {
-        ollama = {
-          baseURL = "http://localhost:11434/v1";
-          apiKey = "ollama";
-        };
-      };
-    };
   };
 }

@@ -6,6 +6,10 @@
   age.secrets.k3s-token.file = ./k3s-token.age;
   age.secrets.grafana.file = ./grafana.age;
   age.secrets.cloudflare-token.file = ./cloudflare-token.age;
+  age.secrets.ollama.file = ./ollama.age;
+
+  age.secrets.atticd-env.file = ./atticd-env.age;
+  age.secrets.urgobalt-forgejo-runner.file = ./urgobalt-forgejo-runner.age;
 
   age.secrets."homepage.env" = {
     file = ./homepage.env.age;
