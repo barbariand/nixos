@@ -3,17 +3,14 @@
   pkgs,
   ...
 }: {
-  services.ark-server = {
-    enable = false;
+  sensible.ark-server = {
+    enable = true;
 
     sessionName = "Cindy's Ark World";
     adminPassword = "ditt-hemliga-lösenord";
-    multiHome = "192.168.1.4";
+    multiHome = "192.168.1.5";
     map = "TheIsland_WP";
     publicDomain = "ark.simd.me";
     mods = "952945";
-  };
-  networking.hosts = {
-    "192.168.1.4" = [config.networking.hostName];
   };
 }

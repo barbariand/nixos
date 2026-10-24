@@ -1,144 +1,94 @@
-{config, ...}: {
+{
+  config,
+  sensibleLib,
+  ...
+}: let
+  atlasLib = sensibleLib.atlas;
+in {
   config.sensible.atlas = {
     enable = true;
     baseDomain = "simd.me";
     serverIp = "192.168.1.3";
 
-    internalNetworks = ["10.56.0.0/24" "127.0.0.0/8" "192.168.1.0/24" "10.55.0.0/24"];
-
-    dns.resolvers = ["1.1.1.1" "8.8.8.8"];
-
-    dns.views = {
+    zones = {
+      lan = {
+        cidrs = ["127.0.0.0/8" "192.168.1.0/24"];
+        ip = "192.168.1.3";
+        defaultInternal = true;
+      };
       wireguard = {
-        accessControl = ["10.55.0.0/24"];
-        localData = [
-          "\"vault.simd.me. IN A 10.55.0.1\""
-          "\"openclaw.simd.me. IN A 10.55.0.1\""
-          "\"logs.simd.me. IN A 10.55.0.1\""
-          "\"grafana.simd.me. IN A 10.55.0.1\""
-          "\"homepage.simd.me. IN A 10.55.0.1\""
-          "\"ollama.internal.simd.me. IN A 10.55.0.1\""
-        ];
+        cidrs = ["10.55.0.0/24"];
+        ip = "10.55.0.1";
+        defaultInternal = true;
       };
       wg_ollama = {
-        accessControl = ["10.56.0.0/24"];
-        localData = [
-          "\"ollama.simd.me. IN A 10.56.0.1\""
-        ];
+        cidrs = ["10.56.0.0/24"];
+        ip = "10.56.0.1";
+        defaultInternal = false;
+      };
+    };
+
+    rules = {
+      "*.internal" = {
+        visibility = "internal";
+        zones = ["lan" "wireguard"];
+      };
+      "minecraft.*" = {
+        visibility = "public";
+        nginx.enable = false;
       };
     };
 
     acme = {
       enable = true;
       email = "cindy@simd.me";
+      dnsProvider = "cloudflare";
       environmentFile = "/var/lib/acme/secrets/cloudflare-acme-env";
     };
 
-    nginx.enable = true;
-    unbound.enable = true;
-
-    cloudflare = {
+    ddns = {
       enable = true;
+      provider = "cloudflare";
       tokenFile = config.age.secrets.cloudflare-token.path;
     };
 
     subdomains = {
-      ollama = {
-        enable = true;
-        visibility = "internal";
-        nginx.proxyPass = "http://10.55.0.2:11434"; 
-      };
-      wireguard = {
-        enable = true;
-        nginx.proxyPass = null;
-      };
-      vault = {
-        enable = true;
-        nginx.proxyPass = "http://127.0.0.1:8222";
+      vault = atlasLib.mkPublic "http://127.0.0.1:8222";
+
+      wireguard = atlasLib.mkDnsOnly;
+      dns = atlasLib.mkDnsOnly;
+
+      ollama = atlasLib.mkZoneService ["wg_ollama" "wireguard" "lan"] "http://10.55.0.2:11434";
+
+      openclaw = atlasLib.mkInternal "http://10.55.0.2:9000";
+      logs = atlasLib.mkInternal "http://127.0.0.1:3100";
+      grafana = atlasLib.mkInternal "http://127.0.0.1:3000";
+      homepage = atlasLib.mkInternal "http://127.0.0.1:8082";
+
+      "ollama.internal".proxyPass = "http://10.55.0.2:11434";
+
+      mc = atlasLib.mkTcpStream 25566 "10.55.0.4:25566";
+      minecraft = atlasLib.mkTcpStream 25565 "10.55.0.4:25565" {
+        childNaming = "prefix";
+        subdomains.ivar = atlasLib.mkTcpStream 25567 "10.55.0.4:25567";
       };
 
-      dns = {
-        enable = true;
-        nginx.proxyPass = null;
-      };
-
-      mc = {
-        enable = true;
-        nginx.enable = false;
-        streams.game = {
-          port = 25566;
-          protocol = "tcp";
-          backend = "10.55.0.4:25566";
+      ark = atlasLib.mkStreams {
+        game = {
+          port = 7777;
+          protocol = "udp";
+          backend = "192.168.1.4:7777";
         };
-      };
-      "minecraft.ivar" = {
-        enable = true;
-        nginx.enable = false;
-        streams.game = {
-          port = 25567;
-          protocol = "tcp";
-          backend = "10.55.0.4:25567";
+        raw = {
+          port = 7778;
+          protocol = "udp";
+          backend = "192.168.1.4:7778";
         };
-      };
-      minecraft = {
-        enable = true;
-        nginx.enable = false;
-        streams.game = {
-          port = 25565;
-          protocol = "tcp";
-          backend = "10.55.0.4:25565";
+        query = {
+          port = 27015;
+          protocol = "udp";
+          backend = "192.168.1.4:27015";
         };
-      };
-
-      ark = {
-        enable = true;
-        nginx.enable = false;
-        streams = {
-          game = {
-            port = 7777;
-            protocol = "udp";
-            backend = "192.168.1.4:7777";
-          };
-          query = {
-            port = 27015;
-            protocol = "udp";
-            backend = "192.168.1.4:27015";
-          };
-          raw = {
-            port = 7778;
-            protocol = "udp";
-            backend = "192.168.1.4:7778";
-          };
-        };
-      };
-
-      openclaw = {
-        enable = true;
-        visibility = "internal";
-        nginx.proxyPass = "http://10.55.0.2:9000";
-      };
-
-      logs = {
-        enable = true;
-        visibility = "internal";
-        nginx.proxyPass = "http://127.0.0.1:3100";
-      };
-      grafana = {
-        enable = true;
-        visibility = "internal";
-        nginx.proxyPass = "http://127.0.0.1:3000";
-      };
-
-      homepage = {
-        enable = true;
-        visibility = "internal";
-        nginx.proxyPass = "http://127.0.0.1:8082";
-      };
-
-      "ollama.internal" = {
-        enable = true;
-        visibility = "internal";
-        nginx.proxyPass = "http://10.55.0.2:11434";
       };
     };
 
