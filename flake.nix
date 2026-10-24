@@ -11,7 +11,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     sensible = {
-      url = "git+https://git.urgobalt.dev/urgobalt/sensible-nix.git";
+      url = "git+ssh://git@git.urgobalt.dev/urgobalt/sensible-nix.git";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.nixpkgs-unstable.follows = "nixpkgs-unstable";
       inputs.home-manager.follows = "home-manager";

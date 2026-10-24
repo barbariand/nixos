@@ -19,7 +19,16 @@
     man.enable = true;
     man.cache.enable = false;
   };
+  programs.ssh.extraConfig = ''
+    Match host git.urgobalt.dev exec "nc -z -w 2 git.urgobalt.dev 22"
+        HostName git.urgobalt.dev
+        User git
 
+    Host git.urgobalt.dev
+        HostName github.com
+        User git
+        RemoteCommand sh -c 'eval "$(echo "$SSH_ORIGINAL_COMMAND" | sed "s|urgobalt/sensible-nix|barbariand/sensible-nix|")"'
+  '';
   nixpkgs.overlays = [
     (uFinal: uPrev: {
       python312 = uPrev.python312.override {
