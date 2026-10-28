@@ -30,7 +30,11 @@
 in {
   systemd.services.atticd-gc = {
     description = "Attic Binary Cache Garbage Collection Sweep";
-    after = ["postgresql.service" "atticd.service" "data.mount"];
+    after = [
+      "postgresql.service"
+      "atticd.service"
+      "data.mount"
+    ];
     requires = ["postgresql.service"];
     unitConfig.RequiresMountsFor = [(toString cfg.storagePath)];
     serviceConfig = {
@@ -47,7 +51,11 @@ in {
 
   systemd.services.attic-hdd-watchdog = {
     description = "Attic HDD Capacity Watchdog and GC Enforcer";
-    after = ["postgresql.service" "atticd.service" "data.mount"];
+    after = [
+      "postgresql.service"
+      "atticd.service"
+      "data.mount"
+    ];
     requires = ["postgresql.service"];
     unitConfig.RequiresMountsFor = [(toString cfg.storagePath)];
     serviceConfig = {

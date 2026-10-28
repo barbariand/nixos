@@ -1,5 +1,4 @@
-{ lib }:
-{
+{lib}: {
   getNamed = hostName: modulesSets:
     lib.concatMap (
       modSet:

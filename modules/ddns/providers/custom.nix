@@ -1,5 +1,9 @@
-{ cfg, lib, pkgs, ... }:
 {
+  cfg,
+  lib,
+  pkgs,
+  ...
+}: {
   assertions = [
     {
       assertion = cfg.custom.script != "";
@@ -12,14 +16,23 @@
       description = "Sensible Custom Dynamic DNS Updater";
       after = ["network-online.target"];
       wants = ["network-online.target"];
-      path = [pkgs.curl pkgs.jq pkgs.dnsutils pkgs.coreutils] ++ cfg.custom.packages;
+      path =
+        [
+          pkgs.curl
+          pkgs.jq
+          pkgs.dnsutils
+          pkgs.coreutils
+        ]
+        ++ cfg.custom.packages;
       environment.DDNS_DOMAINS = lib.concatStringsSep " " (lib.unique cfg.domains);
-      serviceConfig = {
-        Type = "oneshot";
-        ExecStart = pkgs.writeShellScript "sensible-ddns-update" cfg.custom.script;
-      } // lib.optionalAttrs (cfg.custom.environmentFile != null) {
-        EnvironmentFile = cfg.custom.environmentFile;
-      };
+      serviceConfig =
+        {
+          Type = "oneshot";
+          ExecStart = pkgs.writeShellScript "sensible-ddns-update" cfg.custom.script;
+        }
+        // lib.optionalAttrs (cfg.custom.environmentFile != null) {
+          EnvironmentFile = cfg.custom.environmentFile;
+        };
     };
 
     systemd.timers.sensible-ddns = {

@@ -1,5 +1,4 @@
-{ user, ... }:
-{
+{user, ...}: {
   sensible.syncthing = {
     enable = true;
     inherit user;

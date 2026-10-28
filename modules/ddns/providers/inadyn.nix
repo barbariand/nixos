@@ -1,5 +1,8 @@
-{ cfg, lib, ... }:
 {
+  cfg,
+  lib,
+  ...
+}: {
   assertions = [
     {
       assertion = cfg.inadyn.username != null && cfg.inadyn.passwordFile != null;
@@ -10,13 +13,15 @@
   system = {
     services.inadyn = {
       enable = true;
-      settings = lib.recursiveUpdate {
-        provider.${cfg.inadyn.provider} = {
-          username = cfg.inadyn.username;
-          password-file = cfg.inadyn.passwordFile;
-          hostname = lib.unique cfg.domains;
-        };
-      } cfg.inadyn.extraSettings;
+      settings =
+        lib.recursiveUpdate {
+          provider.${cfg.inadyn.provider} = {
+            username = cfg.inadyn.username;
+            password-file = cfg.inadyn.passwordFile;
+            hostname = lib.unique cfg.domains;
+          };
+        }
+        cfg.inadyn.extraSettings;
     };
   };
 }

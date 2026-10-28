@@ -1,5 +1,4 @@
-{ lib }:
-rec {
+{lib}: rec {
   mkCallable = baseAttrs:
     baseAttrs
     // {
@@ -30,8 +29,7 @@ rec {
       protocol = "tcp";
     };
 
-  mkForwardUDP = port: targetNode:
-    (mkForward port targetNode) "udp";
+  mkForwardUDP = port: targetNode: (mkForward port targetNode) "udp";
 
   # Preset 1: Alla noder i nätverket litar på varandra och kan kommunicera fritt (mesh/spoke-relay)
   mkMesh = mkCallable {

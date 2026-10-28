@@ -1,5 +1,4 @@
-{ lib }:
-rec {
+{lib}: rec {
   # Matchar glob-mönster (t.ex. "*", "*.internal", "minecraft.*", "exact")
   matchPattern = pattern: name: let
     regex = "^" + (builtins.replaceStrings ["." "*"] ["\\." ".*"] pattern) + "$";
@@ -8,64 +7,81 @@ rec {
 
   # Plattar ut nästlade subdomäner rekursivt och låter barn ärva förälderns policy
   flattenSubdomains = parentPrefix: parentPolicy: subdomainsAttr:
-    lib.foldlAttrs (acc: name: subCfg: let
-      fullName =
-        if parentPrefix == ""
-        then name
-        else if (subCfg.childNaming or "subdomain") == "prefix"
-        then "${parentPrefix}.${name}"
-        else "${name}.${parentPrefix}";
+    lib.foldlAttrs (
+      acc: name: subCfg: let
+        fullName =
+          if parentPrefix == ""
+          then name
+          else if (subCfg.childNaming or "subdomain") == "prefix"
+          then "${parentPrefix}.${name}"
+          else "${name}.${parentPrefix}";
 
-      inherited = {
-        visibility =
-          if (subCfg.visibility or null) != null
-          then subCfg.visibility
-          else parentPolicy.visibility or "public";
-        zones =
-          if (subCfg.zones or []) != []
-          then subCfg.zones
-          else parentPolicy.zones or [];
-        allowNetworks = lib.unique ((parentPolicy.allowNetworks or []) ++ (subCfg.allowNetworks or []));
-        denyNetworks = lib.unique ((parentPolicy.denyNetworks or []) ++ (subCfg.denyNetworks or []));
-      };
+        inherited = {
+          visibility =
+            if (subCfg.visibility or null) != null
+            then subCfg.visibility
+            else parentPolicy.visibility or "public";
+          zones =
+            if (subCfg.zones or []) != []
+            then subCfg.zones
+            else parentPolicy.zones or [];
+          allowNetworks = lib.unique ((parentPolicy.allowNetworks or []) ++ (subCfg.allowNetworks or []));
+          denyNetworks = lib.unique ((parentPolicy.denyNetworks or []) ++ (subCfg.denyNetworks or []));
+        };
 
-      effectiveSelf = subCfg // inherited;
-      children = flattenSubdomains fullName effectiveSelf (subCfg.subdomains or {});
-    in
-      acc // { ${fullName} = effectiveSelf; } // children
-    ) {} subdomainsAttr;
+        effectiveSelf = subCfg // inherited;
+        children = flattenSubdomains fullName effectiveSelf (subCfg.subdomains or {});
+      in
+        acc // {${fullName} = effectiveSelf;} // children
+    ) {}
+    subdomainsAttr;
 
   # Applicerar matchande regler från sensible.atlas.rules på en subdomän
   applyRules = rules: subName: subCfg: let
     matchingRules = lib.attrValues (lib.filterAttrs (pattern: _: matchPattern pattern subName) rules);
 
-    mergedRule = lib.foldl' (acc: r: {
-      visibility = if r.visibility != null then r.visibility else acc.visibility;
-      zones = lib.unique (acc.zones ++ r.zones);
-      allowNetworks = lib.unique (acc.allowNetworks ++ r.allowNetworks);
-      denyNetworks = lib.unique (acc.denyNetworks ++ r.denyNetworks);
-      ddnsEnable = if r.ddns.enable != null then r.ddns.enable else acc.ddnsEnable;
-      unboundEnable = if r.unbound.enable != null then r.unbound.enable else acc.unboundEnable;
-      nginxEnable = if r.nginx.enable != null then r.nginx.enable else acc.nginxEnable;
-      extraConfig =
-        acc.extraConfig
-        + (lib.optionalString (r.nginx.extraConfig != "") "\n${r.nginx.extraConfig}");
-      extraHeaders = acc.extraHeaders // r.nginx.extraHeaders;
-      allowedTCPPorts = lib.unique (acc.allowedTCPPorts ++ r.firewall.allowedTCPPorts);
-      allowedUDPPorts = lib.unique (acc.allowedUDPPorts ++ r.firewall.allowedUDPPorts);
-    }) {
-      visibility = null;
-      zones = [];
-      allowNetworks = [];
-      denyNetworks = [];
-      ddnsEnable = null;
-      unboundEnable = null;
-      nginxEnable = null;
-      extraConfig = "";
-      extraHeaders = {};
-      allowedTCPPorts = [];
-      allowedUDPPorts = [];
-    } matchingRules;
+    mergedRule =
+      lib.foldl'
+      (acc: r: {
+        visibility =
+          if r.visibility != null
+          then r.visibility
+          else acc.visibility;
+        zones = lib.unique (acc.zones ++ r.zones);
+        allowNetworks = lib.unique (acc.allowNetworks ++ r.allowNetworks);
+        denyNetworks = lib.unique (acc.denyNetworks ++ r.denyNetworks);
+        ddnsEnable =
+          if r.ddns.enable != null
+          then r.ddns.enable
+          else acc.ddnsEnable;
+        unboundEnable =
+          if r.unbound.enable != null
+          then r.unbound.enable
+          else acc.unboundEnable;
+        nginxEnable =
+          if r.nginx.enable != null
+          then r.nginx.enable
+          else acc.nginxEnable;
+        extraConfig =
+          acc.extraConfig + (lib.optionalString (r.nginx.extraConfig != "") "\n${r.nginx.extraConfig}");
+        extraHeaders = acc.extraHeaders // r.nginx.extraHeaders;
+        allowedTCPPorts = lib.unique (acc.allowedTCPPorts ++ r.firewall.allowedTCPPorts);
+        allowedUDPPorts = lib.unique (acc.allowedUDPPorts ++ r.firewall.allowedUDPPorts);
+      })
+      {
+        visibility = null;
+        zones = [];
+        allowNetworks = [];
+        denyNetworks = [];
+        ddnsEnable = null;
+        unboundEnable = null;
+        nginxEnable = null;
+        extraConfig = "";
+        extraHeaders = {};
+        allowedTCPPorts = [];
+        allowedUDPPorts = [];
+      }
+      matchingRules;
 
     effectiveProxyPass =
       if subCfg.proxyPass != null
@@ -115,11 +131,12 @@ rec {
       proxyPass = effectiveProxyPass;
       websockets = subCfg.nginx.websockets;
       extraHeaders = mergedRule.extraHeaders // subCfg.nginx.extraHeaders;
-      extraConfig =
-        lib.concatStringsSep "\n" (builtins.filter (s: s != "") [
+      extraConfig = lib.concatStringsSep "\n" (
+        builtins.filter (s: s != "") [
           mergedRule.extraConfig
           subCfg.nginx.extraConfig
-        ]);
+        ]
+      );
     };
     streams = subCfg.streams;
     firewall = {
@@ -157,32 +174,40 @@ rec {
 
   # Bygger Nginx virtualHosts
   resolveNginxVirtualHosts = atlasCfg: activeSubs:
-    lib.mapAttrs' (subName: sub:
-      lib.nameValuePair "${subName}.${atlasCfg.baseDomain}" {
-        enable = true;
-        proxyPass = sub.nginx.proxyPass;
-        websockets = sub.nginx.websockets;
-        forceSSL = true;
-        acmeHost = if atlasCfg.acme.enable then atlasCfg.baseDomain else null;
-        allowNetworks = resolveAllowedCidrs atlasCfg sub;
-        denyNetworks = sub.denyNetworks;
-        extraHeaders = sub.nginx.extraHeaders;
-        extraConfig = sub.nginx.extraConfig;
-      }
+    lib.mapAttrs' (
+      subName: sub:
+        lib.nameValuePair "${subName}.${atlasCfg.baseDomain}" {
+          enable = true;
+          proxyPass = sub.nginx.proxyPass;
+          websockets = sub.nginx.websockets;
+          forceSSL = true;
+          acmeHost =
+            if atlasCfg.acme.enable
+            then atlasCfg.baseDomain
+            else null;
+          allowNetworks = resolveAllowedCidrs atlasCfg sub;
+          denyNetworks = sub.denyNetworks;
+          extraHeaders = sub.nginx.extraHeaders;
+          extraConfig = sub.nginx.extraConfig;
+        }
     ) (lib.filterAttrs (_: s: s.nginx.enable) activeSubs);
 
   # Bygger Nginx L4-streams
   resolveNginxStreams = activeSubs:
-    lib.foldlAttrs (acc: subName: sub:
-      acc
-      // (lib.mapAttrs' (streamName: streamCfg:
-        lib.nameValuePair "${builtins.replaceStrings ["."] ["_"] subName}_${streamName}" {
-          enable = true;
-          inherit (streamCfg) port protocol backend;
-          openFirewall = true;
-        }
-      ) sub.streams)
-    ) {} activeSubs;
+    lib.foldlAttrs (
+      acc: subName: sub:
+        acc
+        // (lib.mapAttrs' (
+            streamName: streamCfg:
+              lib.nameValuePair "${builtins.replaceStrings ["."] ["_"] subName}_${streamName}" {
+                enable = true;
+                inherit (streamCfg) port protocol backend;
+                openFirewall = true;
+              }
+          )
+          sub.streams)
+    ) {}
+    activeSubs;
 
   # Bygger DDNS-domänlistan
   resolveDdnsDomains = atlasCfg: activeSubs: let
@@ -195,52 +220,66 @@ rec {
   resolveUnboundAccessControl = atlasCfg: let
     zoneCidrs = lib.concatMap (z: z.cidrs) (lib.attrValues atlasCfg.zones);
   in
-    lib.unique (
-      ["127.0.0.0/8"]
-      ++ atlasCfg.internalNetworks
-      ++ zoneCidrs
-    );
+    lib.unique (["127.0.0.0/8"] ++ atlasCfg.internalNetworks ++ zoneCidrs);
 
   # Bygger Unbound baszon-records
   resolveUnboundBaseRecords = atlasCfg: activeSubs: let
     unboundSubs = lib.filterAttrs (_: s: s.unbound.enable) activeSubs;
-    subRecords = lib.mapAttrs' (subName: sub:
-      lib.nameValuePair "${subName}.${atlasCfg.baseDomain}" (if sub.ip != null then sub.ip else atlasCfg.serverIp)
-    ) unboundSubs;
+    subRecords =
+      lib.mapAttrs' (
+        subName: sub:
+          lib.nameValuePair "${subName}.${atlasCfg.baseDomain}" (
+            if sub.ip != null
+            then sub.ip
+            else atlasCfg.serverIp
+          )
+      )
+      unboundSubs;
   in
-    { "${atlasCfg.baseDomain}" = atlasCfg.serverIp; } // subRecords;
+    {"${atlasCfg.baseDomain}" = atlasCfg.serverIp;} // subRecords;
 
   # Bygger Unbound Split-Horizon-vyer från både zones och manuella dns.views
   resolveUnboundViews = atlasCfg: activeSubs: let
     unboundSubs = lib.filterAttrs (_: s: s.unbound.enable) activeSubs;
 
     # Generera vyer automatiskt för alla zoner som har en egen IP skild från serverIp
-    zoneViews = lib.mapAttrs (zName: zCfg: let
-      targetIp = if zCfg.ip != null then zCfg.ip else atlasCfg.serverIp;
-      matchingSubs = lib.filterAttrs (_: sub:
-        sub.nginx.enable
-        && (
-          (sub.zones != [] && builtins.elem zName sub.zones)
-          || (sub.zones == [] && zCfg.defaultInternal)
-        )
-      ) unboundSubs;
-      records = lib.mapAttrs' (subName: _:
-        lib.nameValuePair "${subName}.${atlasCfg.baseDomain}" targetIp
-      ) matchingSubs;
-    in {
-      accessControl = zCfg.cidrs;
-      zone = atlasCfg.baseDomain;
-      inherit records;
-      localData = zCfg.extraLocalData or [];
-    }) (lib.filterAttrs (_: zCfg: zCfg.ip != null && zCfg.ip != atlasCfg.serverIp) atlasCfg.zones);
+    zoneViews = lib.mapAttrs (
+      zName: zCfg: let
+        targetIp =
+          if zCfg.ip != null
+          then zCfg.ip
+          else atlasCfg.serverIp;
+        matchingSubs =
+          lib.filterAttrs (
+            _: sub:
+              sub.nginx.enable
+              && (
+                (sub.zones != [] && builtins.elem zName sub.zones) || (sub.zones == [] && zCfg.defaultInternal)
+              )
+          )
+          unboundSubs;
+        records =
+          lib.mapAttrs' (
+            subName: _: lib.nameValuePair "${subName}.${atlasCfg.baseDomain}" targetIp
+          )
+          matchingSubs;
+      in {
+        accessControl = zCfg.cidrs;
+        zone = atlasCfg.baseDomain;
+        inherit records;
+        localData = zCfg.extraLocalData or [];
+      }
+    ) (lib.filterAttrs (_: zCfg: zCfg.ip != null && zCfg.ip != atlasCfg.serverIp) atlasCfg.zones);
 
     # Slå samman med eventuella manuellt deklarerade dns.views
-    manualViews = lib.mapAttrs (_: vCfg: {
-      accessControl = vCfg.accessControl;
-      zone = atlasCfg.baseDomain;
-      records = vCfg.records or {};
-      localData = vCfg.localData or [];
-    }) atlasCfg.dns.views;
+    manualViews =
+      lib.mapAttrs (_: vCfg: {
+        accessControl = vCfg.accessControl;
+        zone = atlasCfg.baseDomain;
+        records = vCfg.records or {};
+        localData = vCfg.localData or [];
+      })
+      atlasCfg.dns.views;
   in
     lib.recursiveUpdate zoneViews manualViews;
 

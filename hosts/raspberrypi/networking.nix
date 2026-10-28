@@ -12,7 +12,10 @@ in {
 
     zones = {
       lan = {
-        cidrs = ["127.0.0.0/8" "192.168.1.0/24"];
+        cidrs = [
+          "127.0.0.0/8"
+          "192.168.1.0/24"
+        ];
         ip = "192.168.1.3";
         defaultInternal = true;
       };
@@ -31,7 +34,10 @@ in {
     rules = {
       "*.internal" = {
         visibility = "internal";
-        zones = ["lan" "wireguard"];
+        zones = [
+          "lan"
+          "wireguard"
+        ];
       };
       "minecraft.*" = {
         visibility = "public";
@@ -85,17 +91,17 @@ in {
         game = {
           port = 7777;
           protocol = "udp";
-          backend = "192.168.1.4:7777";
-        };
-        raw = {
-          port = 7778;
-          protocol = "udp";
-          backend = "192.168.1.4:7778";
+          backend = "192.168.1.5:7777";
         };
         query = {
           port = 27015;
           protocol = "udp";
-          backend = "192.168.1.4:27015";
+          backend = "192.168.1.5:27015";
+        };
+        rcon = {
+          port = 27020;
+          protocol = "tcp";
+          backend = "192.168.1.5:27020";
         };
       };
     };

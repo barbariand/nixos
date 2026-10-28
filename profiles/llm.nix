@@ -20,7 +20,7 @@
     port = 11434;
   };
   systemd.services.ollama.serviceConfig = {
-     EnvironmentFile = config.age.secrets.ollama.path;
+    EnvironmentFile = config.age.secrets.ollama.path;
   };
   home-manager.users.${user} = {
     home.packages = [
@@ -33,6 +33,5 @@
     home.sessionPath = [
       "${config.home-manager.users.${user}.home.homeDirectory}/.npm-global/bin"
     ];
-
   };
 }

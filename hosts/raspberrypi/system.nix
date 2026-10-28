@@ -3,7 +3,7 @@
   config.sensible = {
     wireguard."wg0" = {
       enable = true;
-      interface = "eth0"; 
+      interface = "eth0";
     };
     wireguard."wg1" = {
       enable = true;
@@ -12,7 +12,7 @@
       fish.enable = true;
       default = "fish";
     };
-    terminal.default ="kitty";
+    terminal.default = "kitty";
     tmux.enable = true;
   };
 }

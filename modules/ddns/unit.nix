@@ -21,7 +21,9 @@ in
         message = "sensible.ddns (cloudflare): 'cloudflare.tokenFile' must be set.";
       }
       {
-        assertion = (cfg.enable && cfg.provider == "inadyn") -> (cfg.inadyn.username != null && cfg.inadyn.passwordFile != null);
+        assertion =
+          (cfg.enable && cfg.provider == "inadyn")
+          -> (cfg.inadyn.username != null && cfg.inadyn.passwordFile != null);
         message = "sensible.ddns (inadyn): both 'inadyn.username' and 'inadyn.passwordFile' must be set.";
       }
       {
@@ -35,11 +37,23 @@ in
     ];
 
     system = {
-      services.cloudflare-dyndns = lib.mkIf (cfg.provider == "cloudflare") pCloudflare.system.services.cloudflare-dyndns;
+      services.cloudflare-dyndns =
+        lib.mkIf (
+          cfg.provider == "cloudflare"
+        )
+        pCloudflare.system.services.cloudflare-dyndns;
       services.inadyn = lib.mkIf (cfg.provider == "inadyn") pInadyn.system.services.inadyn;
       services.ddclient = lib.mkIf (cfg.provider == "ddclient") pDdclient.system.services.ddclient;
-      systemd.services.sensible-ddns = lib.mkIf (cfg.provider == "custom") pCustom.system.systemd.services.sensible-ddns;
-      systemd.timers.sensible-ddns = lib.mkIf (cfg.provider == "custom") pCustom.system.systemd.timers.sensible-ddns;
+      systemd.services.sensible-ddns =
+        lib.mkIf (
+          cfg.provider == "custom"
+        )
+        pCustom.system.systemd.services.sensible-ddns;
+      systemd.timers.sensible-ddns =
+        lib.mkIf (
+          cfg.provider == "custom"
+        )
+        pCustom.system.systemd.timers.sensible-ddns;
     };
   }
   |> sensibleLib.sensibleConfig

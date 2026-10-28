@@ -40,13 +40,13 @@
     interface = "wlan0";
     full-name = "Cindy Nilsson";
 
-    helpers = import ./lib/helpers.nix { inherit lib; };
-    localLib = import ./lib/default.nix { inherit lib; };
+    helpers = import ./lib/helpers.nix {inherit lib;};
+    localLib = import ./lib/default.nix {inherit lib;};
 
     # Profile maps that return host-specific attributes
-    loggingModules = import ./profiles/logging.nix { inherit lib; };
+    loggingModules = import ./profiles/logging.nix {inherit lib;};
 
-    k3sCluster = import ./profiles/k3s.nix { inherit lib interface; };
+    k3sCluster = import ./profiles/k3s.nix {inherit lib interface;};
 
     clientBaseModules = [
       ./profiles/client.nix
@@ -58,11 +58,24 @@
       default = {
         username = user;
         specialArgs = {
-          inherit email interface full-name inputs self user;
+          inherit
+            email
+            interface
+            full-name
+            inputs
+            self
+            user
+            ;
           outPath = self.outPath;
           wallpaper = ./background.jpg;
           sensibleLib = {
-            inherit (localLib) helpers wireguard atlas sshTools;
+            inherit
+              (localLib)
+              helpers
+              wireguard
+              atlas
+              sshTools
+              ;
           };
         };
         modules = [
@@ -77,9 +90,15 @@
           disko = true;
           modules =
             clientBaseModules
-            ++ (helpers.getNamed "homecomputer" [ loggingModules ])
+            ++ (helpers.getNamed "homecomputer" [loggingModules])
             ++ [
-              ({ pkgs, ... }: { environment.systemPackages = with pkgs; [ prismlauncher davinci-resolve blender ]; })
+              ({pkgs, ...}: {
+                environment.systemPackages = with pkgs; [
+                  prismlauncher
+                  davinci-resolve
+                  blender
+                ];
+              })
               ./hosts/homecomputer/default.nix
               ./profiles/llm.nix
             ];
@@ -91,9 +110,16 @@
           disko = true;
           modules =
             clientBaseModules
-            ++ (helpers.getNamed "lenovo-yoga" [ loggingModules ])
+            ++ (helpers.getNamed "lenovo-yoga" [loggingModules])
             ++ [
-              ({ pkgs, ... }: { environment.systemPackages = with pkgs; [ dnsutils davinci-resolve blender ffmpeg-full ]; })
+              ({pkgs, ...}: {
+                environment.systemPackages = with pkgs; [
+                  dnsutils
+                  davinci-resolve
+                  blender
+                  ffmpeg-full
+                ];
+              })
               ./profiles/wifi.nix
               ./hosts/lenovo-yoga/default.nix
             ];
@@ -104,9 +130,9 @@
           stateVersion = "26.05";
           modules =
             serverBaseModules
-            ++ (helpers.getNamed "raspberrypi" [ loggingModules ])
+            ++ (helpers.getNamed "raspberrypi" [loggingModules])
             ++ [
-              { networking.hostName = lib.mkForce "raspberrypi"; }
+              {networking.hostName = lib.mkForce "raspberrypi";}
               "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
               ./profiles/wifi.nix
               ./hosts/raspberrypi/default.nix
@@ -118,7 +144,7 @@
           stateVersion = "26.05";
           modules =
             serverBaseModules
-            ++ (helpers.getNamed "raspberrypi" [ loggingModules ])
+            ++ (helpers.getNamed "raspberrypi" [loggingModules])
             ++ [
               "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
               inputs.hardware.nixosModules.raspberry-pi-4
@@ -133,7 +159,7 @@
           disko = true;
           modules =
             serverBaseModules
-            ++ (helpers.getNamed "build_server" [ loggingModules ])
+            ++ (helpers.getNamed "build_server" [loggingModules])
             ++ [
               ./hosts/build_server/default.nix
             ];
@@ -145,9 +171,9 @@
           disko = true;
           modules =
             serverBaseModules
-            ++ (helpers.getNamed "server_one" [ loggingModules ])
+            ++ (helpers.getNamed "server_one" [loggingModules])
             ++ [
-              ({ ... }: { nixpkgs.overlays = [ nix-minecraft.overlay ]; })
+              ({...}: {nixpkgs.overlays = [nix-minecraft.overlay];})
               nix-minecraft.nixosModules.minecraft-servers
               ./hosts/server_one/default.nix
             ];
@@ -157,59 +183,62 @@
   in {
     nixosConfigurations = systemConfigs.nixosConfigurations;
 
-    devShells = lib.genAttrs [ "x86_64-linux" "aarch64-linux" ] (system: let
-      pkgs = nixpkgs.legacyPackages.${system};
-      pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${system};
+    devShells = lib.genAttrs ["x86_64-linux" "aarch64-linux"] (
+      system: let
+        pkgs = nixpkgs.legacyPackages.${system};
+        pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${system};
 
-      gitSshFailover = pkgs.writeShellScript "git-ssh-failover" ''
-        case "$*" in
-          *git.urgobalt.dev*) ;;
-          *) exec ${pkgs.openssh}/bin/ssh "$@" ;;
-        esac
+        gitSshFailover = pkgs.writeShellScript "git-ssh-failover" ''
+          case "$*" in
+            *git.urgobalt.dev*) ;;
+            *) exec ${pkgs.openssh}/bin/ssh "$@" ;;
+          esac
 
-        stamp="/tmp/urgobalt-down.stamp"
-        ttl=300
-        is_down=0
+          stamp="/tmp/urgobalt-down.stamp"
+          ttl=300
+          is_down=0
 
-        if [ -f "$stamp" ] && [ "$(( $(${pkgs.coreutils}/bin/date +%s) - $(${pkgs.coreutils}/bin/stat -c %Y "$stamp") ))" -lt "$ttl" ]; then
-          is_down=1
-        elif ! ${pkgs.coreutils}/bin/timeout 0.5 ${pkgs.netcat-openbsd}/bin/nc -z git.urgobalt.dev 22 2>/dev/null; then
-          ${pkgs.coreutils}/bin/touch "$stamp"
-          is_down=1
-        else
-          ${pkgs.coreutils}/bin/rm -f "$stamp" 2>/dev/null
-        fi
+          if [ -f "$stamp" ] && [ "$(( $(${pkgs.coreutils}/bin/date +%s) - $(${pkgs.coreutils}/bin/stat -c %Y "$stamp") ))" -lt "$ttl" ]; then
+            is_down=1
+          elif ! ${pkgs.coreutils}/bin/timeout 0.5 ${pkgs.netcat-openbsd}/bin/nc -z git.urgobalt.dev 22 2>/dev/null; then
+            ${pkgs.coreutils}/bin/touch "$stamp"
+            is_down=1
+          else
+            ${pkgs.coreutils}/bin/rm -f "$stamp" 2>/dev/null
+          fi
 
-        if [ "$is_down" -eq 1 ]; then
-          args=()
-          for arg in "$@"; do
-            arg="''${arg//urgobalt\/sensible-nix/barbariand\/sensible-nix}"
-            arg="''${arg//git@git.urgobalt.dev/git@github.com}"
-            arg="''${arg//git.urgobalt.dev/github.com}"
-            args+=("$arg")
-          done
-          exec ${pkgs.openssh}/bin/ssh "''${args[@]}"
-        fi
+          if [ "$is_down" -eq 1 ]; then
+            args=()
+            for arg in "$@"; do
+              arg="''${arg//urgobalt\/sensible-nix/barbariand\/sensible-nix}"
+              arg="''${arg//git@git.urgobalt.dev/git@github.com}"
+              arg="''${arg//git.urgobalt.dev/github.com}"
+              args+=("$arg")
+            done
+            exec ${pkgs.openssh}/bin/ssh "''${args[@]}"
+          fi
 
-        exec ${pkgs.openssh}/bin/ssh "$@"
-      '';
-    in {
-      default = pkgs.mkShell {
-        name = "simd-shell";
-        buildInputs = with pkgs; [
-          pkgs-unstable.just
-          jq
-          wireguard-tools
-          nh
-          ssh-to-age
-          agenix-cli
-        ];
-        shellHook = ''
-          export GIT_SSH_COMMAND="${gitSshFailover}"
-          alias d="just deploy"
-          alias u="just update"
+          exec ${pkgs.openssh}/bin/ssh "$@"
         '';
-      };
-    });
+      in {
+        default = pkgs.mkShell {
+          name = "simd-shell";
+          buildInputs = with pkgs; [
+            pkgs-unstable.just
+            jq
+            wireguard-tools
+            nh
+            ssh-to-age
+            agenix-cli
+            alejandra
+          ];
+          shellHook = ''
+            export GIT_SSH_COMMAND="${gitSshFailover}"
+            alias d="just deploy"
+            alias u="just update"
+          '';
+        };
+      }
+    );
   };
 }

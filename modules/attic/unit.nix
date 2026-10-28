@@ -11,7 +11,14 @@ with lib; let
   pPostgres = import ./postgres.nix {inherit cfg pkgs;};
   pDaemon = import ./daemon.nix {inherit cfg lib;};
   pGc = import ./gc.nix {inherit cfg config pkgs;};
-  pBootstrap = import ./bootstrap.nix {inherit cfg config lib pkgs;};
+  pBootstrap = import ./bootstrap.nix {
+    inherit
+      cfg
+      config
+      lib
+      pkgs
+      ;
+  };
 in
   {
     condition = cfg.enable;
@@ -30,10 +37,7 @@ in
       services.postgresql = pPostgres.services.postgresql;
       services.atticd = pDaemon.services.atticd;
 
-      systemd.services =
-        pDaemon.systemd.services
-        // pGc.systemd.services
-        // pBootstrap.systemd.services;
+      systemd.services = pDaemon.systemd.services // pGc.systemd.services // pBootstrap.systemd.services;
 
       systemd.timers = pGc.systemd.timers;
 

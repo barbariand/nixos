@@ -13,11 +13,19 @@
     kernelPackages = pkgs.linuxPackages_zen;
 
     initrd = {
-      availableKernelModules = [ "nvme" "xhci_pci" "ahci" "usbhid" "usb_storage" "sd_mod" "sr_mod" ];
+      availableKernelModules = [
+        "nvme"
+        "xhci_pci"
+        "ahci"
+        "usbhid"
+        "usb_storage"
+        "sd_mod"
+        "sr_mod"
+      ];
       kernelModules = [];
     };
 
-    kernelModules = [ "kvm-amd" ];
+    kernelModules = ["kvm-amd"];
 
     loader = {
       systemd-boot.enable = true;

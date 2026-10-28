@@ -1,6 +1,6 @@
 {config, ...}: {
   config.sensible.homepage = {
-    environmentFiles = [ config.age.secrets."homepage.env".path ];
+    environmentFiles = [config.age.secrets."homepage.env".path];
     allowedHosts = [
       "homepage.simd.me"
       "127.0.0.1:8082"

@@ -1,9 +1,12 @@
-{ config, pkgs, lib, user ? "cindy", ... }:
-
-let
-  sshKeys = import ./ssh-keys.nix;
-in
 {
+  config,
+  pkgs,
+  lib,
+  user ? "cindy",
+  ...
+}: let
+  sshKeys = import ./ssh-keys.nix;
+in {
   services.openssh = {
     enable = true;
     settings = {

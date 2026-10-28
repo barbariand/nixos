@@ -12,7 +12,12 @@
       stoneblock = {
         enable = true;
         autoStart = false;
-        path = [pkgs.jdk21_headless pkgs.bash pkgs.coreutils pkgs.file];
+        path = [
+          pkgs.jdk21_headless
+          pkgs.bash
+          pkgs.coreutils
+          pkgs.file
+        ];
         managementSystem.tmux.enable = false;
         managementSystem.systemd-socket.enable = true;
         jvmOpts = "";
@@ -22,10 +27,16 @@
           exec ./run.sh "$@"
         '';
       };
-      prominance_2= {
+      prominance_2 = {
         enable = true;
         autoStart = true;
-        path = [pkgs.jdk17_headless pkgs.bash pkgs.coreutils pkgs.file pkgs.gawk];
+        path = [
+          pkgs.jdk17_headless
+          pkgs.bash
+          pkgs.coreutils
+          pkgs.file
+          pkgs.gawk
+        ];
         managementSystem.tmux.enable = false;
         managementSystem.systemd-socket.enable = true;
         jvmOpts = "";
@@ -38,7 +49,12 @@
       gustav_kompisar = {
         enable = true;
         autoStart = true;
-        path = [pkgs.jdk25_headless pkgs.bash pkgs.coreutils pkgs.file];
+        path = [
+          pkgs.jdk25_headless
+          pkgs.bash
+          pkgs.coreutils
+          pkgs.file
+        ];
         managementSystem.tmux.enable = false;
         managementSystem.systemd-socket.enable = true;
         jvmOpts = "";
@@ -51,7 +67,12 @@
       gustav_jules = {
         enable = true;
         autoStart = false;
-        path = [pkgs.jdk25_headless pkgs.bash pkgs.coreutils pkgs.file];
+        path = [
+          pkgs.jdk25_headless
+          pkgs.bash
+          pkgs.coreutils
+          pkgs.file
+        ];
         managementSystem.tmux.enable = false;
         managementSystem.systemd-socket.enable = true;
         jvmOpts = "";

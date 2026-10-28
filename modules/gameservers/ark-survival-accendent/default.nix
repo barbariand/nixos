@@ -1,3 +1,6 @@
 {
-  imports = [./options.nix ./unit.nix];
+  imports = [
+    ./options.nix
+    ./unit.nix
+  ];
 }

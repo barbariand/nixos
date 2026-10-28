@@ -24,14 +24,18 @@
       debug = true; # Förhindrar att disable_logs sätts till true
       windowRules = [
         {
-          match = { class = "^(steam_app_.*)$"; };
+          match = {
+            class = "^(steam_app_.*)$";
+          };
           immediate = false;
           idle_inhibit = "focus";
           no_blur = true;
           no_shadow = true;
         }
         {
-          match = { class = "^(gamescope)$"; };
+          match = {
+            class = "^(gamescope)$";
+          };
           fullscreen = true;
           immediate = false;
           idle_inhibit = "focus";
@@ -43,7 +47,12 @@
     launcher = "walker";
     steam = {
       enable = true;
-      extraPackages = with pkgs; [gamescope gamemode mangohud proton-ge-bin];
+      extraPackages = with pkgs; [
+        gamescope
+        gamemode
+        mangohud
+        proton-ge-bin
+      ];
     };
 
     display-manager = {
@@ -51,7 +60,10 @@
       plymouth.enable = false;
     };
 
-    monitors = ["HDMI-A-1,3840x2160@30.00,0x0,1" "DP-2,1920x1080@60.00,3840x1088,1"];
+    monitors = [
+      "HDMI-A-1,3840x2160@30.00,0x0,1"
+      "DP-2,1920x1080@60.00,3840x1088,1"
+    ];
     live_wallpaper = {
       autostart = true;
       enable = true;

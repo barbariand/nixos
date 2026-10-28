@@ -1,5 +1,11 @@
-{ config, pkgs, user, lib, inputs, ... }:
 {
+  config,
+  pkgs,
+  user,
+  lib,
+  inputs,
+  ...
+}: {
   imports = [
     inputs.agenix.nixosModules.default
     ../modules/default.nix
@@ -11,9 +17,17 @@
   sensible.ccache.enable = true;
   sensible.docker.enable = true;
 
-  users.users.${user}.extraGroups = ["docker" "wireshark" "minecraft"];
-  nix.settings.experimental-features = lib.mkForce ["nix-command" "flakes" "pipe-operators"];
-  
+  users.users.${user}.extraGroups = [
+    "docker"
+    "wireshark"
+    "minecraft"
+  ];
+  nix.settings.experimental-features = lib.mkForce [
+    "nix-command"
+    "flakes"
+    "pipe-operators"
+  ];
+
   documentation = {
     enable = true;
     man.enable = true;
@@ -24,8 +38,12 @@
     (uFinal: uPrev: {
       python312 = uPrev.python312.override {
         packageOverrides = pyFinal: pyPrev: {
-          whatthepatch = pyPrev.whatthepatch.overridePythonAttrs (_: {doCheck = false;});
-          python-lsp-server = pyPrev.python-lsp-server.overridePythonAttrs (_: {doCheck = false;});
+          whatthepatch = pyPrev.whatthepatch.overridePythonAttrs (_: {
+            doCheck = false;
+          });
+          python-lsp-server = pyPrev.python-lsp-server.overridePythonAttrs (_: {
+            doCheck = false;
+          });
         };
       };
     })
@@ -88,7 +106,7 @@
     aspellDicts.en-science
     aspellDicts.sv
     # Funny dependancies for pi.dev
-        clang-tools
+    clang-tools
     gopls
     unstable.codegraph
     lua-language-server
@@ -97,7 +115,6 @@
     solargraph
     svelte-language-server
     wakatime-cli
-
   ];
 
   home-manager.users.${user}.imports = [
@@ -125,7 +142,11 @@
     tmux.enable = true;
     neovim = {
       enable = true;
-      features = ["rust" "html-css-js" "tailwindcss"];
+      features = [
+        "rust"
+        "html-css-js"
+        "tailwindcss"
+      ];
     };
     wallpaper.source = ../background.jpg;
   };

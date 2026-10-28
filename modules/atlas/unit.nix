@@ -10,7 +10,10 @@ with lib; let
 
   activeSubs = atlasLib.resolveAllSubdomains cfg;
   ddnsEnabled = cfg.ddns.enable || cfg.cloudflare.enable;
-  ddnsTokenFile = if cfg.ddns.tokenFile != null then cfg.ddns.tokenFile else cfg.cloudflare.tokenFile;
+  ddnsTokenFile =
+    if cfg.ddns.tokenFile != null
+    then cfg.ddns.tokenFile
+    else cfg.cloudflare.tokenFile;
   extraFw = atlasLib.resolveExtraFirewall cfg activeSubs;
 in
   {
@@ -27,9 +30,7 @@ in
           environmentFile = mkDefault cfg.acme.environmentFile;
           dnsResolver = mkDefault "${head cfg.dns.resolvers}:53";
           group = mkDefault "nginx";
-          reloadServices =
-            (optional cfg.unbound.enable "unbound")
-            ++ (optional cfg.nginx.enable "nginx");
+          reloadServices = (optional cfg.unbound.enable "unbound") ++ (optional cfg.nginx.enable "nginx");
           certs.${cfg.baseDomain} = {
             domain = cfg.baseDomain;
             wildcard = true;
@@ -47,7 +48,11 @@ in
 
         unbound = mkIf cfg.unbound.enable {
           enable = true;
-          acmeCert = mkDefault (if cfg.acme.enable then cfg.baseDomain else null);
+          acmeCert = mkDefault (
+            if cfg.acme.enable
+            then cfg.baseDomain
+            else null
+          );
           resolvers = mkDefault cfg.dns.resolvers;
           accessControl = atlasLib.resolveUnboundAccessControl cfg;
           zones.${cfg.baseDomain} = {
@@ -60,7 +65,11 @@ in
 
         nginx = mkIf cfg.nginx.enable {
           enable = true;
-          acmeCert = mkDefault (if cfg.acme.enable then cfg.baseDomain else null);
+          acmeCert = mkDefault (
+            if cfg.acme.enable
+            then cfg.baseDomain
+            else null
+          );
           defaultRootResponse = mkDefault cfg.nginx.defaultRootResponse;
           appendConfig = cfg.nginx.appendConfig;
           virtualHosts = atlasLib.resolveNginxVirtualHosts cfg activeSubs;

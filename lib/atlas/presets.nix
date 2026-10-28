@@ -1,5 +1,4 @@
-{ lib }:
-rec {
+{lib}: rec {
   mkCallable = baseAttrs:
     baseAttrs
     // {
@@ -59,11 +58,9 @@ rec {
       };
     };
 
-  mkTcpStream = port: backend:
-    mkStream "tcp" port backend;
+  mkTcpStream = port: backend: mkStream "tcp" port backend;
 
-  mkUdpStream = port: backend:
-    mkStream "udp" port backend;
+  mkUdpStream = port: backend: mkStream "udp" port backend;
 
   mkStreams = streams:
     mkCallable {
