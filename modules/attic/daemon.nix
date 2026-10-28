@@ -52,7 +52,10 @@
   };
 
   systemd.services.atticd = {
-    after = ["postgresql.service" "data.mount"];
+    after = [
+      "postgresql.service"
+      "data.mount"
+    ];
     requires = ["postgresql.service"];
     unitConfig.RequiresMountsFor = [
       "/var/lib/postgresql"

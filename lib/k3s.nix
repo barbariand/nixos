@@ -60,7 +60,7 @@ in {
   clusterInterface ? null,
   globalExtraFlags ? "",
   controllerExtraFlags ? "",
-...
+  ...
 }: let
   # --- IP Validation Helper ---
   isValidIPv4 = ip: let
@@ -77,25 +77,30 @@ in {
     (builtins.length parts == 4) && (lib.all isByte parts);
 
   # --- Global Assertions ---
-  globalCheck = assert lib.asserts.assertMsg (builtins.isString controllerHostname) "controllerHostname must be a string.";
-  assert lib.asserts.assertMsg (isValidIPv4 controllerIp) "The controller IP '${controllerIp}' is invalid.";
-  assert lib.asserts.assertMsg (builtins.isFunction tokenFileFn) "tokenFileFn must be a function that accepts 'config'.";
+  globalCheck = assert lib.asserts.assertMsg (builtins.isString controllerHostname)
+  "controllerHostname must be a string.";
+  assert lib.asserts.assertMsg (isValidIPv4 controllerIp)
+  "The controller IP '${controllerIp}' is invalid.";
+  assert lib.asserts.assertMsg (builtins.isFunction tokenFileFn)
+  "tokenFileFn must be a function that accepts 'config'.";
   assert lib.asserts.assertMsg (!(lib.hasAttr controllerHostname nodes))
   "The controller '${controllerHostname}' cannot exist in the 'nodes' set to avoid logic collisions."; true;
 
   # --- Base K3s Flags Generator ---
   # Generates the default flags for any node
   mkDefaultFlags = ip:
-    lib.concatStringsSep " " (builtins.filter (s: s != "") [
-      "--node-ip ${ip}"
-      "--node-external-ip ${ip}"
-      (
-        if clusterInterface != null
-        then "--flannel-iface ${clusterInterface}"
-        else ""
-      )
-      globalExtraFlags
-    ]);
+    lib.concatStringsSep " " (
+      builtins.filter (s: s != "") [
+        "--node-ip ${ip}"
+        "--node-external-ip ${ip}"
+        (
+          if clusterInterface != null
+          then "--flannel-iface ${clusterInterface}"
+          else ""
+        )
+        globalExtraFlags
+      ]
+    );
 
   # --- Base K3s Module Template ---
   mkBaseModule = {
@@ -117,35 +122,42 @@ in {
       inherit role;
       tokenFile = tokenFileFn config;
       # We combine the base flags with the specific flags here to avoid conflicts
-      extraFlags = lib.concatStringsSep " " (builtins.filter (s: s != "") [
-        (mkDefaultFlags ip)
-        extraFlags
-      ]);
+      extraFlags = lib.concatStringsSep " " (
+        builtins.filter (s: s != "") [
+          (mkDefaultFlags ip)
+          extraFlags
+        ]
+      );
     };
 
     systemd.services.k3s = lib.mkIf (clusterInterface != null) {
-      after = ["network-online.target" "network-addresses-${clusterInterface}.service"];
+      after = [
+        "network-online.target"
+        "network-addresses-${clusterInterface}.service"
+      ];
       wants = ["network-online.target"];
     };
   };
 
   # --- Controller Construction ---
   controllerModule = {config, ...}: let
-    serverSpecificFlags = lib.concatStringsSep " " (builtins.filter (s: s != "") [
-      "--bind-address ${controllerIp}"
-      "--advertise-address ${controllerIp}"
-      (
-        if !controllerIsSchedulable
-        then "--disable-agent"
-        else ""
-      )
-      (
-        if controllerDisableTraefik
-        then "--disable traefik"
-        else ""
-      )
-      controllerExtraFlags
-    ]);
+    serverSpecificFlags = lib.concatStringsSep " " (
+      builtins.filter (s: s != "") [
+        "--bind-address ${controllerIp}"
+        "--advertise-address ${controllerIp}"
+        (
+          if !controllerIsSchedulable
+          then "--disable-agent"
+          else ""
+        )
+        (
+          if controllerDisableTraefik
+          then "--disable traefik"
+          else ""
+        )
+        controllerExtraFlags
+      ]
+    );
   in
     mkBaseModule {
       inherit config;
@@ -161,9 +173,11 @@ in {
       inherit name config;
       ip = cfg.ip;
       role = "agent";
-      extraFlags = lib.concatStringsSep " " (builtins.filter (s: s != "") [
-        (cfg.extraFlags or "")
-      ]);
+      extraFlags = lib.concatStringsSep " " (
+        builtins.filter (s: s != "") [
+          (cfg.extraFlags or "")
+        ]
+      );
     }
     // {
       services.k3s = {

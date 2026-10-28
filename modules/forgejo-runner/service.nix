@@ -54,7 +54,10 @@ with lib; {
   };
 
   systemd.services.gitea-runner-ci = {
-    after = ["network-online.target" "nix-daemon.service"];
+    after = [
+      "network-online.target"
+      "nix-daemon.service"
+    ];
     wants = ["network-online.target"];
     environment = {
       TMPDIR = toString cfg.buildTmpDir;

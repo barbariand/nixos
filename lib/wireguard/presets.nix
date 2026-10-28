@@ -1,5 +1,4 @@
-{ lib }:
-rec {
+{lib}: rec {
   mkCallable = baseAttrs:
     baseAttrs
     // {
@@ -30,13 +29,16 @@ rec {
       protocol = "tcp";
     };
 
-  mkForwardUDP = port: targetNode:
-    (mkForward port targetNode) "udp";
+  mkForwardUDP = port: targetNode: (mkForward port targetNode) "udp";
 
-  # Preset 1: Alla noder i nätverket litar på varandra och kan kommunicera fritt (mesh/spoke-relay)
+  # Preset 1: Full mesh där noder litar på varandra; mappar hosts som standard
   mkMesh = mkCallable {
     mode = "mesh";
     isolated = false;
+    hosts = {
+      enable = true;
+      domain = null;
+    };
     firewall = {
       trustInterface = true;
       allowPeerToPeer = true;
@@ -44,12 +46,16 @@ rec {
     };
   };
 
-  # Preset 2: Som mesh, men hubben agerar även brygga/NAT ut mot ett fysiskt gränssnitt (t.ex. "eth0")
+  # Preset 2: Mesh med gateway NAT
   mkGateway = interface:
     mkCallable {
       mode = "gateway";
       inherit interface;
       isolated = false;
+      hosts = {
+        enable = true;
+        domain = null;
+      };
       firewall = {
         trustInterface = true;
         allowPeerToPeer = true;
@@ -58,10 +64,14 @@ rec {
       };
     };
 
-  # Preset 3: Klienter kan nå hubben, men är isolerade från att prata direkt med varandra
+  # Preset 3: Hub-only
   mkHubOnly = mkCallable {
     mode = "hub-only";
     isolated = false;
+    hosts = {
+      enable = false;
+      domain = null;
+    };
     firewall = {
       trustInterface = false;
       allowPeerToPeer = false;
@@ -70,10 +80,14 @@ rec {
     };
   };
 
-  # Preset 4: Strikt zero-trust-nätverk där endast explicit öppnade portar och forwards tillåts
+  # Preset 4: Strikt isolerat nätverk (t.ex. wg1 för externa vänner)
   mkIsolated = mkCallable {
     mode = "isolated";
     isolated = true;
+    hosts = {
+      enable = false;
+      domain = null;
+    };
     firewall = {
       trustInterface = false;
       allowPeerToPeer = false;
@@ -82,7 +96,6 @@ rec {
     };
   };
 
-  # Exponerar en specifik tjänst över ett isolerat nätverk
   exposeService = port: targetNode:
     mkIsolated {
       forwards = [(mkForward port targetNode)];

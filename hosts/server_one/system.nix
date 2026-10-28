@@ -1,6 +1,5 @@
 {...}: {
   config.sensible = {
-
     wireguard."wg0".enable = true;
     shell = {
       fish.enable = true;

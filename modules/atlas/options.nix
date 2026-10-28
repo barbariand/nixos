@@ -10,7 +10,10 @@ with lib; let
     options = {
       port = mkOption {type = types.port;};
       protocol = mkOption {
-        type = types.enum ["tcp" "udp"];
+        type = types.enum [
+          "tcp"
+          "udp"
+        ];
         default = "tcp";
       };
       backend = mkOption {type = types.str;};
@@ -49,7 +52,12 @@ with lib; let
   ruleOpts = {name, ...}: {
     options = {
       visibility = mkOption {
-        type = types.nullOr (types.enum ["public" "internal"]);
+        type = types.nullOr (
+          types.enum [
+            "public"
+            "internal"
+          ]
+        );
         default = null;
       };
       zones = mkOption {
@@ -101,119 +109,131 @@ with lib; let
   };
 
   # Rekursiv subdomäntyp så att en subdomän kan definiera egna under-subdomäner
-  subdomainType = types.coercedTo types.attrs stripFunctor (types.submodule ({name, ...}: {
-    options = {
-      enable = mkOption {
-        type = types.bool;
-        default = true;
-        description = "Whether this subdomain entry is enabled (defaults to true when declared).";
-      };
+  subdomainType = types.coercedTo types.attrs stripFunctor (
+    types.submodule (
+      {name, ...}: {
+        options = {
+          enable = mkOption {
+            type = types.bool;
+            default = true;
+            description = "Whether this subdomain entry is enabled (defaults to true when declared).";
+          };
 
-      visibility = mkOption {
-        type = types.nullOr (types.enum ["public" "internal"]);
-        default = null;
-        description = "Set to 'internal' to prevent DDNS updates and restrict Nginx access to allowed zones.";
-      };
+          visibility = mkOption {
+            type = types.nullOr (
+              types.enum [
+                "public"
+                "internal"
+              ]
+            );
+            default = null;
+            description = "Set to 'internal' to prevent DDNS updates and restrict Nginx access to allowed zones.";
+          };
 
-      proxyPass = mkOption {
-        type = types.nullOr types.str;
-        default = null;
-        description = "Shorthand for nginx.proxyPass.";
-      };
+          proxyPass = mkOption {
+            type = types.nullOr types.str;
+            default = null;
+            description = "Shorthand for nginx.proxyPass.";
+          };
 
-      ip = mkOption {
-        type = types.nullOr types.str;
-        default = null;
-        description = "Optional custom IPv4 for Unbound base A-record (defaults to atlas.serverIp).";
-      };
+          ip = mkOption {
+            type = types.nullOr types.str;
+            default = null;
+            description = "Optional custom IPv4 for Unbound base A-record (defaults to atlas.serverIp).";
+          };
 
-      zones = mkOption {
-        type = types.listOf types.str;
-        default = [];
-        description = "Explicit list of zone names allowed to access and resolve this subdomain.";
-      };
+          zones = mkOption {
+            type = types.listOf types.str;
+            default = [];
+            description = "Explicit list of zone names allowed to access and resolve this subdomain.";
+          };
 
-      allowNetworks = mkOption {
-        type = types.listOf types.str;
-        default = [];
-        description = "Additional CIDRs permitted in Nginx for this subdomain.";
-      };
+          allowNetworks = mkOption {
+            type = types.listOf types.str;
+            default = [];
+            description = "Additional CIDRs permitted in Nginx for this subdomain.";
+          };
 
-      denyNetworks = mkOption {
-        type = types.listOf types.str;
-        default = [];
-        description = "Explicit CIDRs denied in Nginx for this subdomain.";
-      };
+          denyNetworks = mkOption {
+            type = types.listOf types.str;
+            default = [];
+            description = "Explicit CIDRs denied in Nginx for this subdomain.";
+          };
 
-      childNaming = mkOption {
-        type = types.enum ["subdomain" "prefix"];
-        default = "subdomain";
-        description = "How nested subdomains are joined ('subdomain' -> child.parent, 'prefix' -> parent.child).";
-      };
+          childNaming = mkOption {
+            type = types.enum [
+              "subdomain"
+              "prefix"
+            ];
+            default = "subdomain";
+            description = "How nested subdomains are joined ('subdomain' -> child.parent, 'prefix' -> parent.child).";
+          };
 
-      nginx = {
-        enable = mkOption {
-          type = types.nullOr types.bool;
-          default = null;
+          nginx = {
+            enable = mkOption {
+              type = types.nullOr types.bool;
+              default = null;
+            };
+            proxyPass = mkOption {
+              type = types.nullOr types.str;
+              default = null;
+            };
+            websockets = mkOption {
+              type = types.bool;
+              default = true;
+            };
+            extraHeaders = mkOption {
+              type = types.attrsOf types.str;
+              default = {};
+            };
+            extraConfig = mkOption {
+              type = types.lines;
+              default = "";
+            };
+          };
+
+          streams = mkOption {
+            type = types.attrsOf (types.submodule streamOpts);
+            default = {};
+            description = "TCP/UDP L4 streams for this subdomain.";
+          };
+
+          unbound.enable = mkOption {
+            type = types.nullOr types.bool;
+            default = null;
+          };
+
+          ddns.enable = mkOption {
+            type = types.nullOr types.bool;
+            default = null;
+          };
+
+          cloudflare.enable = mkOption {
+            type = types.nullOr types.bool;
+            default = null;
+            description = "Alias for ddns.enable.";
+          };
+
+          firewall = {
+            allowedTCPPorts = mkOption {
+              type = types.listOf types.port;
+              default = [];
+            };
+            allowedUDPPorts = mkOption {
+              type = types.listOf types.port;
+              default = [];
+            };
+          };
+
+          subdomains = mkOption {
+            type = types.attrsOf subdomainType;
+            default = {};
+            description = "Nested child subdomains inheriting this subdomain's policy.";
+          };
         };
-        proxyPass = mkOption {
-          type = types.nullOr types.str;
-          default = null;
-        };
-        websockets = mkOption {
-          type = types.bool;
-          default = true;
-        };
-        extraHeaders = mkOption {
-          type = types.attrsOf types.str;
-          default = {};
-        };
-        extraConfig = mkOption {
-          type = types.lines;
-          default = "";
-        };
-      };
-
-      streams = mkOption {
-        type = types.attrsOf (types.submodule streamOpts);
-        default = {};
-        description = "TCP/UDP L4 streams for this subdomain.";
-      };
-
-      unbound.enable = mkOption {
-        type = types.nullOr types.bool;
-        default = null;
-      };
-
-      ddns.enable = mkOption {
-        type = types.nullOr types.bool;
-        default = null;
-      };
-
-      cloudflare.enable = mkOption {
-        type = types.nullOr types.bool;
-        default = null;
-        description = "Alias for ddns.enable.";
-      };
-
-      firewall = {
-        allowedTCPPorts = mkOption {
-          type = types.listOf types.port;
-          default = [];
-        };
-        allowedUDPPorts = mkOption {
-          type = types.listOf types.port;
-          default = [];
-        };
-      };
-
-      subdomains = mkOption {
-        type = types.attrsOf subdomainType;
-        default = {};
-        description = "Nested child subdomains inheriting this subdomain's policy.";
-      };
-    };
-  }));
+      }
+    )
+  );
 in
   sensible_option {
     atlas = mkOption {
@@ -262,26 +282,31 @@ in
           dns = {
             resolvers = mkOption {
               type = types.listOf types.str;
-              default = ["1.1.1.1" "8.8.8.8"];
+              default = [
+                "1.1.1.1"
+                "8.8.8.8"
+              ];
             };
 
             views = mkOption {
-              type = types.attrsOf (types.submodule {
-                options = {
-                  accessControl = mkOption {
-                    type = types.listOf types.str;
-                    default = [];
+              type = types.attrsOf (
+                types.submodule {
+                  options = {
+                    accessControl = mkOption {
+                      type = types.listOf types.str;
+                      default = [];
+                    };
+                    records = mkOption {
+                      type = types.attrsOf types.str;
+                      default = {};
+                    };
+                    localData = mkOption {
+                      type = types.listOf types.str;
+                      default = [];
+                    };
                   };
-                  records = mkOption {
-                    type = types.attrsOf types.str;
-                    default = {};
-                  };
-                  localData = mkOption {
-                    type = types.listOf types.str;
-                    default = [];
-                  };
-                };
-              });
+                }
+              );
               default = {};
               description = "Manual Split-Horizon DNS views (merged with views auto-generated from 'zones').";
             };
@@ -312,7 +337,12 @@ in
               default = false;
             };
             provider = mkOption {
-              type = types.enum ["cloudflare" "inadyn" "ddclient" "custom"];
+              type = types.enum [
+                "cloudflare"
+                "inadyn"
+                "ddclient"
+                "custom"
+              ];
               default = "cloudflare";
             };
             tokenFile = mkOption {

@@ -8,10 +8,15 @@
   clients ? [],
   serverName ? "loki-server",
 }:
-assert lib.asserts.assertMsg (builtins.isString domain) "domain must be a fully qualified string (e.g., 'logs.simd.me').";
-assert lib.asserts.assertMsg (builtins.isFunction secretKeyFileFn) "secretKeyFileFn must be a function taking 'config' and returning a string path.";
-assert lib.asserts.assertMsg (builtins.isInt port && port > 0 && port <= 65535) "The port number must be between 1 and 65535.";
-assert lib.asserts.assertMsg (builtins.isList clients) "clients must be a list of hostnames (strings)."; let
+assert lib.asserts.assertMsg (builtins.isString domain)
+"domain must be a fully qualified string (e.g., 'logs.simd.me').";
+assert lib.asserts.assertMsg (builtins.isFunction secretKeyFileFn)
+"secretKeyFileFn must be a function taking 'config' and returning a string path.";
+assert lib.asserts.assertMsg (
+  builtins.isInt port && port > 0 && port <= 65535
+) "The port number must be between 1 and 65535.";
+assert lib.asserts.assertMsg (builtins.isList clients)
+"clients must be a list of hostnames (strings)."; let
   endpoint = "https://${domain}/loki/api/v1/push";
 
   localEndpoint = "http://127.0.0.1:${builtins.toString port}/loki/api/v1/push";
@@ -129,7 +134,10 @@ assert lib.asserts.assertMsg (builtins.isList clients) "clients must be a list o
         ];
       };
 
-      networking.firewall.allowedTCPPorts = [port grafanaPort];
+      networking.firewall.allowedTCPPorts = [
+        port
+        grafanaPort
+      ];
     } (alloyConfig localEndpoint serverName);
 
   # Klienterna omvandlas också till lambdas för konsekvens

@@ -7,18 +7,28 @@
 with lib; let
   cfg = config.sensible.acme;
 
-  mappedCerts = mapAttrs (_: certCfg: {
-    domain = certCfg.domain;
-    extraDomainNames = unique (
-      (optional certCfg.wildcard "*.${certCfg.domain}")
-      ++ certCfg.extraDomainNames
-    );
-    dnsProvider = if certCfg.dnsProvider != null then certCfg.dnsProvider else cfg.dnsProvider;
-    environmentFile = if certCfg.environmentFile != null then certCfg.environmentFile else cfg.environmentFile;
-    webroot = certCfg.webroot;
-    group = if certCfg.group != null then certCfg.group else cfg.group;
-    reloadServices = unique (cfg.reloadServices ++ certCfg.reloadServices);
-  }) cfg.certs;
+  mappedCerts =
+    mapAttrs (_: certCfg: {
+      domain = certCfg.domain;
+      extraDomainNames = unique (
+        (optional certCfg.wildcard "*.${certCfg.domain}") ++ certCfg.extraDomainNames
+      );
+      dnsProvider =
+        if certCfg.dnsProvider != null
+        then certCfg.dnsProvider
+        else cfg.dnsProvider;
+      environmentFile =
+        if certCfg.environmentFile != null
+        then certCfg.environmentFile
+        else cfg.environmentFile;
+      webroot = certCfg.webroot;
+      group =
+        if certCfg.group != null
+        then certCfg.group
+        else cfg.group;
+      reloadServices = unique (cfg.reloadServices ++ certCfg.reloadServices);
+    })
+    cfg.certs;
 in
   {
     condition = cfg.enable;

@@ -28,15 +28,21 @@ with lib; let
     explicitAddrs = nodeCfg.addresses;
     dynamicAddrs = activeBackend.resolveAddresses nodeName;
   in
-    if dynamicAddrs != [] then explicitAddrs ++ dynamicAddrs else explicitAddrs;
+    if dynamicAddrs != []
+    then explicitAddrs ++ dynamicAddrs
+    else explicitAddrs;
 
-  mappedDevices = mapAttrs (nodeName: nodeCfg: {
-    id = nodeCfg.id;
-    addresses = let
-      addrs = resolveAllAddresses nodeName nodeCfg;
-    in
-      if addrs == [] then ["dynamic"] else addrs;
-  }) cfg.nodes;
+  mappedDevices =
+    mapAttrs (nodeName: nodeCfg: {
+      id = nodeCfg.id;
+      addresses = let
+        addrs = resolveAllAddresses nodeName nodeCfg;
+      in
+        if addrs == []
+        then ["dynamic"]
+        else addrs;
+    })
+    cfg.nodes;
 
   gitDefaultIgnores = [
     ".git/index.lock"
@@ -51,17 +57,26 @@ with lib; let
     ".stversions"
   ];
 
-  mappedFolders = mapAttrs (folderName: folderCfg: {
-    label = folderName;
-    id = if folderCfg.id != null then folderCfg.id else folderName;
-    path = folderCfg.path;
-    type = folderCfg.type;
-    devices = if folderCfg.devices != [] then folderCfg.devices else (builtins.attrNames cfg.nodes);
-    fsWatcherEnabled = folderCfg.fsWatcherEnabled;
-    fsWatcherDelayS = folderCfg.fsWatcherDelayS;
-    ignorePerms = folderCfg.ignorePerms;
-    ignorePatterns = folderCfg.ignorePatterns ++ (optional folderCfg.isGitRepo gitDefaultIgnores |> flatten);
-  }) cfg.folders;
+  mappedFolders =
+    mapAttrs (folderName: folderCfg: {
+      label = folderName;
+      id =
+        if folderCfg.id != null
+        then folderCfg.id
+        else folderName;
+      path = folderCfg.path;
+      type = folderCfg.type;
+      devices =
+        if folderCfg.devices != []
+        then folderCfg.devices
+        else (builtins.attrNames cfg.nodes);
+      fsWatcherEnabled = folderCfg.fsWatcherEnabled;
+      fsWatcherDelayS = folderCfg.fsWatcherDelayS;
+      ignorePerms = folderCfg.ignorePerms;
+      ignorePatterns =
+        folderCfg.ignorePatterns ++ (optional folderCfg.isGitRepo gitDefaultIgnores |> flatten);
+    })
+    cfg.folders;
 in
   {
     condition = cfg.enable;
@@ -80,7 +95,10 @@ in
 
       networking.firewall.interfaces = mkIf (activeBackend.firewallInterface != null) {
         ${activeBackend.firewallInterface} = {
-          allowedTCPPorts = [22000 8384];
+          allowedTCPPorts = [
+            22000
+            8384
+          ];
           allowedUDPPorts = [22000];
         };
       };
@@ -101,7 +119,11 @@ in
 
           gui = {
             address =
-              if activeBackend.firewallInterface != null && builtins.hasAttr config.networking.hostName wgCfg.${activeBackend.firewallInterface}.topology.nodes
+              if
+                activeBackend.firewallInterface
+                != null
+                && builtins.hasAttr config.networking.hostName
+                wgCfg.${activeBackend.firewallInterface}.topology.nodes
               then "${wgCfg.${activeBackend.firewallInterface}.topology.nodes.${config.networking.hostName}.ip}:8384"
               else "127.0.0.1:8384";
           };

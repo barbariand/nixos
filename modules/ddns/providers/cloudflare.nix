@@ -1,5 +1,8 @@
-{ cfg, lib, ... }:
 {
+  cfg,
+  lib,
+  ...
+}: {
   assertions = [
     {
       assertion = cfg.cloudflare.tokenFile != null;

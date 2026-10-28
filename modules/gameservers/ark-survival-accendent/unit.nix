@@ -27,27 +27,60 @@ in
       };
       users.groups.${cfg.user} = {};
 
-      networking.firewall.allowedUDPPorts = [cfg.port (cfg.port + 1) cfg.queryPort];
+      networking.firewall.allowedUDPPorts = [
+        cfg.port
+        (cfg.port + 1)
+        cfg.queryPort
+      ];
       networking.firewall.allowedTCPPorts = [cfg.rconPort];
 
       networking.hosts = optionalAttrs (cfg.multiHome != "") {
         ${cfg.multiHome} = [config.networking.hostName];
       };
 
-      systemd.services.ark-server = {
-        description = "ARK: Survival Ascended Server";
-        after = ["network.target"];
+      systemd.services.ark-survival-ascended-updater = mkIf cfg.autoUpdate {
+        description = "ARK: Survival Ascended Server Auto-Updater (SteamCMD)";
+        after = ["network-online.target"];
+        wants = ["network-online.target"];
+
+        serviceConfig = {
+          Type = "oneshot";
+          User = cfg.user;
+          Group = cfg.user;
+          WorkingDirectory = cfg.serverDir;
+          TimeoutStartSec = 0;
+          ExecStart = pkgs.writeShellScript "asa-steamcmd-update" ''
+            ${steamcmd_command} \
+              +force_install_dir "${cfg.serverDir}" \
+              +login anonymous \
+              +app_update 2430930 \
+              +quit
+          '';
+        };
+      };
+
+      systemd.services.ark-survival-ascended-server = {
+        description = "ARK: Survival Ascended Dedicated Server";
+        after = ["network.target"] ++ optional cfg.autoUpdate "ark-survival-ascended-updater.service";
+        wants = optional cfg.autoUpdate "ark-survival-ascended-updater.service";
         wantedBy = ["multi-user.target"];
 
+        restartIfChanged = false;
+        stopIfChanged = false;
+
         environment = {
-          XDG_RUNTIME_DIR = "/run/ark-server-runtime";
+          XDG_RUNTIME_DIR = "/run/ark-asa-server-runtime";
+          SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
         };
 
         path = with pkgs; [
+          coreutils
           iproute2
           nettools
           strace
           dnsutils
+          procps
+          cacert
         ];
 
         serviceConfig = {
@@ -55,18 +88,25 @@ in
           User = cfg.user;
           Group = cfg.user;
 
-          RuntimeDirectory = "ark-server-runtime";
+          RuntimeDirectory = "ark-asa-server-runtime";
           RuntimeDirectoryMode = "0700";
 
           WorkingDirectory = cfg.serverDir;
           TimeoutStartSec = 0;
-          StateDirectory = "ark-server";
+          TimeoutStopSec = 300;
+          StateDirectory = "ark-survival-ascended-server";
           LimitNOFILE = 1000000;
 
           ProtectProc = "default";
           ProcSubset = "all";
           PrivateNetwork = false;
-          RestrictAddressFamilies = ["AF_INET" "AF_INET6" "AF_NETLINK" "AF_PACKET" "AF_UNIX"];
+          RestrictAddressFamilies = [
+            "AF_INET"
+            "AF_INET6"
+            "AF_NETLINK"
+            "AF_PACKET"
+            "AF_UNIX"
+          ];
           CapabilityBoundingSet = ["CAP_NET_BIND_SERVICE"];
 
           BindReadOnlyPaths = [
@@ -74,25 +114,24 @@ in
             "/etc/hosts"
             "/run/systemd/resolve"
           ];
+          
+          # Sends only SIGTERM to the bash script. This protects Xvfb and subprocesses
+          # from being shut down abruptly by systemd before Wine is finished.
+          KillMode = "mixed";
 
-          ExecStartPre = pkgs.writeShellScript "asa-update" (
-            ''
-              touch "${cfg.serverDir}/.Xdefaults"
-              echo "passwd: files" > "${cfg.serverDir}/nsswitch.conf"
-              echo "group: files" >> "${cfg.serverDir}/nsswitch.conf"
-              echo "hosts: files dns" >> "${cfg.serverDir}/nsswitch.conf"
-              echo "networks: files" >> "${cfg.serverDir}/nsswitch.conf"
-            ''
-            + optionalString cfg.autoUpdate ''
-              ${steamcmd_command} \
-                +force_install_dir "${cfg.serverDir}" \
-                +login anonymous \
-                +app_update 2430930 \
-                +quit
-            ''
-          );
+          ExecStartPre = pkgs.writeShellScript "asa-setup" ''
+            touch "${cfg.serverDir}/.Xdefaults"
+            echo "passwd: files" > "${cfg.serverDir}/nsswitch.conf"
+            echo "group: files" >> "${cfg.serverDir}/nsswitch.conf"
+            echo "hosts: files dns" >> "${cfg.serverDir}/nsswitch.conf"
+            echo "networks: files" >> "${cfg.serverDir}/nsswitch.conf"
+          '';
 
           ExecStart = pkgs.writeShellScript "asa-start" ''
+            log() {
+              echo "[$(date '+%Y-%m-%d %H:%M:%S')] [asa-runner] $*"
+            }
+
             export WINEPREFIX="${cfg.serverDir}/.wine"
             export WINEDEBUG="-all"
             export WINE_RESOLV_CONF="/etc/resolv.conf"
@@ -102,37 +141,73 @@ in
 
             cd "${cfg.serverDir}/ShooterGame/Binaries/Win64"
 
-            ARGS="${cfg.map}?listen"
-            ARGS="$ARGS?SessionName=${cfg.sessionName}"
-            ARGS="$ARGS?MaxPlayers=${toString cfg.maxPlayers}"
-            ARGS="$ARGS?Port=${toString cfg.port}"
-            ARGS="$ARGS?QueryPort=${toString cfg.queryPort}"
-            ARGS="$ARGS?ServerAdminPassword=${cfg.adminPassword}"
+            MAP_ARGS="${cfg.map}?listen"
+            MAP_ARGS="$MAP_ARGS?SessionName=${cfg.sessionName}"
+            MAP_ARGS="$MAP_ARGS?MaxPlayers=${toString cfg.maxPlayers}"
+            MAP_ARGS="$MAP_ARGS?Port=${toString cfg.port}"
+            MAP_ARGS="$MAP_ARGS?QueryPort=${toString cfg.queryPort}"
+            MAP_ARGS="$MAP_ARGS?RCONEnabled=True"
+            MAP_ARGS="$MAP_ARGS?RCONPort=${toString cfg.rconPort}"
+            MAP_ARGS="$MAP_ARGS?ServerAdminPassword=${cfg.adminPassword}"
 
             if [ -n "${cfg.serverPassword}" ]; then
-              ARGS="$ARGS?ServerPassword=${cfg.serverPassword}"
+              MAP_ARGS="$MAP_ARGS?ServerPassword=${cfg.serverPassword}"
             fi
 
-            if [ -n "${cfg.mods}" ]; then
-              ARGS="$ARGS?ModIds=${cfg.mods}"
-            fi
+            EXTRA_FLAGS=(
+              "-server"
+              "-log"
+              "-servergamelog"
+              "-crossplay"
+              "-automanagedmods"
+              "-NoRHI"
+            )
 
-            EXTRA_FLAGS="-server -log -servergamelog -crossplay -automanagedmods -NoRHI"
+            MODS_STRING="${concatStringsSep "," cfg.mods}"
+            if [ -n "$MODS_STRING" ]; then
+              EXTRA_FLAGS+=("-mods=$MODS_STRING")
+            fi
 
             if [ -n "${cfg.multiHome}" ]; then
-              EXTRA_FLAGS="$EXTRA_FLAGS -MultiHome=${cfg.multiHome}"
+              EXTRA_FLAGS+=("-MultiHome=${cfg.multiHome}")
             fi
 
             if [ -n "${cfg.publicDomain}" ]; then
               PUBLIC_IP=$(${pkgs.dnsutils}/bin/dig +short "${cfg.publicDomain}" | tail -n1)
               if [ -n "$PUBLIC_IP" ]; then
-                EXTRA_FLAGS="$EXTRA_FLAGS -PublicIP=$PUBLIC_IP"
+                EXTRA_FLAGS+=("-PublicIP=$PUBLIC_IP")
               fi
             fi
 
+            log "Initializing Wine prefix via wineboot..."
             ${pkgs.wine64}/bin/wineboot -u
 
-            exec ${pkgs.steam-run}/bin/steam-run ${xvfb_command} -a ${pkgs.wine64}/bin/wine ./ArkAscendedServer.exe "$ARGS" $EXTRA_FLAGS
+            cleanup() {
+              log "Received SIGTERM signal. Sending termination signal to steam-run (PID $SERVER_PID)..."
+              if [ -n "$SERVER_PID" ]; then
+                kill -TERM "$SERVER_PID" 2>/dev/null || true
+                log "Waiting for the Ark process to save and shut down..."
+                wait "$SERVER_PID" 2>/dev/null || true
+              fi
+            }
+            # Catch both termination signals
+            trap cleanup SIGTERM SIGINT
+
+            log "Starting ArkAscendedServer.exe in the background..."
+            ${pkgs.steam-run}/bin/steam-run ${xvfb_command} -a ${pkgs.wine64}/bin/wine ./ArkAscendedServer.exe "$MAP_ARGS" "''${EXTRA_FLAGS[@]}" &
+            SERVER_PID=$!
+            log "Main process started with PID: $SERVER_PID"
+
+            wait "$SERVER_PID" || true
+            log "ArkAscendedServer.exe has terminated."
+
+            log "Killing wineserver inside steam-run (max 5s timeout)..."
+            ${pkgs.coreutils}/bin/timeout 5 ${pkgs.steam-run}/bin/steam-run ${pkgs.wine64}/bin/wineserver -k || log "wineserver -k timed out or returned an error."
+
+            log "Cleaning up any remaining child processes and Xvfb..."
+            pkill -P $$ -9 2>/dev/null || true
+
+            log "All processes cleaned up. Exiting the service cleanly."
           '';
 
           Restart = "on-failure";
@@ -144,6 +219,8 @@ in
         steamcmd
         wine64
         xvfb-run
+        procps
+        cacert
       ];
     };
   }

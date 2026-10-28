@@ -47,7 +47,11 @@ check *args:
     {{ nix("flake check " + flake_uri, args) }}
 
 [group("local")]
-build *args:
+fmt:
+    alejandra .
+
+[group("local")]
+switch *args:
     {{ nh("switch", args) }}
 
 [group("local")]
