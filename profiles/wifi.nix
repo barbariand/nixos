@@ -1,4 +1,4 @@
-{ config, ... }: let
+{config, ...}: let
   PHONE = 1000;
   EDUROAM = 950;
   TRUSTED = 900;

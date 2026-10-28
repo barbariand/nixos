@@ -20,30 +20,49 @@ with lib; let
     concatStringsSep "\n" (denies ++ allows);
 
   mkHeaderBlock = vhost:
-    concatStringsSep "\n" (mapAttrsToList (k: v: ''add_header ${k} "${v}" always;'') vhost.extraHeaders);
+    concatStringsSep "\n" (
+      mapAttrsToList (k: v: ''add_header ${k} "${v}" always;'') vhost.extraHeaders
+    );
 
-  generatedVhosts = mapAttrs (_: vhost: let
-    certHost = if vhost.acmeHost != null then vhost.acmeHost else cfg.acmeCert;
-    aclConfig = mkAclBlock vhost;
-    headerConfig = mkHeaderBlock vhost;
-  in {
-    useACMEHost = mkIf (certHost != null) certHost;
-    forceSSL = vhost.forceSSL && (certHost != null);
-    extraConfig = concatStringsSep "\n" (filter (s: s != "") [
-      aclConfig
-      headerConfig
-      vhost.extraConfig
-    ]);
-    locations."/" = mkIf (vhost.proxyPass != null) {
-      proxyPass = vhost.proxyPass;
-      proxyWebsockets = vhost.websockets;
-    };
-  }) activeVhosts;
+  generatedVhosts =
+    mapAttrs (
+      _: vhost: let
+        certHost =
+          if vhost.acmeHost != null
+          then vhost.acmeHost
+          else cfg.acmeCert;
+        aclConfig = mkAclBlock vhost;
+        headerConfig = mkHeaderBlock vhost;
+      in {
+        useACMEHost = mkIf (certHost != null) certHost;
+        forceSSL = vhost.forceSSL && (certHost != null);
+        extraConfig = concatStringsSep "\n" (
+          filter (s: s != "") [
+            aclConfig
+            headerConfig
+            vhost.extraConfig
+          ]
+        );
+        locations."/" = mkIf (vhost.proxyPass != null) {
+          proxyPass = vhost.proxyPass;
+          proxyWebsockets = vhost.websockets;
+        };
+      }
+    )
+    activeVhosts;
 
-  streamList = mapAttrsToList (name: sCfg: {
-    upstreamName = "${replaceStrings ["." "-"] ["_" "_"] name}_backend";
-    inherit (sCfg) port protocol backend openFirewall;
-  }) activeStreams;
+  streamList =
+    mapAttrsToList (name: sCfg: {
+      upstreamName = "${replaceStrings ["." "-"] ["_" "_"] name}_backend";
+      inherit
+        (sCfg)
+        port
+        protocol
+        backend
+        openFirewall
+        ;
+    })
+    activeStreams;
 
   buildUpstream = s: ''
     upstream ${s.upstreamName} {
@@ -79,10 +98,12 @@ in
         enable = true;
         recommendedProxySettings = true;
         recommendedTlsSettings = true;
-        appendConfig = concatStringsSep "\n" (filter (s: s != "") [
-          cfg.appendConfig
-          generatedStreamConfig
-        ]);
+        appendConfig = concatStringsSep "\n" (
+          filter (s: s != "") [
+            cfg.appendConfig
+            generatedStreamConfig
+          ]
+        );
         virtualHosts =
           {
             "_" = {
@@ -96,7 +117,8 @@ in
       };
 
       networking.firewall = {
-        allowedTCPPorts = (optional cfg.openFirewall 80) ++ (optional cfg.openFirewall 443) ++ streamTcpPorts;
+        allowedTCPPorts =
+          (optional cfg.openFirewall 80) ++ (optional cfg.openFirewall 443) ++ streamTcpPorts;
         allowedUDPPorts = streamUdpPorts;
       };
     };

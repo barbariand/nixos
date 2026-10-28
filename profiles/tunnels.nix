@@ -1,11 +1,9 @@
-{ sensibleLib, ... }:
-let
+{sensibleLib, ...}: let
   wgLib = sensibleLib.wireguard;
-in
-{
+in {
   imports = [
     (sensibleLib.sshTools {
-      ignorePeers = [ "phone" ];
+      ignorePeers = ["phone"];
       sshUser = "cindy";
     })
   ];
@@ -14,8 +12,15 @@ in
     "wg1" = wgLib.mkIsolated {
       privateKeyFile = "/var/lib/wireguard/ollama.key";
       firewall = {
-        allowedTCPPorts = [ 53 443 853 ];
-        allowedUDPPorts = [ 53 853 ];
+        allowedTCPPorts = [
+          53
+          443
+          853
+        ];
+        allowedUDPPorts = [
+          53
+          853
+        ];
       };
 
       topology = {

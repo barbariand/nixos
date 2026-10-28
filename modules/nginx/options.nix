@@ -60,7 +60,10 @@ with lib; let
         type = types.port;
       };
       protocol = mkOption {
-        type = types.enum ["tcp" "udp"];
+        type = types.enum [
+          "tcp"
+          "udp"
+        ];
         default = "tcp";
       };
       backend = mkOption {

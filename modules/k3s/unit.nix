@@ -16,7 +16,11 @@ with lib; let
   resolveNodeIp = name: explicitIp:
     if explicitIp != null
     then explicitIp
-    else if cfg.wireguardInterface != null && builtins.hasAttr cfg.wireguardInterface wgCfg && builtins.hasAttr name wgCfg.${cfg.wireguardInterface}.topology.nodes
+    else if
+      cfg.wireguardInterface
+      != null
+      && builtins.hasAttr cfg.wireguardInterface wgCfg
+      && builtins.hasAttr name wgCfg.${cfg.wireguardInterface}.topology.nodes
     then wgCfg.${cfg.wireguardInterface}.topology.nodes.${name}.ip
     else null;
 
@@ -66,7 +70,10 @@ in
       services.k3s =
         {
           enable = true;
-          role = if isController then "server" else "agent";
+          role =
+            if isController
+            then "server"
+            else "agent";
           tokenFile = cfg.tokenFile;
           extraFlags = concatStringsSep " " (filter (s: s != "") (baseFlags ++ roleFlags));
         }
@@ -75,7 +82,10 @@ in
         };
 
       systemd.services.k3s = mkIf (cfg.wireguardInterface != null) {
-        after = ["network-online.target" "systemd-networkd.service"];
+        after = [
+          "network-online.target"
+          "systemd-networkd.service"
+        ];
         wants = ["network-online.target"];
       };
     };

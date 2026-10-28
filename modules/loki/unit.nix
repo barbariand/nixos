@@ -133,7 +133,10 @@ in
         ];
       };
 
-      networking.firewall.allowedTCPPorts = lib.mkIf isServer [cfg.port cfg.grafanaPort];
+      networking.firewall.allowedTCPPorts = lib.mkIf isServer [
+        cfg.port
+        cfg.grafanaPort
+      ];
     };
   }
   |> sensibleLib.sensibleConfig

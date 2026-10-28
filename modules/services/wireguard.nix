@@ -2,18 +2,18 @@
   lib,
   wgCfg,
   wgIf,
-}:
-let
+}: let
   # Check if the interface and node exist in the topology
   isValid = builtins.hasAttr wgIf wgCfg;
-in
-{
+in {
   # Function to resolve dynamic addresses for a given node
   resolveAddresses = nodeName:
-    if isValid && builtins.hasAttr nodeName wgCfg.${wgIf}.topology.nodes then [
+    if isValid && builtins.hasAttr nodeName wgCfg.${wgIf}.topology.nodes
+    then [
       "tcp://${wgCfg.${wgIf}.topology.nodes.${nodeName}.ip}:22000"
       "quic://${wgCfg.${wgIf}.topology.nodes.${nodeName}.ip}:22000"
-    ] else [];
+    ]
+    else [];
 
   # The interface on which to open firewall ports
   firewallInterface = wgIf;

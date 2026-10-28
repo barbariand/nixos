@@ -12,6 +12,5 @@
     };
     terminal.default = "kitty";
     pass.enable = true;
-
   };
 }

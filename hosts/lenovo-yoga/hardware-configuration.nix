@@ -9,9 +9,21 @@
     (modulesPath + "/installer/scan/not-detected.nix")
   ];
 
-  boot.initrd.availableKernelModules = ["nvme" "xhci_pci" "thunderbolt" "usb_storage" "sd_mod"];
-  boot.initrd.kernelModules = ["nvme" "amdgpu"];
-  boot.kernelModules = ["kvm-amd" "amdgpu"];
+  boot.initrd.availableKernelModules = [
+    "nvme"
+    "xhci_pci"
+    "thunderbolt"
+    "usb_storage"
+    "sd_mod"
+  ];
+  boot.initrd.kernelModules = [
+    "nvme"
+    "amdgpu"
+  ];
+  boot.kernelModules = [
+    "kvm-amd"
+    "amdgpu"
+  ];
   services.upower.enable = true;
   boot.loader.grub.splashImage = ./../../background.jpg;
 
@@ -37,7 +49,7 @@
     enable32Bit = true;
     # Använd standard Mesa för RADV Vulkan-drivrutinen; amdgpu-pro krävs ej för spel
     extraPackages = with pkgs; [
-      rocmPackages.clr.icd 
+      rocmPackages.clr.icd
     ];
   };
 

@@ -1,3 +1,6 @@
 {
-  imports = [./networking/default.nix ./wifi/default.nix];
+  imports = [
+    ./networking/default.nix
+    ./wifi/default.nix
+  ];
 }

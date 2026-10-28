@@ -1,8 +1,8 @@
 {pkgs, ...}: {
   config.sensible = {
-  wireguard."wg0".enable = true;
+    wireguard."wg0".enable = true;
     # gui
-   hyprland = {
+    hyprland = {
       enable = true;
       debug = true; # Förhindrar att disable_logs sätts till true
     };
@@ -10,7 +10,12 @@
     podman.enable = false;
     steam = {
       enable = true;
-      extraPackages = with pkgs; [gamescope gamemode mangohud proton-ge-bin];
+      extraPackages = with pkgs; [
+        gamescope
+        gamemode
+        mangohud
+        proton-ge-bin
+      ];
     };
     display-manager = {
       global_auto_login = true;

@@ -18,7 +18,10 @@ in
         settings.Resolve = {
           DNSOverTLS = lib.mkIf (!unboundActive) cfg.dnsOverTls;
           FallbackDNS = cfg.fallbackDns;
-          DNSStubListener = if unboundActive then false else true;
+          DNSStubListener =
+            if unboundActive
+            then false
+            else true;
         };
       };
 

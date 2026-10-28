@@ -1,6 +1,4 @@
-{
-  cfg,
-}: {
+{cfg}: {
   nix.settings.trusted-users = ["gitea-runner"];
 
   systemd.tmpfiles.rules = [

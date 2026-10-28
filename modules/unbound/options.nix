@@ -68,7 +68,10 @@ in
 
           listenInterfaces = mkOption {
             type = types.listOf types.str;
-            default = ["0.0.0.0@53" "0.0.0.0@853"];
+            default = [
+              "0.0.0.0@53"
+              "0.0.0.0@853"
+            ];
           };
 
           enableDoT = mkOption {
@@ -90,13 +93,20 @@ in
 
           resolvers = mkOption {
             type = types.listOf types.str;
-            default = ["1.1.1.1" "8.8.8.8"];
+            default = [
+              "1.1.1.1"
+              "8.8.8.8"
+            ];
             description = "Upstream forward DNS resolvers.";
           };
 
           accessControl = mkOption {
             type = types.listOf types.str;
-            default = ["127.0.0.0/8" "192.168.0.0/16" "10.0.0.0/8"];
+            default = [
+              "127.0.0.0/8"
+              "192.168.0.0/16"
+              "10.0.0.0/8"
+            ];
             description = "CIDRs allowed to query Unbound.";
           };
 

@@ -32,7 +32,11 @@
     fi
 
     ${pkgs.attic-client}/bin/attic cache configure "local:${cfg.cacheName}" \
-      ${if cfg.publicPull then "--public" else "--private"} \
+      ${
+      if cfg.publicPull
+      then "--public"
+      else "--private"
+    } \
       --retention-period "${cfg.garbageCollection.defaultRetentionPeriod}"
 
     ${pkgs.attic-client}/bin/attic cache info "local:${cfg.cacheName}" > /var/lib/atticd/${cfg.cacheName}-cache-info.txt
@@ -40,7 +44,10 @@
 in {
   systemd.services.atticd-bootstrap = {
     description = "Declaratively Bootstrap Attic Cache (Public Pull / Private Push)";
-    after = ["atticd.service" "postgresql.service"];
+    after = [
+      "atticd.service"
+      "postgresql.service"
+    ];
     requires = ["atticd.service"];
     wantedBy = ["multi-user.target"];
     serviceConfig = {

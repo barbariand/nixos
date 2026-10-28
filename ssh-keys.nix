@@ -7,7 +7,18 @@ rec {
   server_one = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINw8zWQ5+G7biSV8RIK/6uZH8F1r4a9FeESyHQcRDLI7";
   build_server = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILHSsfGHwdwd6CbrOl2ufvtRDUDz1nj0o9ONd8p5KQlZ root@buildserver";
 
-  users = [lenovo home_computer github];
-  systems = [raspberrypi server_one build_server];
-  keyFiles = ["~/.ssh/github" "~/.ssh/id_ed25519"];
+  users = [
+    lenovo
+    home_computer
+    github
+  ];
+  systems = [
+    raspberrypi
+    server_one
+    build_server
+  ];
+  keyFiles = [
+    "~/.ssh/github"
+    "~/.ssh/id_ed25519"
+  ];
 }

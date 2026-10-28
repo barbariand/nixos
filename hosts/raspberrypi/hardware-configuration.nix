@@ -31,7 +31,11 @@
   boot.initrd.kernelModules = [];
   boot.kernelModules = [];
   boot.extraModulePackages = [];
-  boot.kernelParams = ["cgroup_enable=memory" "cgroup_enable=cpuset" "cgroup_memory=1"];
+  boot.kernelParams = [
+    "cgroup_enable=memory"
+    "cgroup_enable=cpuset"
+    "cgroup_memory=1"
+  ];
   boot.zfs.forceImportRoot = false;
 
   nixpkgs.hostPlatform = lib.mkDefault "aarch64-linux";
