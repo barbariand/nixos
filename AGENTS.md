@@ -33,11 +33,11 @@ Respect this strict layout:
 
 ### Critical Scope Rules (Do Not Over-Search)
 - **Standard vs. Complex Configuration**:
- - If a feature is a standard NixOS option (service, program, or standard system setup), it belongs in `profiles/`.
- - If a feature is a complex system (e.g., cluster configurations, multi-node services, or heavy abstractions), it belongs in `modules/` with corresponding logic in `lib/`.
+  - If a feature is a standard NixOS option (service, program, or standard system setup), it belongs in `profiles/`.
+  - If a feature is a complex system (e.g., cluster configurations, multi-node services, or heavy abstractions), it belongs in `modules/` with corresponding logic in `lib/`.
 - **Scale & Scope**:
- - Small, machine-specific details or overrides belong in `hosts/`.
- - **Target Found = Stop Searching**: The moment you identify the nature of the request (Standard vs. Complex vs. Local), the location is determined. Proceed to the edit immediately.
+  - Small, machine-specific details or overrides belong in `hosts/`.
+  - **Target Found = Stop Searching**: The moment you identify the nature of the request (Standard vs. Complex vs. Local), the location is determined. Proceed to the edit immediately.
 
 ---
 
@@ -53,7 +53,7 @@ Secrets are encrypted via Agenix and decrypted at runtime:
 ```
 systemd.services.<name>.serviceConfig.EnvironmentFile = config.age.secrets.<name>.path;
 ```
-     *(Or if injecting a single path/argument, reference `config.age.secrets.<name>.path`).*
+   *(Or if injecting a single path/argument, reference `config.age.secrets.<name>.path`).*
 3. **Never Attempt Decryption**:
    - Never attempt to run `age --decrypt` or read raw `.age` files. Always reference the decrypted runtime path via `config.age.secrets.<name>.path`.
 
