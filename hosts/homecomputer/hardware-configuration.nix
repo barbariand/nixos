@@ -53,6 +53,13 @@
     binfmt.emulatedSystems = ["aarch64-linux"];
   };
 
+  swapDevices = [
+    {
+      device = "/var/lib/swapfile";
+      size = 48 * 1024;
+    }
+  ];
+
   hardware = {
     enableRedistributableFirmware = true;
     cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
