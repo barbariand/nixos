@@ -151,8 +151,6 @@
       (nft.extraConfig or "")
     ];
 
-  # Genererar regler för NixOS inbyggda inet nixos-fw forward-kedja så att trafik som
-  # redan filtrerats och godkänts av wg_<net>-tabellen inte kasserars av nixos-fw.
   mkFirewallForwardRules = hostName: activeNetworks: let
     hubNets = lib.filterAttrs (_: netCfg: topologyLib.needsNftables hostName netCfg) activeNetworks;
     rules =
@@ -164,7 +162,6 @@
   in
     lib.concatStringsSep "\n" rules;
 
-  # Bakåtkompatibla hjälpare
   mkRoutingTable = netName: netCfg: ''
     chain forward {
       type filter hook forward priority filter; policy accept;

@@ -27,6 +27,24 @@
     echo "Triggering atticd-gc oneshot sweep..."
     ${pkgs.systemd}/bin/systemctl start atticd-gc.service
   '';
+
+  gcExecScript = pkgs.writeShellScript "atticd-gc-exec" ''
+    set -euo pipefail
+    
+    ATTIC_ENV=$(${pkgs.systemd}/bin/systemctl show atticd.service --property=Environment)
+    ATTIC_CONF=$(echo "$ATTIC_ENV" | ${pkgs.coreutils}/bin/tr ' ' '\n' | ${pkgs.gnugrep}/bin/grep '^ATTIC_SERVER_CONFIG=' | ${pkgs.coreutils}/bin/cut -d= -f2 || true)
+
+    if [ -z "$ATTIC_CONF" ]; then
+      ATTIC_CONF=$(${pkgs.systemd}/bin/systemctl cat atticd.service | ${pkgs.gnugrep}/bin/grep -o '\-f /nix/store/[^ ]*' | ${pkgs.coreutils}/bin/cut -d' ' -f2 | ${pkgs.coreutils}/bin/head -n 1 || true)
+    fi
+
+    if [ -z "$ATTIC_CONF" ]; then
+      echo "ERROR: Kunde inte hitta atticd konfigurationsfilen från systemd!" >&2
+      exit 1
+    fi
+
+    exec ${config.services.atticd.package}/bin/atticd --mode garbage-collector-once -f "$ATTIC_CONF"
+  '';
 in {
   systemd.services.atticd-gc = {
     description = "Attic Binary Cache Garbage Collection Sweep";
@@ -45,7 +63,7 @@ in {
       ReadWritePaths = [(toString cfg.storagePath)];
       IOSchedulingClass = "idle";
       CPUSchedulingPolicy = "idle";
-      ExecStart = "${config.services.atticd.package}/bin/atticd --mode garbage-collector-once -f /etc/atticd.toml";
+      ExecStart = gcExecScript;
     };
   };
 
