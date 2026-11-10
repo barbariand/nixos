@@ -17,6 +17,17 @@
   sensible.ccache.enable = true;
   sensible.docker.enable = true;
 
+  nix.settings = {
+    substituters = [
+      "https://cache.simd.me/simd"
+    ];
+
+    trusted-public-keys = [
+      "simd:W4tMJwzanoMh2lKYEqQ+fClSwdVQumrFURjpXV8+Stc="
+    ];
+
+    netrc-file = config.age.secrets.nix-netrc.path;
+  };
   users.users.${user}.extraGroups = [
     "docker"
     "wireshark"
