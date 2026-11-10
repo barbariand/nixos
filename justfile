@@ -31,7 +31,7 @@ default:
 
 [group("local")]
 check *args:
-    nix flake check {{ FLAKE_URI }} {{ args }}
+    nix flake check {{ FLAKE_URI }} {{ args }} {{ OVERRIDE_FLAG }}
 
 [group("local")]
 fmt:
