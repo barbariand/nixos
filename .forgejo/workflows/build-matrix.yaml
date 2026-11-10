@@ -1,0 +1,46 @@
+name: Build Systems to Attic
+
+on:
+  push:
+    branches:
+      - staging
+  schedule:
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+jobs:
+  build-and-cache:
+    runs-on: [build_server]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ssh-key: ${{ secrets.RUNNER_DEPLOY_KEY }}
+          ref: ${{ github.event_name == 'schedule' && 'master' || '' }}
+          fetch-depth: 0
+
+      - name: Update flake.lock and advance staging (scheduled runs only)
+        if: github.event_name == 'schedule'
+        run: |
+          git config user.name "Forgejo Build Bot"
+          git config user.email "bot@simd.me"
+
+          git checkout master
+          nix flake update --extra-experimental-features "nix-command flakes"
+
+          if ! git diff --quiet flake.lock; then
+            git add flake.lock
+            git commit -m "chore(flake): weekly flake lock update"
+            git push origin master
+          else
+            echo "No dependency updates detected in flake.lock."
+          fi
+
+          # Synka staging till senaste master
+          git push origin HEAD:staging --force
+
+      - name: Build all targets and push to local Attic
+        env:
+          ATTIC_TOKEN: ${{ secrets.ATTIC_TOKEN }}
+        run: |
+          ./scripts/ci-build-all.sh
