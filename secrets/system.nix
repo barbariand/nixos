@@ -12,8 +12,13 @@
   age.secrets.ollama.file = ./ollama.age;
 
   age.secrets.atticd-env.file = ./atticd-env.age;
-  age.secrets.urgobalt-forgejo-runner.file = ./urgobalt-forgejo-runner.age;
-
+  age.secrets.forgejo-runner-tokens.file = ./urgobalt-forgejo-runner.age;
+  age.secrets.nix-netrc = {
+    file = ./nix-netrc.age;
+    mode = "0400";
+    owner = "root";
+    group = "root";
+  };
   age.secrets."homepage.env" = {
     file = ./homepage.env.age;
   };
