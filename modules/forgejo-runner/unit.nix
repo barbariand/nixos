@@ -7,7 +7,8 @@
 }: let
   cfg = config.sensible.forgejo-runner;
 
-  pService = import ./service.nix {inherit cfg lib pkgs;};
+  pConfig = import ./config.nix {inherit cfg lib pkgs;};
+  pService = import ./service.nix {inherit cfg lib pkgs pConfig;};
   pDaemon = import ./daemon-tuning.nix {inherit cfg;};
 in
   {
@@ -17,10 +18,9 @@ in
       users = pService.users;
       nix = pDaemon.nix;
       systemd.tmpfiles.rules = pDaemon.systemd.tmpfiles.rules;
-      services.gitea-actions-runner = pService.services.gitea-actions-runner;
 
       systemd.services = {
-        gitea-runner-ci = pService.systemd.services.gitea-runner-ci;
+        forgejo-runner-ci = pService.systemd.services.forgejo-runner-ci;
         nix-daemon = pDaemon.systemd.services.nix-daemon;
       };
     };

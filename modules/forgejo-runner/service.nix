@@ -2,63 +2,49 @@
   cfg,
   lib,
   pkgs,
+  pConfig,
 }:
-with lib; {
-  users.users.gitea-runner = {
+with lib; let
+  hostPackages = with pkgs; [
+    attic-client
+    bash
+    coreutils
+    curl
+    findutils
+    gawk
+    git
+    gnugrep
+    gnused
+    gnutar
+    gzip
+    jq
+    just
+    nix
+    openssh
+    xz
+    yq-go
+    zstd
+  ];
+in {
+  users.users.forgejo-runner = {
     isSystemUser = true;
-    group = "gitea-runner";
-    home = "/var/lib/gitea-runner";
+    group = "forgejo-runner";
+    home = "/var/lib/forgejo-runner";
     createHome = true;
   };
-  users.groups.gitea-runner = {};
+  users.groups.forgejo-runner = {};
 
-  services.gitea-actions-runner = {
-    package = pkgs.forgejo-runner;
-    instances.ci = {
-      enable = true;
-      name = cfg.name;
-      url = cfg.url;
-      tokenFile = cfg.tokenFile;
-      labels = cfg.labels;
-
-      hostPackages = with pkgs; [
-        attic-client
-        bash
-        coreutils
-        curl
-        findutils
-        gawk
-        git
-        gnugrep
-        gnused
-        gnutar
-        gzip
-        jq
-        just
-        nix
-        openssh
-        xz
-        zstd
-      ];
-
-      settings = {
-        log.level = "info";
-        runner = {
-          capacity = cfg.capacity;
-          timeout = "3h";
-          insecure = false;
-        };
-        cache.enabled = false;
-      };
-    };
-  };
-
-  systemd.services.gitea-runner-ci = {
+  systemd.services.forgejo-runner-ci = {
+    description = "Forgejo Actions Runner CI";
     after = [
       "network-online.target"
       "nix-daemon.service"
     ];
     wants = ["network-online.target"];
+    wantedBy = ["multi-user.target"];
+
+    path = hostPackages;
+
     environment = {
       TMPDIR = toString cfg.buildTmpDir;
       NIX_CONFIG = ''
@@ -67,16 +53,46 @@ with lib; {
         cores = ${toString cfg.coresPerJob}
       '';
     };
+
     serviceConfig = {
-      User = mkForce "gitea-runner";
-      Group = mkForce "gitea-runner";
-      DynamicUser = mkForce false;
-      StateDirectory = "gitea-runner";
+      User = "forgejo-runner";
+      Group = "forgejo-runner";
+      DynamicUser = false;
+      StateDirectory = "forgejo-runner";
+      RuntimeDirectory = "forgejo-runner";
+      RuntimeDirectoryMode = "0700";
+      WorkingDirectory = "/var/lib/forgejo-runner";
+
       CPUWeight = 50;
       IOWeight = 50;
       MemoryHigh = "10G";
       MemoryMax = "12G";
       OOMScoreAdjust = 500;
+      Restart = "always";
+      RestartSec = "10s";
+
+      ExecStartPre = pkgs.writeShellScript "forgejo-runner-build-config" ''
+        set -euo pipefail
+
+        CONFIG_DEST="/run/forgejo-runner/config.yaml"
+        cp "${pConfig.baseConfigFile}" "$CONFIG_DEST"
+        chmod 0600 "$CONFIG_DEST"
+
+        while IFS='=' read -r key val || [ -n "$key" ]; do
+          [[ -z "$key" || "$key" =~ ^# ]] && continue
+
+          key=$(echo "$key" | xargs)
+          val=$(echo "$val" | xargs)
+          val="''${val%\"}"
+          val="''${val#\"}"
+
+          ${pkgs.yq-go}/bin/yq -i \
+            "select(.server.connections.$key != null) | .server.connections.$key.token = \"$val\"" \
+            "$CONFIG_DEST"
+        done < "${cfg.tokenEnvFile}"
+      '';
+
+      ExecStart = "${pkgs.forgejo-runner}/bin/forgejo-runner daemon --config /run/forgejo-runner/config.yaml";
     };
   };
 }
