@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -uo pipefail
 
-source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+CI_DIR="$(dirname "${BASH_SOURCE[0]}")"
+source "$CI_DIR/lib.sh"
 
 trap cleanup_ssh EXIT
 setup_ssh
@@ -12,7 +13,18 @@ git config user.email "bot@simd.me"
 
 git checkout master >/dev/null 2>&1
 
-run_silent_on_success "flake-update" nix flake update --extra-experimental-features "nix-command flakes" --no-warn-dirty
+echo "=== Updating flake.lock ==="
+log_file="flake-update.log"
+nix flake update --extra-experimental-features "nix-command flakes" --no-warn-dirty 2> "$log_file"
+status=$?
+
+if [ $status -ne 0 ]; then
+  echo "=== ❌ Flake update failed (Exit code: $status) ==="
+  cat "$log_file"
+  rm -f "$log_file"
+  exit "$status"
+fi
+rm -f "$log_file"
 
 if ! git diff --quiet flake.lock; then
   echo "=== Committing dependency updates ==="

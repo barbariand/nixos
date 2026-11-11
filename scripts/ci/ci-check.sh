@@ -1,12 +1,27 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -uo pipefail
 
-# Source the library (works regardless of where the script is called from)
-source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+CI_DIR="$(dirname "${BASH_SOURCE[0]}")"
+source "$CI_DIR/lib.sh"
 
 trap cleanup_ssh EXIT
 setup_ssh
 setup_nix_args
 
-# Run flake check with error handling
-run_silent_on_success "flake-check" nix flake check "${NIX_ARGS[@]}"
+echo "=== Running nix flake check ==="
+log_file="flake-check.log"
+
+"$CI_DIR/tasks/task-flake-check.sh" "${NIX_ARGS[@]}" 2> "$log_file"
+status=$?
+
+if [ $status -ne 0 ]; then
+  echo "=== ❌ Flake check failed (Exit code: $status) ==="
+  echo "------------------ Check Log Tail ------------------"
+  cat "$log_file"
+  echo "----------------------------------------------------"
+  rm -f "$log_file"
+  exit "$status"
+fi
+
+rm -f "$log_file"
+echo "=== Flake check completed successfully ==="
