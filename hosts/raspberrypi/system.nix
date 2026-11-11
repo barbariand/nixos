@@ -3,7 +3,7 @@
   config.sensible = {
     wireguard."wg0" = {
       enable = true;
-      interface = "eth0";
+      interface = "end0";
     };
     wireguard."wg1" = {
       enable = true;

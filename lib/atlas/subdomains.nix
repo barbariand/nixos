@@ -251,11 +251,9 @@
           else atlasCfg.serverIp;
         matchingSubs =
           lib.filterAttrs (
-            _: sub:
-              sub.nginx.enable
-              && (
-                (sub.zones != [] && builtins.elem zName sub.zones) || (sub.zones == [] && zCfg.defaultInternal)
-              )
+            _: sub: (
+              (sub.zones != [] && builtins.elem zName sub.zones) || (sub.zones == [] && zCfg.defaultInternal)
+            )
           )
           unboundSubs;
         records =

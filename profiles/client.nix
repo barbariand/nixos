@@ -1,10 +1,10 @@
 {pkgs, ...}: {
   sensible.docker.enable = true;
-  programs.wireshark.enable = true;
+  # programs.wireshark.enable = true;
 
   environment.systemPackages = with pkgs; [
     krita
-    wireshark
+    #wireshark
     unstable.signal-desktop
     monocraft
     bruno

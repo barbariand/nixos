@@ -69,7 +69,7 @@ in {
         '';
       };
 
-      wireguard = atlasLib.mkDnsOnly;
+      wireguard = atlasLib.mkDnsOnly {unbound.enable = false;};
       dns = atlasLib.mkDnsOnly;
 
       ollama = atlasLib.mkZoneService ["wg_ollama" "wireguard" "lan"] "http://10.55.0.2:11434";

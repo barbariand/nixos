@@ -14,12 +14,11 @@ default:
 
 [group("local")]
 check *args:
-    nix flake check {{ FLAKE_URI }} {{ args }}
+    nix flake check {{ FLAKE_URI }} {{ args }} --override-input sensible ../sensible-nix/
 
 [group("local")]
 fmt:
     alejandra .
-
 
 [group("local")]
 boot:

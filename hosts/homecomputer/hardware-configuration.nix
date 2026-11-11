@@ -56,7 +56,8 @@
   swapDevices = [
     {
       device = "/var/lib/swapfile";
-      size = 48 * 1024;
+      size = 32 * 1024;
+      options = ["nofail"];
     }
   ];
 
@@ -78,7 +79,7 @@
       modesetting.enable = true;
       powerManagement.enable = false;
       powerManagement.finegrained = false;
-      open = true;
+      open = false;
       nvidiaSettings = true;
       package = config.boot.kernelPackages.nvidiaPackages.production;
     };
@@ -93,7 +94,6 @@
       videoDrivers = ["nvidia"];
       digimend.enable = true;
     };
-    tailscale.enable = true;
   };
 
   # Nätverk & Wake-on-LAN

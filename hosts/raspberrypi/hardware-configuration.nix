@@ -37,6 +37,9 @@
     "cgroup_memory=1"
   ];
   boot.zfs.forceImportRoot = false;
-
+  systemd.network.networks."10-wired" = {
+    matchConfig.Name = "end0 eth0";
+    networkConfig.DHCP = "yes";
+  };
   nixpkgs.hostPlatform = lib.mkDefault "aarch64-linux";
 }

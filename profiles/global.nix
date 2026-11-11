@@ -14,7 +14,7 @@
     ./tunnels.nix
   ];
 
-  sensible.ccache.enable = true;
+  sensible.ccache.enable = false;
   sensible.docker.enable = true;
 
   nix.settings = {
@@ -46,6 +46,14 @@
   };
 
   nixpkgs.overlays = [
+    (final: prev: {
+      makeSecurityWrapper = prev.makeSecurityWrapper.override {
+        stdenv = prev.stdenv;
+      };
+      pkgsMusl = prev.pkgsMusl.overrideScope (mFinal: mPrev: {
+        stdenv = prev.stdenv;
+      });
+    })
     (uFinal: uPrev: {
       python312 = uPrev.python312.override {
         packageOverrides = pyFinal: pyPrev: {
@@ -160,5 +168,11 @@
       ];
     };
     wallpaper.source = ../background.jpg;
+  };
+  sensible.networking = {
+    nameservers = [
+      "10.55.0.1"
+      "1.1.1.1"
+    ];
   };
 }
