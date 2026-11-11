@@ -140,6 +140,26 @@ in
             description = "SSD-backed temporary build directory to avoid tmpfs RAM exhaustion.";
           };
 
+          priority = {
+            cpuWeight = mkOption {
+              type = types.ints.positive;
+              default = 50;
+              description = "Systemd CPUWeight for runner cgroup.";
+            };
+
+            ioWeight = mkOption {
+              type = types.ints.positive;
+              default = 50;
+              description = "Systemd IOWeight for runner cgroup.";
+            };
+
+            oomScoreAdjust = mkOption {
+              type = types.ints.between (-1000) 1000;
+              default = 500;
+              description = "Systemd OOMScoreAdjust for runner daemon.";
+            };
+          };
+
           extraSettings = mkOption {
             type = types.attrsOf types.anything;
             default = {};

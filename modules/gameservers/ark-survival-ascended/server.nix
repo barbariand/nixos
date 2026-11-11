@@ -40,6 +40,11 @@ in {
       StateDirectory = "ark-survival-ascended-server";
       LimitNOFILE = 1000000;
 
+      CPUWeight = lib.mkIf (cfg.priority.cpuWeight != null) cfg.priority.cpuWeight;
+      IOWeight = lib.mkIf (cfg.priority.ioWeight != null) cfg.priority.ioWeight;
+      OOMScoreAdjust = lib.mkIf (cfg.priority.oomScoreAdjust != null) cfg.priority.oomScoreAdjust;
+      Nice = lib.mkIf (cfg.priority.nice != null) cfg.priority.nice;
+
       ProtectProc = "default";
       ProcSubset = "all";
       PrivateNetwork = false;
@@ -124,11 +129,41 @@ in {
         ${pkgs.wine64}/bin/wineboot -u
 
         cleanup() {
-          log "Received SIGTERM signal. Sending termination signal to steam-run (PID $SERVER_PID)..."
+          log "Received shutdown signal. Notifying Ark process and waiting for clean persistence..."
+          
+          # 1. Skicka SIGTERM direkt till den underliggande ArkAscendedServer.exe om den hittas
+          ARK_PID=$(pgrep -f "ArkAscendedServer.exe" | head -n 1 || true)
+          if [ -n "$ARK_PID" ]; then
+            log "Signaling ArkAscendedServer.exe (PID $ARK_PID) directly..."
+            kill -TERM "$ARK_PID" 2>/dev/null || true
+          fi
+
+          # 2. Skicka även SIGTERM till steam-run-wrappern
           if [ -n "$SERVER_PID" ]; then
             kill -TERM "$SERVER_PID" 2>/dev/null || true
-            log "Waiting for the Ark process to save and shut down..."
+          fi
+
+          # 3. Vänta på att ArkAscendedServer faktiskt avslutas (upp till shutdownGracePeriodSec)
+          WAIT_LIMIT=${toString cfg.shutdownGracePeriodSec}
+          ELAPSED=0
+          while pgrep -f "ArkAscendedServer.exe" >/dev/null 2>&1; do
+            if [ "$ELAPSED" -ge "$WAIT_LIMIT" ]; then
+              log "Timeout ($WAIT_LIMIT s) reached while waiting for Ark to shut down cleanly."
+              break
+            fi
+            sleep 1
+            ELAPSED=$((ELAPSED + 1))
+          done
+
+          if [ -n "$SERVER_PID" ]; then
             wait "$SERVER_PID" 2>/dev/null || true
+          fi
+
+          # 4. Explicit cooldown-period innan hårda avdödningssteg körs
+          COOLDOWN=${toString cfg.shutdownCooldownSec}
+          if [ "$COOLDOWN" -gt 0 ]; then
+            log "Entering shutdown cooldown of $COOLDOWN seconds before tearing down Wine..."
+            sleep "$COOLDOWN"
           fi
         }
         trap cleanup SIGTERM SIGINT
@@ -140,6 +175,12 @@ in {
 
         wait "$SERVER_PID" || true
         log "ArkAscendedServer.exe has terminated."
+
+        # Om processen kraschade eller stängdes utan signal, ge den också cooldown innan wineserver dödas
+        COOLDOWN=${toString cfg.shutdownCooldownSec}
+        if [ "$COOLDOWN" -gt 0 ]; then
+          sleep "$COOLDOWN"
+        fi
 
         log "Killing wineserver inside steam-run (max 5s timeout)..."
         ${pkgs.coreutils}/bin/timeout 5 ${pkgs.steam-run}/bin/steam-run ${pkgs.wine64}/bin/wineserver -k || log "wineserver -k timed out or returned an error."

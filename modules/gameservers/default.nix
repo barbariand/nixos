@@ -1,3 +1,3 @@
 {
-  imports = [./ark-survival-accendent/default.nix];
+  imports = [./ark-survival-ascended/default.nix];
 }

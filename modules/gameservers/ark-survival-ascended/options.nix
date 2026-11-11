@@ -84,6 +84,44 @@ with lib;
             default = false;
             description = "Run steamcmd update on every service start.";
           };
+
+          shutdownGracePeriodSec = mkOption {
+            type = types.ints.positive;
+            default = 30;
+            description = "Seconds to wait after signaling shutdown for ArkAscendedServer.exe to persist save data before killing wineserver.";
+          };
+
+          shutdownCooldownSec = mkOption {
+            type = types.ints.unsigned;
+            default = 5;
+            description = "Additional sleep duration (in seconds) after the main process exits before issuing wineserver -k and killing child processes.";
+          };
+
+          priority = {
+            cpuWeight = mkOption {
+              type = types.nullOr types.ints.positive;
+              default = null;
+              description = "Systemd CPUWeight (1-10000) for cgroup CPU share prioritization.";
+            };
+
+            ioWeight = mkOption {
+              type = types.nullOr types.ints.positive;
+              default = null;
+              description = "Systemd IOWeight (1-10000) for cgroup disk I/O prioritization.";
+            };
+
+            oomScoreAdjust = mkOption {
+              type = types.nullOr (types.ints.between (-1000) 1000);
+              default = null;
+              description = "Systemd OOMScoreAdjust (-1000 to 1000). Negative values protect against OOM kills.";
+            };
+
+            nice = mkOption {
+              type = types.nullOr (types.ints.between (-20) 19);
+              default = null;
+              description = "Process nice level (-20 to 19). Lower values yield higher CPU priority.";
+            };
+          };
         };
       };
     };

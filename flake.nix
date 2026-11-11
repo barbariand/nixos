@@ -97,7 +97,7 @@
                   prismlauncher
                   davinci-resolve
                   blender
-                  cisco-packet-tracer_9
+                  #cisco-packet-tracer_9
                 ];
               })
               ./hosts/homecomputer/default.nix

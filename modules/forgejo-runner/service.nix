@@ -64,11 +64,11 @@ in {
       RuntimeDirectoryMode = "0700";
       WorkingDirectory = "/var/lib/forgejo-runner";
 
-      CPUWeight = 50;
-      IOWeight = 50;
+      CPUWeight = cfg.priority.cpuWeight;
+      IOWeight = cfg.priority.ioWeight;
       MemoryHigh = "10G";
       MemoryMax = "12G";
-      OOMScoreAdjust = 500;
+      OOMScoreAdjust = cfg.priority.oomScoreAdjust;
       Restart = "always";
       RestartSec = "10s";
 
