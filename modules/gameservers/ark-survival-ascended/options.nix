@@ -97,30 +97,10 @@ with lib;
             description = "Additional sleep duration (in seconds) after the main process exits before issuing wineserver -k and killing child processes.";
           };
 
-          priority = {
-            cpuWeight = mkOption {
-              type = types.nullOr types.ints.positive;
-              default = null;
-              description = "Systemd CPUWeight (1-10000) for cgroup CPU share prioritization.";
-            };
-
-            ioWeight = mkOption {
-              type = types.nullOr types.ints.positive;
-              default = null;
-              description = "Systemd IOWeight (1-10000) for cgroup disk I/O prioritization.";
-            };
-
-            oomScoreAdjust = mkOption {
-              type = types.nullOr (types.ints.between (-1000) 1000);
-              default = null;
-              description = "Systemd OOMScoreAdjust (-1000 to 1000). Negative values protect against OOM kills.";
-            };
-
-            nice = mkOption {
-              type = types.nullOr (types.ints.between (-20) 19);
-              default = null;
-              description = "Process nice level (-20 to 19). Lower values yield higher CPU priority.";
-            };
+          serviceConfig = mkOption {
+            type = types.attrsOf types.anything;
+            default = {};
+            description = "Extra systemd serviceConfig options merged directly into ark-survival-ascended-server.service.";
           };
         };
       };
