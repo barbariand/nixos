@@ -20,6 +20,7 @@ with lib; let
     jq
     just
     nix
+    nodejs
     openssh
     xz
     yq-go

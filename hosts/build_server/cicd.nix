@@ -53,7 +53,12 @@
       };
     };
   };
-
+  programs.ssh.knownHosts."git.urgobalt.dev".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINxOp2Vbzsr0U4FZZzhkd4ri1cTEdMLrGR2g/wchDlES";
+  programs.ssh.extraConfig = ''
+    Host git.urgobalt.dev
+      StrictHostKeyChecking accept-new
+      IdentityFile ${config.age.secrets.ci-ssh-key.path}
+  '';
   age.secrets.forgejo-runner-tokens = {
     owner = "forgejo-runner";
     group = "forgejo-runner";

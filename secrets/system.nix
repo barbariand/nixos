@@ -19,6 +19,11 @@
     owner = "root";
     group = "root";
   };
+  age.secrets.ci-ssh-key = {
+    file = ./ci-ssh-key.age;
+    owner = "root";
+    mode = "0400";
+  };
   age.secrets."homepage.env" = {
     file = ./homepage.env.age;
   };

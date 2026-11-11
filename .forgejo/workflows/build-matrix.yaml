@@ -21,26 +21,12 @@ jobs:
 
       - name: Update flake.lock and advance staging (scheduled runs only)
         if: github.event_name == 'schedule'
-        run: |
-          git config user.name "Forgejo Build Bot"
-          git config user.email "bot@simd.me"
-
-          git checkout master
-          nix flake update --extra-experimental-features "nix-command flakes"
-
-          if ! git diff --quiet flake.lock; then
-            git add flake.lock
-            git commit -m "chore(flake): weekly flake lock update"
-            git push origin master
-          else
-            echo "No dependency updates detected in flake.lock."
-          fi
-
-          # Synka staging till senaste master
-          git push origin HEAD:staging --force
+        env:
+          RUNNER_DEPLOY_KEY: ${{ secrets.RUNNER_DEPLOY_KEY }}
+        run: ./scripts/ci-update-flake.sh
 
       - name: Build all targets and push to local Attic
         env:
+          RUNNER_DEPLOY_KEY: ${{ secrets.RUNNER_DEPLOY_KEY }}
           ATTIC_TOKEN: ${{ secrets.ATTIC_TOKEN }}
-        run: |
-          ./scripts/ci-build-all.sh
+        run: ./scripts/ci-build-all.sh
