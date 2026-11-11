@@ -1,13 +1,31 @@
-{sensibleLib, ...}: let
+{
+  sensibleLib,
+  user,
+  ...
+}: let
   wgLib = sensibleLib.wireguard;
 in {
-  imports = [
-    (sensibleLib.sshTools {
-      ignorePeers = ["phone"];
-      sshUser = "cindy";
-    })
-  ];
+  sensible.ssh-tools = {
+    enable = true;
+    defaultUser = "cindy";
 
+    wireguard = {
+      enable = true;
+      interfaces = ["wg0"];
+      ignorePeers = ["phone"];
+    };
+
+    hosts = {
+      bth = {
+        user = "dani24";
+        strictHostKeyChecking = "accept-new";
+      };
+      multiprocessor_server = {
+        user = "dani24";
+        strictHostKeyChecking = "no";
+      };
+    };
+  };
   sensible.wireguard = {
     "wg1" = wgLib.mkIsolated {
       privateKeyFile = "/var/lib/wireguard/ollama.key";
@@ -75,6 +93,14 @@ in {
           phone = {
             publicKey = "HtWcEPpV156RJ5b/NKC0z9U7Fu4nh4935s1Jj21tZ0U=";
             ip = "10.55.0.200";
+          };
+          bth = {
+            publicKey = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+            ip = "10.55.0.20";
+          };
+          multiprocessor_server = {
+            publicKey = "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=";
+            ip = "10.55.0.21";
           };
         };
 

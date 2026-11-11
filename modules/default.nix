@@ -1,5 +1,6 @@
 {
   imports = [
+    ./ssh-tools/default.nix
     ./wireguard/default.nix
     ./acme/default.nix
     ./atlas/default.nix
