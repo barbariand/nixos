@@ -135,7 +135,6 @@
             ++ [
               {networking.hostName = lib.mkForce "raspberrypi";}
               "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
-              ./profiles/wifi.nix
               ./hosts/raspberrypi/default.nix
             ];
         };
@@ -149,7 +148,6 @@
             ++ [
               "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
               inputs.hardware.nixosModules.raspberry-pi-4
-              ./profiles/wifi.nix
               ./hosts/raspberrypi/default.nix
             ];
         };
@@ -232,6 +230,7 @@
             ssh-to-age
             agenix-cli
             alejandra
+            python3
           ];
           shellHook = ''
             export GIT_SSH_COMMAND="${gitSshFailover}"

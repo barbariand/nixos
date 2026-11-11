@@ -11,6 +11,9 @@ on:
 jobs:
   build-and-cache:
     runs-on: [build_server]
+    defaults:
+      run:
+        shell: nix develop --command bash -eo pipefail {0}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -23,10 +26,10 @@ jobs:
         if: github.event_name == 'schedule'
         env:
           RUNNER_DEPLOY_KEY: ${{ secrets.RUNNER_DEPLOY_KEY }}
-        run: ./scripts/ci/ci-update-flake.sh
+        run: ./scripts/ci/ci-update-flake.py
 
       - name: Check, Build and Push to Attic
         env:
           RUNNER_DEPLOY_KEY: ${{ secrets.RUNNER_DEPLOY_KEY }}
           ATTIC_TOKEN: ${{ secrets.ATTIC_TOKEN }}
-        run: ./scripts/ci/ci-build-all.sh
+        run: ./scripts/ci/ci-build-all.py

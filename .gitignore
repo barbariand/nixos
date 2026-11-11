@@ -1,3 +1,5 @@
 .stfolder/
 .direnv/
 .just/
+result/
+__pycache__/
