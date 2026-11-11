@@ -19,14 +19,14 @@ jobs:
           ref: ${{ github.event_name == 'schedule' && 'master' || '' }}
           fetch-depth: 0
 
-      - name: Update flake.lock and advance staging (scheduled runs only)
+      - name: Update flake.lock and advance staging
         if: github.event_name == 'schedule'
         env:
           RUNNER_DEPLOY_KEY: ${{ secrets.RUNNER_DEPLOY_KEY }}
-        run: ./scripts/ci-update-flake.sh
+        run: ./scripts/ci/ci-update-flake.sh
 
-      - name: Build all targets and push to local Attic
+      - name: Check, Build and Push to Attic
         env:
           RUNNER_DEPLOY_KEY: ${{ secrets.RUNNER_DEPLOY_KEY }}
           ATTIC_TOKEN: ${{ secrets.ATTIC_TOKEN }}
-        run: ./scripts/ci-build-all.sh
+        run: ./scripts/ci/ci-build-all.sh

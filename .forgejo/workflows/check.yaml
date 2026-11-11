@@ -1,0 +1,21 @@
+name: Flake Check
+
+on:
+  push:
+    branches-ignore:
+      - staging
+
+jobs:
+  check:
+    runs-on: [build_server]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ssh-key: ${{ secrets.RUNNER_DEPLOY_KEY }}
+          fetch-depth: 0
+
+      - name: Run Flake Check
+        env:
+          RUNNER_DEPLOY_KEY: ${{ secrets.RUNNER_DEPLOY_KEY }}
+        run: ./scripts/ci/ci-check.sh
