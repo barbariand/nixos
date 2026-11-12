@@ -34,7 +34,7 @@ update:
 
 [group("tools")]
 update-hosts:
-    @./scripts/update-hosts.py
+    python3 -m scripts.update_hosts
 
 [group("tools")]
 clean-hosts:

@@ -3,9 +3,6 @@ import os
 import subprocess
 import sys
 import time
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from ..lib.ci_env import setup_ssh_context
 from ..lib.nix import NixContext, eval_target_hosts
@@ -17,7 +14,7 @@ ATTIC_SERVER = "https://cache.simd.me"
 
 def main() -> int:
     ctx = NixContext.from_env()
-    
+
     with setup_ssh_context():
         nix_args = ctx.get_ci_args()
         attic_token = os.getenv("ATTIC_TOKEN")
@@ -33,7 +30,9 @@ def main() -> int:
         try:
             hosts = eval_target_hosts(ctx)
         except subprocess.CalledProcessError as exc:
-            log_error("ci-build", "Failed to evaluate nixosConfigurations attribute set.")
+            log_error(
+                "ci-build", "Failed to evaluate nixosConfigurations attribute set."
+            )
             print(exc.stderr, file=sys.stderr)
             return 1
 
@@ -52,8 +51,13 @@ def main() -> int:
             elapsed = int(time.time() - start)
 
             if res.returncode != 0:
-                log_error("ci-build", f"Build FAILED for '{host}' after {elapsed}s (Exit code: {res.returncode})")
-                print("------------------ Build Log Tail (last 80 lines) ------------------")
+                log_error(
+                    "ci-build",
+                    f"Build FAILED for '{host}' after {elapsed}s (Exit code: {res.returncode})",
+                )
+                print(
+                    "------------------ Build Log Tail (last 80 lines) ------------------"
+                )
                 lines = res.stderr.splitlines()
                 print("\n".join(lines[-80:]))
                 print("-" * 68)
@@ -66,13 +70,18 @@ def main() -> int:
             print(f"   Output Path: {out_path}")
 
             if attic_token and out_path:
-                log_info("ci-build", f"Pushing {host} store path to Attic ({ATTIC_CACHE})...")
+                log_info(
+                    "ci-build", f"Pushing {host} store path to Attic ({ATTIC_CACHE})..."
+                )
                 push = subprocess.run(
                     ["attic", "push", f"local:{ATTIC_CACHE}", out_path],
                     capture_output=True,
                 )
                 if push.returncode != 0:
-                    log_warn("ci-build", f"Attic push failed for {host} with exit code {push.returncode}")
+                    log_warn(
+                        "ci-build",
+                        f"Attic push failed for {host} with exit code {push.returncode}",
+                    )
                 else:
                     log_info("ci-build", f"Cached {host} in Attic successfully.")
 
@@ -83,7 +92,9 @@ def main() -> int:
             log_error("ci-build", f"Failed targets: {' '.join(failed_hosts)}")
             return 1
 
-        log_info("ci-build", "All machine configurations built and cached successfully.")
+        log_info(
+            "ci-build", "All machine configurations built and cached successfully."
+        )
         return 0
 
 

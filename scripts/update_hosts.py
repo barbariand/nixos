@@ -35,7 +35,7 @@ def main() -> int:
         # Defaults to passing "--help" to the CLI if no command is given.
         recipe = f"""[group("systems")]
 {host} command="--help" *args:
-    @./scripts/cli.py {host} {{{{ command }}}} {{{{ args }}}}
+    python3 -m scripts.cli {host} {{{{ command }}}} {{{{ args }}}}
 """
         content.append(recipe)
 

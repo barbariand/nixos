@@ -232,6 +232,9 @@
             alejandra
             python3
           ];
+          env = {
+            PYTHONPATH = ".";
+          };
           shellHook = ''
             export GIT_SSH_COMMAND="${gitSshFailover}"
             alias d="just deploy"

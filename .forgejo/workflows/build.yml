@@ -26,10 +26,10 @@ jobs:
         if: github.event_name == 'schedule'
         env:
           RUNNER_DEPLOY_KEY: ${{ secrets.RUNNER_DEPLOY_KEY }}
-        run: ./scripts/ci/ci-update-flake.py
+        run: python3 -m scripts.ci.ci_update_flake.py
 
       - name: Check, Build and Push to Attic
         env:
           RUNNER_DEPLOY_KEY: ${{ secrets.RUNNER_DEPLOY_KEY }}
           ATTIC_TOKEN: ${{ secrets.ATTIC_TOKEN }}
-        run: ./scripts/ci/ci-build-all.py
+        run: python3 -m scripts.ci.ci_build_all.py

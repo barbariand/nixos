@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 import subprocess
 import sys
-from pathlib import Path
-
-# Insert scripts root into sys.path to resolve the lib module
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from ..lib.ci_env import setup_ssh_context
 from ..lib.logger import log_error, log_info

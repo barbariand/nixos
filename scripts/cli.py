@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import argparse
 import sys
-from lib.nix import NixContext
-from lib.logger import log_error
-from lib import commands
+from .lib.nix import NixContext
+from .lib.logger import log_error
+from .lib import commands
 
 
 def main() -> int:
