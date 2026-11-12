@@ -7,9 +7,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from .lib.ci_env import setup_ssh_context
-from .lib.nix import NixContext, eval_target_hosts
-from .lib.logger import log_error, log_info, log_warn
+from ..lib.ci_env import setup_ssh_context
+from ..lib.nix import NixContext, eval_target_hosts
+from ..lib.logger import log_error, log_info, log_warn
 
 ATTIC_CACHE = "simd"
 ATTIC_SERVER = "https://cache.simd.me"

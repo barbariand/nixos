@@ -6,8 +6,8 @@ from pathlib import Path
 # Insert scripts root into sys.path to resolve the lib module
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from .lib.ci_env import setup_ssh_context
-from .lib.logger import log_error, log_info
+from ..lib.ci_env import setup_ssh_context
+from ..lib.logger import log_error, log_info
 
 
 def run(cmd: list[str], check: bool = True) -> subprocess.CompletedProcess[str]:

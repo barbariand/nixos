@@ -5,9 +5,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from .lib.ci_env import setup_ssh_context
-from .lib.nix import NixContext
-from .lib.logger import log_error, log_info
+from ..lib.ci_env import setup_ssh_context
+from ..lib.nix import NixContext
+from ..lib.logger import log_error, log_info
 
 
 def main() -> int:
