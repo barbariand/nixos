@@ -84,7 +84,7 @@ system = {
 };
 ```
 2. **The `home-manager` Key**:
-   Inside `sensibleLib.sensibleConfig`, user-level configurations must reside under `home-manager`, never `home`.
+   Inside `sensibleLib.sensibleConfig`, user-level configurations must reside under `home-manager`, never `home` and what is sent in as `home-manager` to `sensibleLib.sensibleConfig` will automatically be under the right users home-manager config so user does not need to be manually inserted.
 3. **Pipelining (`|>` Syntax)**:
    Always use the pipe operator to apply wrappers:
 ```

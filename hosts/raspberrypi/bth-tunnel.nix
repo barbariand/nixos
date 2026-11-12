@@ -4,12 +4,27 @@
     "10.55.0.20/32"
     "10.55.0.21/32"
   ];
+  services.openssh.listenAddresses = [
+    {
+      addr = "10.55.0.1";
+      port = 22;
+    }
+    {
+      addr = "192.168.1.3";
+      port = 22;
+    }
+    {
+      addr = "127.0.0.1";
+      port = 22;
+    }
+  ];
 
   systemd.services.bth-ssh-forward = {
     description = "SSH Port Forward to dani24@ssh.student.bth.se on 10.55.0.20";
     after = [
       "network-online.target"
       "systemd-networkd.service"
+      "sshd.service"
     ];
     wants = ["network-online.target"];
     wantedBy = ["multi-user.target"];
@@ -26,6 +41,8 @@
           -o ServerAliveCountMax=3 \
           -o ExitOnForwardFailure=yes \
           -o StrictHostKeyChecking=accept-new \
+          -i /home/cindy/.ssh/id_ed25519 \
+          -o IdentitiesOnly=yes \
           -L 10.55.0.20:22:127.0.0.1:22 \
           dani24@ssh.student.bth.se
       '';
@@ -37,6 +54,7 @@
     after = [
       "network-online.target"
       "systemd-networkd.service"
+      "sshd.service"
     ];
     wants = ["network-online.target"];
     wantedBy = ["multi-user.target"];
@@ -53,6 +71,8 @@
           -o ServerAliveCountMax=3 \
           -o ExitOnForwardFailure=yes \
           -o StrictHostKeyChecking=accept-new \
+          -i /home/cindy/.ssh/id_ed25519 \
+          -o IdentitiesOnly=yes \
           -J dani24@ssh.student.bth.se \
           -L 10.55.0.21:22:127.0.0.1:22 \
           dani24@jane.lab.bth.se

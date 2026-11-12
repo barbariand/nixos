@@ -1,5 +1,6 @@
 {
   imports = [
+    ./ssh-forwards/default.nix
     ./ssh-tools/default.nix
     ./wireguard/default.nix
     ./acme/default.nix

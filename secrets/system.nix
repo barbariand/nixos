@@ -24,6 +24,11 @@
     owner = "root";
     mode = "0400";
   };
+  age.secrets.bth-ssh-key = {
+    file = ./bth-ssh-key.age;
+    owner = user;
+    mode = "0400";
+  };
   age.secrets."homepage.env" = {
     file = ./homepage.env.age;
   };

@@ -1,9 +1,11 @@
 {
   sensibleLib,
   user,
+  config,
   ...
 }: let
   wgLib = sensibleLib.wireguard;
+  bthKeyPath = config.age.secrets.bth-ssh-key.path;
 in {
   sensible.ssh-tools = {
     enable = true;
@@ -22,6 +24,30 @@ in {
       };
       multiprocessor_server = {
         user = "dani24";
+        strictHostKeyChecking = "no";
+      };
+    };
+  };
+  sensible.ssh-forwards = {
+    enable = true;
+    relayHost = "raspberrypi";
+    wireguardInterface = "wg0";
+    relayListenAddresses = [
+      "127.0.0.1"
+      "192.168.1.3"
+    ];
+    defaultUser = "dani24";
+    defaultIdentityFile = bthKeyPath;
+
+    tunnels = {
+      bth = {
+        targetHost = "ssh.student.bth.se";
+        strictHostKeyChecking = "accept-new";
+      };
+
+      multiprocessor_server = {
+        targetHost = "jane.lab.bth.se";
+        proxyJump = "bth";
         strictHostKeyChecking = "no";
       };
     };
