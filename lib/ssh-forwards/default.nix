@@ -39,19 +39,9 @@ in rec {
     )
     (lib.filterAttrs (_: t: t.enable) cfg.tunnels);
 
-  # Builds the ProxyJump string (supports referencing another tunnel name or raw jump spec)
-  resolveProxyJump = resolvedTunnels: tCfg:
-    if tCfg.proxyJump == null
-    then null
-    else if builtins.hasAttr tCfg.proxyJump resolvedTunnels
-    then let
-      jumpTarget = resolvedTunnels.${tCfg.proxyJump};
-      jumpUser =
-        if jumpTarget.resolvedUser != null
-        then "${jumpTarget.resolvedUser}@"
-        else "";
-    in "${jumpUser}${jumpTarget.targetHost}"
-    else tCfg.proxyJump;
+  # Returns the tunnel alias directly when referencing another tunnel so OpenSSH
+  # picks up its Host block (IdentityFile, User, HostName, IdentitiesOnly) from ssh_config.
+  resolveProxyJump = _resolvedTunnels: tCfg: tCfg.proxyJump;
 
   # Generates "-L bindIp:localPort:remoteHost:remotePort" arguments for a tunnel
   mkForwardArgs = tCfg:

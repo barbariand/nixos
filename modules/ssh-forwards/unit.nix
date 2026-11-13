@@ -17,8 +17,7 @@ with lib; let
 
   relayOwnWgIp =
     if
-      cfg.wireguardInterface
-      != null
+      cfg.wireguardInterface != null
       && builtins.hasAttr cfg.wireguardInterface wgCfg
       && builtins.hasAttr hostName wgCfg.${cfg.wireguardInterface}.topology.nodes
     then [wgCfg.${cfg.wireguardInterface}.topology.nodes.${hostName}.ip]
@@ -28,6 +27,8 @@ with lib; let
 
   mkTunnelService = name: tCfg: let
     jumpSpec = fwdLib.resolveProxyJump resolvedTunnels tCfg;
+    jumpIsLocalTunnel =
+      tCfg.proxyJump != null && builtins.hasAttr tCfg.proxyJump resolvedTunnels;
     fwdArgs = fwdLib.mkForwardArgs tCfg;
     destination =
       if tCfg.resolvedUser != null
@@ -51,13 +52,18 @@ with lib; let
   in
     nameValuePair "ssh-forward-${name}" {
       description = "SSH Port Forward to ${destination} on ${tCfg.resolvedIp}";
-      after = [
-        "network-online.target"
-        "systemd-networkd.service"
-        "sshd.service"
-        "agenix-install-secrets.service"
-      ];
-      wants = ["network-online.target"];
+      after =
+        [
+          "network-online.target"
+          "systemd-networkd.service"
+          "sshd.service"
+          "agenix-install-secrets.service"
+        ]
+        ++ optional (config.services.unbound.enable or false) "unbound.service"
+        ++ optional jumpIsLocalTunnel "ssh-forward-${tCfg.proxyJump}.service";
+      wants =
+        ["network-online.target"]
+        ++ optional jumpIsLocalTunnel "ssh-forward-${tCfg.proxyJump}.service";
       wantedBy = ["multi-user.target"];
 
       serviceConfig = {
@@ -65,7 +71,7 @@ with lib; let
         AmbientCapabilities = ["CAP_NET_BIND_SERVICE"];
         CapabilityBoundingSet = ["CAP_NET_BIND_SERVICE"];
         Restart = "always";
-        RestartSec = "10s";
+        RestartSec = "5s";
         ExecStart = sshCmd;
       };
     };
