@@ -58,8 +58,8 @@ in {
       privateKeyFile = "/var/lib/wireguard/ollama.key";
       dns = ["10.56.0.1"];
       domains = [
-        "~simd.me"
         "!wireguard.simd.me"
+        "~simd.me"
       ];
       firewall = {
         allowedTCPPorts = [
@@ -100,7 +100,10 @@ in {
     "wg0" = wgLib.mkMesh {
       privateKeyFile = "/var/lib/wireguard/private.key";
       dns = ["10.55.0.1"];
-      domains = ["~simd.me"];
+      domains = [
+        "!wireguard.simd.me"
+        "~simd.me"
+      ];
       topology = {
         prefixLength = 24;
         nodes = {

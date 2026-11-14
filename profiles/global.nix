@@ -138,9 +138,7 @@
     wallpaper.source = ../background.jpg;
   };
   sensible.networking = {
-    nameservers = [
-      "10.55.0.1"
-    ];
+    nameservers = [];
     fallbackDns = [
       "1.1.1.1"
       "9.9.9.9"
