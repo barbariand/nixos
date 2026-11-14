@@ -30,6 +30,10 @@ in
 
       systemd.services.alloy.serviceConfig.SupplementaryGroups = ["systemd-journal"];
 
+      systemd.tmpfiles.rules = lib.mkIf isServer [
+        "Z /var/lib/loki 0750 loki loki - -"
+      ];
+
       environment.etc."alloy/config.alloy".text = ''
         loki.write "local_loki" {
           endpoint {
