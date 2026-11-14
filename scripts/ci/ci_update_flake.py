@@ -10,11 +10,21 @@ def run(cmd: list[str], check: bool = True) -> subprocess.CompletedProcess[str]:
     return subprocess.run(cmd, check=check, capture_output=True, text=True)
 
 
+def ensure_ssh_origin() -> None:
+    """Konverterar origin från HTTPS till SSH om nödvändigt så GIT_SSH_COMMAND används."""
+    remote_url = run(["git", "remote", "get-url", "origin"]).stdout.strip()
+    if remote_url.startswith("https://"):
+        ssh_url = remote_url.replace("https://", "git@", 1).replace("/", ":", 1)
+        log_info("ci-update", f"Converting origin remote to SSH: {ssh_url}")
+        run(["git", "remote", "set-url", "origin", ssh_url])
+
+
 def main() -> int:
     with setup_ssh_context():
         log_info("ci-update", "Configuring Git User")
         run(["git", "config", "user.name", "Forgejo Build Bot"])
         run(["git", "config", "user.email", "bot@simd.me"])
+        ensure_ssh_origin()
         run(["git", "checkout", "master"])
 
         log_info("ci-update", "Updating flake.lock")

@@ -1,0 +1,23 @@
+name: Test Flake Update (Manual)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-update-and-advance:
+    runs-on: [build_server]
+    defaults:
+      run:
+        shell: nix develop --command bash -eo pipefail {0}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ssh-key: ${{ secrets.RUNNER_DEPLOY_KEY }}
+          ref: master
+          fetch-depth: 0
+
+      - name: Update flake.lock and advance staging
+        env:
+          RUNNER_DEPLOY_KEY: ${{ secrets.RUNNER_DEPLOY_KEY }}
+        run: python3 -m scripts.ci.ci_update_flake

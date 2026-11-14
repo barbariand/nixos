@@ -12,8 +12,6 @@
 
       garbageCollection = {
         interval = "12 hours";
-        defaultRetentionPeriod = "7 days";
-        emergencyRetentionPeriod = "3 days";
       };
     };
 
