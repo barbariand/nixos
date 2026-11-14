@@ -30,7 +30,7 @@
 
   gcExecScript = pkgs.writeShellScript "atticd-gc-exec" ''
     set -euo pipefail
-    
+
     ATTIC_ENV=$(${pkgs.systemd}/bin/systemctl show atticd.service --property=Environment)
     ATTIC_CONF=$(echo "$ATTIC_ENV" | ${pkgs.coreutils}/bin/tr ' ' '\n' | ${pkgs.gnugrep}/bin/grep '^ATTIC_SERVER_CONFIG=' | ${pkgs.coreutils}/bin/cut -d= -f2 || true)
 

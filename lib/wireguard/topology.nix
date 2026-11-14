@@ -18,16 +18,16 @@
     then {}
     else
       lib.mapAttrs' (
-        nodeName: nodeCfg:
-          let
-            domainSuffix =
-              if (netCfg.hosts.domain or null) != null
-              then ["${nodeName}.${netCfg.hosts.domain}"]
-              else [];
-            aliases = lib.unique ([nodeName] ++ domainSuffix);
-          in
-            lib.nameValuePair nodeCfg.ip aliases
-      ) netCfg.topology.nodes;
+        nodeName: nodeCfg: let
+          domainSuffix =
+            if (netCfg.hosts.domain or null) != null
+            then ["${nodeName}.${netCfg.hosts.domain}"]
+            else [];
+          aliases = lib.unique ([nodeName] ++ domainSuffix);
+        in
+          lib.nameValuePair nodeCfg.ip aliases
+      )
+      netCfg.topology.nodes;
 
   resolveAllHosts = allNetworks:
     lib.foldl' (
@@ -37,10 +37,12 @@
         else
           lib.foldlAttrs (
             innerAcc: ip: aliases:
-              innerAcc // {
+              innerAcc
+              // {
                 ${ip} = lib.unique ((innerAcc.${ip} or []) ++ aliases);
               }
-          ) acc (resolveNetworkHosts netCfg)
+          )
+          acc (resolveNetworkHosts netCfg)
     ) {} (lib.attrValues allNetworks);
 
   resolveHubLinks = hubName: hubCfg: nodes:

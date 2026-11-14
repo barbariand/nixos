@@ -9,7 +9,8 @@ in rec {
     if tCfg.bindIp != null
     then tCfg.bindIp
     else if
-      wgIf != null
+      wgIf
+      != null
       && builtins.hasAttr wgIf wgCfg
       && builtins.hasAttr name wgCfg.${wgIf}.topology.nodes
     then wgCfg.${wgIf}.topology.nodes.${name}.ip
@@ -93,11 +94,13 @@ in rec {
       }
     ]
     ++ (lib.mapAttrsToList (name: tCfg: {
-      assertion = tCfg.resolvedIp != null && ipLib.isValidIPv4 tCfg.resolvedIp;
-      message = "sensible.ssh-forwards: Tunnel '${name}' could not resolve a valid IPv4 'bindIp' (set bindIp explicitly or add '${name}' to sensible.wireguard.${toString cfg.wireguardInterface}.topology.nodes).";
-    }) resolvedTunnels)
+        assertion = tCfg.resolvedIp != null && ipLib.isValidIPv4 tCfg.resolvedIp;
+        message = "sensible.ssh-forwards: Tunnel '${name}' could not resolve a valid IPv4 'bindIp' (set bindIp explicitly or add '${name}' to sensible.wireguard.${toString cfg.wireguardInterface}.topology.nodes).";
+      })
+      resolvedTunnels)
     ++ (lib.mapAttrsToList (name: tCfg: {
-      assertion = tCfg.forwards != [];
-      message = "sensible.ssh-forwards: Tunnel '${name}' must define at least one port forward in 'forwards'.";
-    }) resolvedTunnels);
+        assertion = tCfg.forwards != [];
+        message = "sensible.ssh-forwards: Tunnel '${name}' must define at least one port forward in 'forwards'.";
+      })
+      resolvedTunnels);
 }

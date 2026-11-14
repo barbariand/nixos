@@ -17,7 +17,8 @@ with lib; let
 
   relayOwnWgIp =
     if
-      cfg.wireguardInterface != null
+      cfg.wireguardInterface
+      != null
       && builtins.hasAttr cfg.wireguardInterface wgCfg
       && builtins.hasAttr hostName wgCfg.${cfg.wireguardInterface}.topology.nodes
     then [wgCfg.${cfg.wireguardInterface}.topology.nodes.${hostName}.ip]

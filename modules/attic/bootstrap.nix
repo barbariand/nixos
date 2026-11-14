@@ -63,8 +63,8 @@ in {
       "atticd.service"
       "postgresql.service"
     ];
-    requires = [ "atticd.service" ];
-    wantedBy = [ "multi-user.target" ];
+    requires = ["atticd.service"];
+    wantedBy = ["multi-user.target"];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
