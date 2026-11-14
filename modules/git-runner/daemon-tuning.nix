@@ -1,8 +1,8 @@
 {cfg}: {
-  nix.settings.trusted-users = ["forgejo-runner"];
+  nix.settings.trusted-users = ["git-runner"];
 
   systemd.tmpfiles.rules = [
-    "d ${toString cfg.buildTmpDir} 0775 forgejo-runner nixbld 1d"
+    "d ${toString cfg.buildTmpDir} 0775 git-runner nixbld 1d"
   ];
 
   systemd.services.nix-daemon = {

@@ -59,6 +59,18 @@ in
                   description = "Automatically enable this network on any host present in topology.nodes.";
                 };
 
+                dns = mkOption {
+                  type = types.listOf types.str;
+                  default = [];
+                  description = "DNS servers pushed to systemd-resolved for this WireGuard interface.";
+                };
+
+                domains = mkOption {
+                  type = types.listOf types.str;
+                  default = [];
+                  description = "Search/routing domains (e.g. ['~example.com']) routed to this interface's DNS.";
+                };
+
                 hosts = {
                   enable = mkOption {
                     type = types.bool;

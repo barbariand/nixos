@@ -77,8 +77,12 @@ in
         };
 
         networking = {
-          nameservers = cfg.dns.resolvers;
-          fallbackDns = cfg.dns.resolvers;
+          nameservers = mkForce (
+            if cfg.unbound.enable
+            then ["127.0.0.1"]
+            else cfg.dns.resolvers
+          );
+          fallbackDns = mkForce cfg.dns.resolvers;
         };
       };
 

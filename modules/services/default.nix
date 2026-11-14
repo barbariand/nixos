@@ -1,6 +1,5 @@
 {
   imports = [
-    ./options.nix
-    ./unit.nix
+    ./syncthing/default.nix
   ];
 }

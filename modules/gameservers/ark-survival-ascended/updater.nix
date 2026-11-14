@@ -1,9 +1,12 @@
-{ cfg, pkgs, lib, ... }:
-let
+{
+  cfg,
+  pkgs,
+  lib,
+  ...
+}: let
   steamcmd_command = "${pkgs.steamcmd}/bin/steamcmd";
-in
-lib.optionalAttrs cfg.autoUpdate {
-  ark-survival-ascended-updater = {
+in {
+  ark-survival-ascended-updater = lib.mkIf cfg.autoUpdate {
     description = "ARK: Survival Ascended Server Auto-Updater (SteamCMD)";
     after = ["network-online.target"];
     wants = ["network-online.target"];

@@ -4,11 +4,22 @@
   ...
 }: let
   atlasLib = sensibleLib.atlas;
+  wgLib = sensibleLib.wireguard;
+
+  wg0 = config.sensible.wireguard.wg0;
+  wg1 = config.sensible.wireguard.wg1;
+
+  nodes = wg0.topology.nodes;
+  piWgIp = nodes.raspberrypi.ip;
+  homeIp = nodes.homecomputer.ip;
+  serverOneIp = nodes.server_one.ip;
+  buildServerIp = nodes.build_server.ip;
+  lanIp = "192.168.1.3";
 in {
   config.sensible.atlas = {
     enable = true;
     baseDomain = "simd.me";
-    serverIp = "192.168.1.3";
+    serverIp = lanIp;
 
     zones = {
       lan = {
@@ -16,17 +27,17 @@ in {
           "127.0.0.0/8"
           "192.168.1.0/24"
         ];
-        ip = "192.168.1.3";
+        ip = lanIp;
         defaultInternal = true;
       };
       wireguard = {
-        cidrs = ["10.55.0.0/24"];
-        ip = "10.55.0.1";
+        cidrs = [(wgLib.getNetworkCidr wg0)];
+        ip = piWgIp;
         defaultInternal = true;
       };
       wg_ollama = {
-        cidrs = ["10.56.0.0/24"];
-        ip = "10.56.0.1";
+        cidrs = [(wgLib.getNetworkCidr wg1)];
+        ip = wg1.topology.nodes.raspberrypi.ip;
         defaultInternal = false;
       };
     };
@@ -59,9 +70,9 @@ in {
     };
 
     subdomains = {
-      vault = atlasLib.mkPublic "http://127.0.0.1:8222";
+      vault = atlasLib.mkPublic "http://127.0.0.1:${toString config.services.vaultwarden.config.ROCKET_PORT}";
 
-      cache = (atlasLib.mkPublic "http://10.55.0.5:5000") {
+      cache = (atlasLib.mkPublic "http://${buildServerIp}:5000") {
         nginx.extraConfig = ''
           client_max_body_size 0;
           proxy_request_buffering off;
@@ -72,44 +83,42 @@ in {
       wireguard = atlasLib.mkDnsOnly {unbound.enable = false;};
       dns = atlasLib.mkDnsOnly;
 
-      ollama = atlasLib.mkZoneService ["wg_ollama" "wireguard" "lan"] "http://10.55.0.2:11434";
+      ollama = atlasLib.mkZoneService ["wg_ollama" "wireguard" "lan"] "http://${homeIp}:11434";
 
-      openclaw = atlasLib.mkInternal "http://10.55.0.2:9000";
-      logs = atlasLib.mkInternal "http://127.0.0.1:3100";
-      grafana = atlasLib.mkInternal "http://127.0.0.1:3000";
-      homepage = atlasLib.mkInternal "http://127.0.0.1:8082";
+      openclaw = atlasLib.mkInternal "http://${homeIp}:9000";
+      logs = atlasLib.mkInternal "http://127.0.0.1:${toString config.sensible.loki.port}";
+      grafana = atlasLib.mkInternal "http://127.0.0.1:${toString config.sensible.loki.grafanaPort}";
+      homepage = atlasLib.mkInternal "http://127.0.0.1:${toString config.sensible.homepage.port}";
 
-      "ollama.internal".proxyPass = "http://10.55.0.2:11434";
-
-      mc = atlasLib.mkTcpStream 25566 "10.55.0.4:25566";
-      minecraft = atlasLib.mkTcpStream 25565 "10.55.0.4:25565" {
+      mc = atlasLib.mkTcpStream 25566 "${serverOneIp}:25566";
+      minecraft = atlasLib.mkTcpStream 25565 "${serverOneIp}:25565" {
         childNaming = "prefix";
-        subdomains.ivar = atlasLib.mkTcpStream 25567 "10.55.0.4:25567";
+        subdomains.ivar = atlasLib.mkTcpStream 25567 "${serverOneIp}:25567";
       };
 
-      ai_research_buddy = atlasLib.mkPublic "http://10.55.0.2:8855";
+      ai_research_buddy = atlasLib.mkPublic "http://${homeIp}:8855";
       ark = atlasLib.mkStreams {
         game = {
           port = 7777;
           protocol = "udp";
-          backend = "192.168.1.5:7777";
+          backend = "${buildServerIp}:7777";
         };
         query = {
           port = 27015;
           protocol = "udp";
-          backend = "192.168.1.5:27015";
+          backend = "${buildServerIp}:27015";
         };
         rcon = {
           port = 27020;
           protocol = "tcp";
-          backend = "192.168.1.5:27020";
+          backend = "${buildServerIp}:27020";
         };
       };
     };
 
     firewall = {
       allowedTCPPorts = [22];
-      allowedUDPPorts = [51820];
+      allowedUDPPorts = [wg0.topology.hubs.raspberrypi.port];
     };
   };
 }

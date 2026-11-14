@@ -1,4 +1,8 @@
-{config, ...}: {
+{config, ...}: let
+  nodes = config.sensible.wireguard.wg0.topology.nodes;
+  piIp = nodes.raspberrypi.ip;
+  homeIp = nodes.homecomputer.ip;
+in {
   config.sensible.homepage = {
     environmentFiles = [config.age.secrets."homepage.env".path];
     allowedHosts = [
@@ -59,7 +63,7 @@
               icon = "raspberry-pi";
               href = "https://dns.simd.me";
               description = "NGINX Reverse Proxy & Unbound DNS Server";
-              ping = "10.55.0.1";
+              ping = piIp;
             };
           }
           {
@@ -67,7 +71,7 @@
               icon = "windows";
               href = "https://openclaw.simd.me";
               description = "Gaming Rig and OpenClaw Execution Environment";
-              ping = "10.55.0.2";
+              ping = homeIp;
             };
           }
         ];
@@ -77,9 +81,9 @@
           {
             "Kubernetes API" = {
               icon = "kubernetes";
-              href = "https://10.55.0.1:6443";
+              href = "https://${piIp}:6443";
               description = "Internal K3s Control Plane Bound to WireGuard IP";
-              ping = "10.55.0.1";
+              ping = piIp;
             };
           }
         ];

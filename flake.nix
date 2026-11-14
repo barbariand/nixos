@@ -43,11 +43,6 @@
     helpers = import ./lib/helpers.nix {inherit lib;};
     localLib = import ./lib/default.nix {inherit lib;};
 
-    # Profile maps that return host-specific attributes
-    loggingModules = import ./profiles/logging.nix {inherit lib;};
-
-    k3sCluster = import ./profiles/k3s.nix {inherit lib interface;};
-
     clientBaseModules = [
       ./profiles/client.nix
     ];
@@ -75,11 +70,13 @@
               wireguard
               atlas
               sshTools
+              sshForwards
               ;
           };
         };
         modules = [
           ./profiles/global.nix
+          ./profiles/loki.nix
         ];
       };
 
@@ -90,7 +87,6 @@
           disko = true;
           modules =
             clientBaseModules
-            ++ (helpers.getNamed "homecomputer" [loggingModules])
             ++ [
               ({pkgs, ...}: {
                 environment.systemPackages = with pkgs; [
@@ -102,6 +98,7 @@
               })
               ./hosts/homecomputer/default.nix
               ./profiles/llm.nix
+              ./profiles/syncthing.nix
             ];
         };
 
@@ -111,7 +108,6 @@
           disko = true;
           modules =
             clientBaseModules
-            ++ (helpers.getNamed "lenovo-yoga" [loggingModules])
             ++ [
               ({pkgs, ...}: {
                 environment.systemPackages = with pkgs; [
@@ -122,6 +118,7 @@
                 ];
               })
               ./profiles/wifi.nix
+              ./profiles/syncthing.nix
               ./hosts/lenovo-yoga/default.nix
             ];
         };
@@ -131,7 +128,6 @@
           stateVersion = "26.05";
           modules =
             serverBaseModules
-            ++ (helpers.getNamed "raspberrypi" [loggingModules])
             ++ [
               {networking.hostName = lib.mkForce "raspberrypi";}
               "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
@@ -144,10 +140,10 @@
           stateVersion = "26.05";
           modules =
             serverBaseModules
-            ++ (helpers.getNamed "raspberrypi" [loggingModules])
             ++ [
               "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
               inputs.hardware.nixosModules.raspberry-pi-4
+              ./profiles/syncthing.nix
               ./hosts/raspberrypi/default.nix
             ];
         };
@@ -158,7 +154,6 @@
           disko = true;
           modules =
             serverBaseModules
-            ++ (helpers.getNamed "build_server" [loggingModules])
             ++ [
               ./hosts/build_server/default.nix
             ];
@@ -170,7 +165,6 @@
           disko = true;
           modules =
             serverBaseModules
-            ++ (helpers.getNamed "server_one" [loggingModules])
             ++ [
               ({...}: {nixpkgs.overlays = [nix-minecraft.overlay];})
               nix-minecraft.nixosModules.minecraft-servers

@@ -9,7 +9,7 @@
 in {
   sensible.ssh-tools = {
     enable = true;
-    defaultUser = "cindy";
+    defaultUser = user;
 
     wireguard = {
       enable = true;
@@ -31,6 +31,7 @@ in {
   sensible.ssh-forwards = {
     enable = true;
     relayHost = "raspberrypi";
+    serviceUser = user;
     wireguardInterface = "wg0";
     relayListenAddresses = [
       "127.0.0.1"
@@ -55,6 +56,11 @@ in {
   sensible.wireguard = {
     "wg1" = wgLib.mkIsolated {
       privateKeyFile = "/var/lib/wireguard/ollama.key";
+      dns = ["10.56.0.1"];
+      domains = [
+        "~simd.me"
+        "!wireguard.simd.me"
+      ];
       firewall = {
         allowedTCPPorts = [
           53
@@ -93,6 +99,8 @@ in {
 
     "wg0" = wgLib.mkMesh {
       privateKeyFile = "/var/lib/wireguard/private.key";
+      dns = ["10.55.0.1"];
+      domains = ["~simd.me"];
       topology = {
         prefixLength = 24;
         nodes = {

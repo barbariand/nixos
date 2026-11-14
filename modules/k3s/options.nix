@@ -13,7 +13,6 @@ with lib;
 
           controllerNode = mkOption {
             type = types.str;
-            default = "raspberrypi";
             description = "Hostname of the K3s server/controller node.";
           };
 

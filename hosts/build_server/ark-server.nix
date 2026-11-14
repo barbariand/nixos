@@ -1,14 +1,13 @@
 {
   config,
-  pkgs,
+  user,
   ...
 }: {
   sensible.ark-server = {
     enable = true;
     autoUpdate = true;
     sessionName = "Cindy's Ark World";
-    adminPassword = "ditt-hemliga-lösenord";
-    #multiHome = "192.168.1.5";
+    adminPasswordFile = config.age.secrets.ark-admin-password.path;
     map = "TheIsland_WP";
     publicDomain = "ark.simd.me";
 
@@ -31,5 +30,5 @@
       "1008253" # https://www.curseforge.com/ark-survival-ascended/mods/enhanced-spyglass
     ];
   };
-  users.users.cindy.extraGroups = ["arkserver"];
+  users.users.${user}.extraGroups = ["arkserver"];
 }

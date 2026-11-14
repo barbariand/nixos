@@ -1,10 +1,9 @@
 {pkgs, ...}: {
   sensible.docker.enable = true;
-  # programs.wireshark.enable = true;
 
   environment.systemPackages = with pkgs; [
+    # GUI & Creative
     krita
-    #wireshark
     unstable.signal-desktop
     monocraft
     bruno
@@ -17,5 +16,35 @@
     inkscape
     gajim
     karere
+
+    # Desktop Utilities
+    bitwarden-cli
+    bluetui
+    brightnessctl
+    pamixer
+    xdg-utils
+
+    # Heavy Toolchains & Language Servers
+    bacon
+    gcc
+    rustup
+    basedpyright
+    ruff
+    clang-tools
+    gopls
+    unstable.codegraph
+    lua-language-server
+    poppler-utils
+    pyright
+    solargraph
+    svelte-language-server
+    wakatime-cli
+
+    # Spell Checking & Dictionaries
+    aspell
+    aspellDicts.en
+    aspellDicts.en-computers
+    aspellDicts.en-science
+    aspellDicts.sv
   ];
 }

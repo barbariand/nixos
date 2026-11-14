@@ -24,7 +24,7 @@ with lib;
 
           apiEndpoint = mkOption {
             type = types.str;
-            default = "https://cache.simd.me/";
+            example = "https://cache.example.com/";
             description = "Canonical URL to Attic (must end with a trailing slash).";
           };
 
@@ -41,7 +41,7 @@ with lib;
 
           cacheName = mkOption {
             type = types.str;
-            default = "simd";
+            default = "default";
             description = "Attic cache name to provision on startup.";
           };
 

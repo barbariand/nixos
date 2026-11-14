@@ -1,8 +1,10 @@
-{
-  pkgs,
-  lib,
-  ...
-}: {
+{pkgs, ...}: {
+  networking.firewall.allowedTCPPorts = [
+    25565
+    25566
+    25567
+  ];
+
   services.minecraft-servers = {
     enable = true;
     eula = true;
@@ -41,7 +43,7 @@
         managementSystem.systemd-socket.enable = true;
         jvmOpts = "";
 
-        package = pkgs.writeShellScriptBin "start-stoneblock" ''
+        package = pkgs.writeShellScriptBin "start-prominance-2" ''
           cd "/var/lib/minecraft/prominance_2"
           exec ./run.sh
         '';
@@ -59,7 +61,7 @@
         managementSystem.systemd-socket.enable = true;
         jvmOpts = "";
 
-        package = pkgs.writeShellScriptBin "start-stoneblock" ''
+        package = pkgs.writeShellScriptBin "start-gustav-kompisar" ''
           cd "/var/lib/minecraft/gustav_kompisar"
           exec ./run.sh
         '';
@@ -77,7 +79,7 @@
         managementSystem.systemd-socket.enable = true;
         jvmOpts = "";
 
-        package = pkgs.writeShellScriptBin "start-stoneblock" ''
+        package = pkgs.writeShellScriptBin "start-gustav-jules" ''
           cd "/var/lib/minecraft/gustav_jules"
           exec ./run.sh
         '';

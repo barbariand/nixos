@@ -22,13 +22,19 @@
     folders = {
       "nixos-config" = {
         id = "x4k9z-q1p2m";
-        path = "/etc/nixos";
+        path = "/home/${user}/code_home/nixos";
+        isGitRepo = true;
+        fsWatcherDelayS = 15;
+      };
+      "sensible-nix" = {
+        id = "s9n2b-k7v4x";
+        path = "/home/${user}/code_home/sensible-nix";
         isGitRepo = true;
         fsWatcherDelayS = 15;
       };
       "bsk-latex" = {
         id = "a6gbd-afyse";
-        path = "/home/cindy/code/bsk/";
+        path = "/home/${user}/code/bsk";
         isGitRepo = true;
         ignorePatterns = [
           "*.aux"

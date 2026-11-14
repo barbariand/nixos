@@ -71,7 +71,7 @@ in
 
           defaultUser = mkOption {
             type = types.nullOr types.str;
-            default = "cindy";
+            default = null;
             description = "Default remote SSH username applied to WireGuard-derived and explicit hosts.";
           };
 

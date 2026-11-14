@@ -8,7 +8,7 @@
     ./attic/default.nix
     ./core/default.nix
     ./ddns/default.nix
-    ./forgejo-runner/default.nix
+    ./git-runner/default.nix
     ./gameservers/default.nix
     ./homepage/default.nix
     ./k3s/default.nix

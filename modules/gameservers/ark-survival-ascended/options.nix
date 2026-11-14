@@ -36,14 +36,15 @@ with lib;
             default = 70;
           };
 
-          adminPassword = mkOption {
-            type = types.str;
-            default = "change-me-immediately";
+          adminPasswordFile = mkOption {
+            type = types.path;
+            description = "Path to file containing the ARK ServerAdminPassword (e.g. via agenix).";
           };
 
-          serverPassword = mkOption {
-            type = types.str;
-            default = "";
+          serverPasswordFile = mkOption {
+            type = types.nullOr types.path;
+            default = null;
+            description = "Optional path to file containing the join ServerPassword.";
           };
 
           multiHome = mkOption {
@@ -70,7 +71,7 @@ with lib;
           mods = mkOption {
             type = types.listOf types.str;
             default = [];
-            description = "Lista över CurseForge Mod IDs, till exempel [ \"952945\" ].";
+            description = "List of CurseForge Mod IDs, e.g. [ \"952945\" ].";
           };
 
           publicDomain = mkOption {

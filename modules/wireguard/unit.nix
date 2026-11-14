@@ -23,18 +23,20 @@
   hostsNetworks = lib.filterAttrs (_: v: v.hosts.enable) activeNetworks;
 
   wireguardHosts = lib.foldl' (acc: netCfg:
-    lib.foldl' (innerAcc: nodeName:
-      let
-        node = netCfg.topology.nodes.${nodeName};
-        domainSuffix = if netCfg.hosts.domain != null then ["${nodeName}.${netCfg.hosts.domain}"] else [];
-        hostAliases = lib.unique ([nodeName] ++ domainSuffix);
-        existing = innerAcc.${node.ip} or [];
-      in
-        innerAcc // {
-          ${node.ip} = lib.unique (existing ++ hostAliases);
-        }
-    ) acc (builtins.attrNames netCfg.topology.nodes)
-  ) {} (lib.attrValues hostsNetworks);
+    lib.foldl' (innerAcc: nodeName: let
+      node = netCfg.topology.nodes.${nodeName};
+      domainSuffix =
+        if netCfg.hosts.domain != null
+        then ["${nodeName}.${netCfg.hosts.domain}"]
+        else [];
+      hostAliases = lib.unique ([nodeName] ++ domainSuffix);
+      existing = innerAcc.${node.ip} or [];
+    in
+      innerAcc
+      // {
+        ${node.ip} = lib.unique (existing ++ hostAliases);
+      })
+    acc (builtins.attrNames netCfg.topology.nodes)) {} (lib.attrValues hostsNetworks);
 
   nftTables =
     lib.mapAttrs' (
@@ -107,9 +109,16 @@
       in
         lib.nameValuePair "30-${netName}" {
           matchConfig.Name = netName;
-          networkConfig = {
-            Address = "${localNode.ip}/${toString netCfg.topology.prefixLength}";
-          };
+          networkConfig =
+            {
+              Address = "${localNode.ip}/${toString netCfg.topology.prefixLength}";
+            }
+            // lib.optionalAttrs (netCfg.dns != []) {
+              DNS = netCfg.dns;
+            }
+            // lib.optionalAttrs (netCfg.domains != []) {
+              Domains = netCfg.domains;
+            };
         }
     )
     activeNetworks;

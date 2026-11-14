@@ -13,7 +13,6 @@ with lib;
 
           serverNode = mkOption {
             type = types.str;
-            default = "raspberrypi";
             description = "The hostname of the machine acting as the central Loki server.";
           };
 
@@ -25,7 +24,7 @@ with lib;
 
           domain = mkOption {
             type = types.str;
-            example = "logs.simd.me";
+            example = "logs.example.com";
             description = "Fully qualified domain name for the Loki push endpoint.";
           };
 

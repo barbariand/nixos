@@ -106,7 +106,7 @@ in
 
           relayHost = mkOption {
             type = types.str;
-            default = "raspberrypi";
+            default = "";
             description = "Hostname of the relay node that binds the virtual IPs and maintains the outbound SSH tunnels.";
           };
 
@@ -118,7 +118,7 @@ in
 
           serviceUser = mkOption {
             type = types.str;
-            default = "cindy";
+            default = "root";
             description = "Local system user on relayHost running the persistent SSH tunnel daemons.";
           };
 

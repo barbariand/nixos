@@ -71,21 +71,15 @@
     nh
     nixos-anywhere
 
-    # Development: Toolchains & Build Tools
-    bacon
-    gcc
+    # Development: Core Toolchains & Build Tools
     gnumake
-    rustup
     unstable.just
+    dig
 
     # Development: Version Control & Forge CLIs
     gh
     unstable.git
     unstable.jujutsu
-
-    # Development: Python Tooling
-    basedpyright
-    ruff
 
     # Modern Core Utilities & Replacements
     bat
@@ -96,43 +90,19 @@
     trashy
 
     # Classic System Utilities & Hardware Inspection
-    brightnessctl
     evtest
     mlocate
-    pamixer
     tldr
     unzip
     wget
-    xdg-utils
 
     # Networking, Connectivity & Sync
-    bluetui
     speedtest-rs
     syncthing
     wireguard-tools
 
-    # Security & Password Management
-    bitwarden-cli
-
     # Databases
     sqlite
-
-    # Spell Checking & Dictionaries
-    aspell
-    aspellDicts.en
-    aspellDicts.en-computers
-    aspellDicts.en-science
-    aspellDicts.sv
-    # Funny dependancies for pi.dev
-    clang-tools
-    gopls
-    unstable.codegraph
-    lua-language-server
-    poppler-utils
-    pyright
-    solargraph
-    svelte-language-server
-    wakatime-cli
   ];
 
   home-manager.users.${user}.imports = [
@@ -143,7 +113,6 @@
   sensible = {
     secrets = {
       enable = true;
-      password = "root";
       passwordFile = config.age.secrets.user-password.path;
     };
     sysinfo.default = "fastfetch";
@@ -171,7 +140,10 @@
   sensible.networking = {
     nameservers = [
       "10.55.0.1"
+    ];
+    fallbackDns = [
       "1.1.1.1"
+      "9.9.9.9"
     ];
   };
 }

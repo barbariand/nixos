@@ -39,10 +39,10 @@ in
         ${cfg.multiHome} = [config.networking.hostName];
       };
 
-      systemd.services =
-        {}
-        // updaterService
-        // serverService;
+      systemd.services = {
+        ark-survival-ascended-updater = updaterService.ark-survival-ascended-updater;
+        ark-survival-ascended-server = serverService.ark-survival-ascended-server;
+      };
 
       environment.systemPackages = with pkgs; [
         steamcmd
