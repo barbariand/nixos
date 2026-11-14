@@ -33,7 +33,7 @@ in {
         pskRaw = "ext:PSK_BAROLO";
         priority = TRUSTED;
       };
-      "3MobilWiFi-4G-842A" = {
+      "munkanas" = {
         pskRaw = "ext:PSK_MORFAR";
         priority = TRUSTED;
       };
