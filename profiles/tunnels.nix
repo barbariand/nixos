@@ -57,10 +57,6 @@ in {
     "wg1" = wgLib.mkIsolated {
       privateKeyFile = "/var/lib/wireguard/ollama.key";
       dns = ["10.56.0.1"];
-      domains = [
-        "!wireguard.simd.me"
-        "~simd.me"
-      ];
       firewall = {
         allowedTCPPorts = [
           53
@@ -101,8 +97,14 @@ in {
       privateKeyFile = "/var/lib/wireguard/private.key";
       dns = ["10.55.0.1"];
       domains = [
-        "!wireguard.simd.me"
-        "~simd.me"
+        "logs.simd.me"
+        "ark.simd.me"
+        "grafana.simd.me"
+        "homepage.simd.me"
+        "dns.simd.me"
+        "~internal.simd.me"
+        "ollama.simd.me"
+        "minecraft.simd.me"
       ];
       topology = {
         prefixLength = 24;
