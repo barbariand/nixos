@@ -20,6 +20,10 @@
     };
 
     mods = [
+      "935297" # https://www.curseforge.com/ark-survival-ascended/mods/natures-touch
+      "1449350" # https://www.curseforge.com/ark-survival-ascended/mods/item-frame
+      "1166819" # https://www.curseforge.com/ark-survival-ascended/mods/tek-dinos-everywhere
+      "942008" # https://www.curseforge.com/ark-survival-ascended/mods/dino-painter
       "931874" # https://www.curseforge.com/ark-survival-ascended/mods/arkitect-structures-remastered
       "957616" # https://www.curseforge.com/ark-survival-ascended/mods/more-plants
       "946694" # https://www.curseforge.com/ark-survival-ascended/mods/klinger-additional-rustic-building
