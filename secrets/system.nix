@@ -31,7 +31,8 @@
   };
   age.secrets.ci-ssh-key = {
     file = ./ci-ssh-key.age;
-    owner = "root";
+    owner = "git-runner";
+    group = "git-runner";
     mode = "0400";
   };
   age.secrets.bth-ssh-key = {

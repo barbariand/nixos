@@ -24,13 +24,13 @@ def setup_ssh_context() -> Generator[None, None, None]:
 
     log_info("ci_env", "Configuring SSH context for private flake inputs")
     with tempfile.NamedTemporaryFile(mode="w", delete=False) as key_file:
-        key_file.write(deploy_key)
+        key_file.write(deploy_key + "\n")
         key_path = key_file.name
 
     os.chmod(key_path, stat.S_IRUSR | stat.S_IWUSR)
     original_ssh_cmd = os.environ.get("GIT_SSH_COMMAND")
     os.environ["GIT_SSH_COMMAND"] = (
-        f"ssh -i {key_path} -o StrictHostKeyChecking=accept-new -o LogLevel=ERROR"
+        f"ssh -i {key_path} -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -o LogLevel=ERROR"
     )
 
     try:
