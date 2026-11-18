@@ -26,12 +26,6 @@
         isGitRepo = true;
         fsWatcherDelayS = 15;
       };
-      "sensible-nix" = {
-        id = "s9n2b-k7v4x";
-        path = "/home/${user}/code_home/sensible-nix";
-        isGitRepo = true;
-        fsWatcherDelayS = 15;
-      };
       "bsk-latex" = {
         id = "a6gbd-afyse";
         path = "/home/${user}/code/bsk";

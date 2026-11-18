@@ -115,6 +115,7 @@
                   davinci-resolve
                   blender
                   ffmpeg-full
+                  pangolin-cli
                 ];
               })
               ./profiles/wifi.nix
